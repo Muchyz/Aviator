@@ -9,8 +9,8 @@ import { io } from "socket.io-client";
   document.head.appendChild(l);
 })();
 
-const API = "https://YOUR-RAILWAY-URL.up.railway.app/api";
-const SOCKET_URL = "https://YOUR-RAILWAY-URL.up.railway.app";
+const API = "https://aviator-backend-production-1de1.up.railway.app/api";
+const SOCKET_URL = "https://aviator-backend-production-1de1.up.railway.app";
 
 const CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
