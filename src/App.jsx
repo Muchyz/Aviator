@@ -159,18 +159,29 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
 
 /* GAME CARD */
 .gcard{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;width:100%;}
-.gtopbar{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.live-ind{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--text2)}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blk 1.4s infinite}
-.rbadge{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--border-md);color:var(--text2);}
+
+/* COMBINED TOP BAR */
+.gtopbar{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;min-height:42px;flex-wrap:wrap;}
+.live-ind{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text2);flex-shrink:0;margin-right:4px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blk 1.4s infinite;flex-shrink:0;}
+.rbadge{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px;background:var(--surface);border:1px solid var(--border-md);color:var(--text2);flex-shrink:0;}
 .rbadge.flying{color:var(--amber);border-color:var(--amber-border);background:var(--amber-dim)}
 .rbadge.crashed{color:var(--red);border-color:var(--red-border);background:var(--red-dim)}
+.topbar-sep{width:1px;height:18px;background:var(--border-md);flex-shrink:0;margin:0 4px;}
+.crashes-inline{display:flex;align-items:center;gap:4px;overflow-x:auto;flex:1;min-width:0;}
+.crashes-inline::-webkit-scrollbar{display:none}
+.cbadge{padding:3px 8px;border-radius:5px;flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;border:1px solid transparent;}
+.cbadge.lo{background:var(--blue-dim);color:var(--blue);border-color:var(--blue-border)}
+.cbadge.mi{background:rgba(100,116,139,0.1);color:#94a3b8;border-color:rgba(100,116,139,0.2)}
+.cbadge.hi{background:rgba(168,85,247,0.1);color:var(--purple);border-color:rgba(168,85,247,0.25)}
+.cbadge.new{animation:badgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275)}
+@keyframes badgePop{from{opacity:0;transform:scale(0.6)}to{opacity:1;transform:scale(1)}}
 
-/* CANVAS - IMPROVED GRAPH */
+/* CANVAS */
 .canvas{position:relative;height:220px;background:radial-gradient(ellipse at 10% 90%,rgba(244,63,94,0.07) 0%,transparent 55%),linear-gradient(180deg,#020509 0%,#07090f 100%);overflow:hidden;}
 .canvas::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.018) 1px,transparent 1px);background-size:60px 44px;}
 .csvg{position:absolute;inset:0;width:100%;height:100%}
-.plane-el{position:absolute;pointer-events:none;transition:left 0.085s linear,bottom 0.085s linear;filter:drop-shadow(0 0 8px rgba(245,158,11,0.85)) drop-shadow(0 0 18px rgba(245,158,11,0.35));}
+.plane-el{position:absolute;pointer-events:none;filter:drop-shadow(0 0 8px rgba(245,158,11,0.85)) drop-shadow(0 0 18px rgba(245,158,11,0.35));}
 .plane-el.crashed-anim{animation:crashSpin 0.55s ease forwards;filter:drop-shadow(0 0 10px rgba(244,63,94,0.9))!important}
 @keyframes crashSpin{0%{transform:rotate(0deg) scale(1)}50%{transform:rotate(200deg) scale(1.2)}100%{transform:rotate(380deg) scale(0);opacity:0}}
 .explode-el{position:absolute;pointer-events:none;animation:explode 0.65s ease forwards;font-size:28px;line-height:1;}
@@ -189,17 +200,6 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
 .mult-label.crashed{color:var(--red)}
 .win-flash{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:10;background:var(--green-dim);border:1px solid var(--green-border);border-radius:8px;padding:6px 18px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--green);white-space:nowrap;animation:popIn 0.25s ease}
 @keyframes popIn{from{opacity:0;transform:translateX(-50%) scale(0.85)}to{opacity:1;transform:translateX(-50%) scale(1)}}
-
-/* CRASH HISTORY BAR */
-.cbar{display:flex;align-items:center;gap:5px;padding:8px 16px;border-bottom:1px solid var(--border);overflow-x:auto;min-height:38px;}
-.cbar::-webkit-scrollbar{display:none}
-.cbar-lbl{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);flex-shrink:0;margin-right:4px}
-.cbadge{padding:3px 8px;border-radius:5px;flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;border:1px solid transparent;}
-.cbadge.lo{background:var(--blue-dim);color:var(--blue);border-color:var(--blue-border)}
-.cbadge.mi{background:rgba(100,116,139,0.1);color:#94a3b8;border-color:rgba(100,116,139,0.2)}
-.cbadge.hi{background:rgba(168,85,247,0.1);color:var(--purple);border-color:rgba(168,85,247,0.25)}
-.cbadge.new{animation:badgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275)}
-@keyframes badgePop{from{opacity:0;transform:scale(0.6)}to{opacity:1;transform:scale(1)}}
 
 /* COUNTDOWN RING */
 .cd-outer{display:flex;flex-direction:column;align-items:center;gap:8px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
@@ -434,9 +434,16 @@ const FLOAT_WINS = [
   "FatumA*** cashed ×12.1",
 ];
 
-function PlaneSVG({ size = 36 }) {
+// Plane SVG that tilts upward to follow the curve angle
+function PlaneSVG({ size = 36, angle = -30 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 40 40"
+      fill="none"
+      style={{ transform: `rotate(${angle}deg)`, display: "block" }}
+    >
       <path d="M2 20 L38 8 L30 20 L38 32 Z" fill="#f59e0b" opacity="0.95" />
       <path d="M16 20 L25 15 L25 25 Z" fill="#fff" opacity="0.35" />
       <path d="M30 20 L25 15 L29 20 L25 25 Z" fill="#fbbf24" />
@@ -1065,6 +1072,7 @@ export default function App() {
   const [betAmt, setBetAmt] = useState("50");
   const [autoCO, setAutoCO] = useState("2.00");
   const [planePos, setPlanePos] = useState({ x: 8, y: 18 });
+  const [planeAngle, setPlaneAngle] = useState(-30);
   const [planeCrashed, setPlaneCrashed] = useState(false);
   const [explodePos, setExplodePos] = useState(null);
   const [cd, setCd] = useState(5);
@@ -1081,6 +1089,7 @@ export default function App() {
   const coRef = useRef(false);
   const socketRef = useRef(null);
   const planePosRef = useRef({ x: 8, y: 18 });
+  const prevPosRef = useRef({ x: 8, y: 18 });
 
   useEffect(() => {
     const token = localStorage.getItem("avipesa_token");
@@ -1111,7 +1120,9 @@ export default function App() {
     });
     socket.on("game:waiting", data => {
       gsRef.current = "waiting"; setGs("waiting"); setMult(1); mRef.current = 1;
-      setPlanePos({ x: 8, y: 18 }); planePosRef.current = { x: 8, y: 18 };
+      const startPos = { x: 8, y: 18 };
+      setPlanePos(startPos); planePosRef.current = startPos; prevPosRef.current = startPos;
+      setPlaneAngle(-30);
       setPlaneCrashed(false); setPathPts([]);
       setCashedOut(false); setHasBet(false); betRef.current = false; coRef.current = false;
       setCrashes(data.history || []); setPlayers(data.bets || []);
@@ -1119,21 +1130,39 @@ export default function App() {
     socket.on("game:countdown", data => setCd(data.countdown));
     socket.on("game:flying", data => {
       gsRef.current = "flying"; setGs("flying"); setPlaneCrashed(false);
-      setPathPts([{ x: 8, y: 82 }]); setPlayers(data.bets || []);
+      const startPos = { x: 8, y: 18 };
+      setPathPts([{ x: startPos.x, y: 100 - startPos.y }]);
+      setPlayers(data.bets || []);
     });
     socket.on("game:tick", data => {
       const m = data.multiplier; setMult(m); mRef.current = m;
+      // Exponential growth curve: x grows linearly with log(m), y grows faster
       const elapsed = Math.log(m) / 0.35;
-      const px = Math.min(8 + elapsed * 12, 78);
-      const py = Math.max(82 - elapsed * 14, 6);
-      planePosRef.current = { x: px, y: py }; setPlanePos({ x: px, y: py });
-      setPathPts(p => [...p.slice(-80), { x: px, y: py }]);
+      const px = Math.min(8 + elapsed * 11, 82);
+      const py = Math.min(18 + elapsed * 13, 88);
+
+      // Calculate angle from previous position to current
+      const prev = prevPosRef.current;
+      const dx = px - prev.x;
+      const dy = py - prev.y; // positive dy = moving up in screen coords (y% from bottom)
+      if (dx > 0) {
+        // angle: negative = tilting up-right. dy positive means going up, so negative angle
+        const angleRad = Math.atan2(-dy, dx);
+        const angleDeg = angleRad * (180 / Math.PI);
+        setPlaneAngle(Math.max(-80, Math.min(0, angleDeg)));
+      }
+
+      prevPosRef.current = { x: px, y: py };
+      planePosRef.current = { x: px, y: py };
+      setPlanePos({ x: px, y: py });
+      // pathPts use SVG coords where y=0 is top, so convert: svgY = 100 - py (as percentage)
+      setPathPts(p => [...p.slice(-120), { x: px, y: 100 - py }]);
       setPlayers(data.bets || []);
     });
     socket.on("game:crashed", data => {
       gsRef.current = "crashed"; setGs("crashed"); setPlaneCrashed(true);
       setExplodePos({ ...planePosRef.current }); setTimeout(() => setExplodePos(null), 800);
-      setCrashes(p => [data.multiplier, ...p].slice(0, 12)); setPlayers(data.bets || []);
+      setCrashes(p => [data.multiplier, ...p].slice(0, 14)); setPlayers(data.bets || []);
       if (betRef.current && !coRef.current) {
         toast_(`Crashed ×${data.multiplier.toFixed(2)} — Lost ${fKES(parseFloat(betRef.current))}`, "err");
       }
@@ -1258,23 +1287,29 @@ export default function App() {
   const md = mult.toFixed(2);
   const multClass = () => { const m = parseFloat(md); if (m >= 10) return "hi10"; if (m >= 5) return "hi5"; return ""; };
 
-  // IMPROVED GRAPH: smooth exponential curve using quadratic bezier
+  // Build smooth SVG path through all points
+  // pathPts are stored as { x: percent-from-left, y: percent-from-top }
   const buildPath = () => {
     if (pathPts.length < 2) return { linePath: "", fillPath: "" };
     const W = 420; const H = 280;
-    const toX = p => (p.x / 100) * W;
-    const toY = p => H - (p.y / 100) * H;
-    let d = `M ${toX(pathPts[0])} ${toY(pathPts[0])}`;
+    const toSX = p => (p.x / 100) * W;
+    const toSY = p => (p.y / 100) * H;
+
+    let d = `M ${toSX(pathPts[0])} ${toSY(pathPts[0])}`;
     for (let i = 1; i < pathPts.length; i++) {
       const prev = pathPts[i - 1];
       const cur = pathPts[i];
-      const cpx = (toX(prev) + toX(cur)) / 2;
-      const cpy1 = toY(prev);
-      const cpy2 = toY(cur);
-      d += ` C ${cpx} ${cpy1}, ${cpx} ${cpy2}, ${toX(cur)} ${toY(cur)}`;
+      // Use cubic bezier for smooth curve
+      const cpx1 = toSX(prev) + (toSX(cur) - toSX(prev)) * 0.5;
+      const cpy1 = toSY(prev);
+      const cpx2 = toSX(prev) + (toSX(cur) - toSX(prev)) * 0.5;
+      const cpy2 = toSY(cur);
+      d += ` C ${cpx1} ${cpy1}, ${cpx2} ${cpy2}, ${toSX(cur)} ${toSY(cur)}`;
     }
+
     const last = pathPts[pathPts.length - 1];
-    const fillPath = d + ` L ${toX(last)} ${H} L ${toX(pathPts[0])} ${H} Z`;
+    const first = pathPts[0];
+    const fillPath = d + ` L ${toSX(last)} ${H} L ${toSX(first)} ${H} Z`;
     return { linePath: d, fillPath };
   };
 
@@ -1413,17 +1448,33 @@ export default function App() {
         <div className="layout">
           <div>
             <div className="gcard">
+
+              {/* COMBINED TOP BAR: status + crash history */}
               <div className="gtopbar">
-                <div className="live-ind"><div className="live-dot" />Live Round</div>
+                <div className="live-ind">
+                  <div className="live-dot" />
+                  Live
+                </div>
                 <div className={`rbadge ${gs}`}>
                   {gs === "waiting" ? `Next in ${cd}s` : gs === "crashed" ? "Crashed" : "In Play"}
+                </div>
+                <div className="topbar-sep" />
+                <div className="crashes-inline">
+                  {crashes.map((v, i) => (
+                    <span key={i} className={`cbadge ${cbCls(v)} ${i === 0 ? "new" : ""}`}>
+                      {Number(v).toFixed(2)}×
+                    </span>
+                  ))}
                 </div>
               </div>
 
               {/* CANVAS */}
               <div className="canvas">
                 {explodePos && (
-                  <div className="explode-el" style={{ left: `${explodePos.x}%`, bottom: `${explodePos.y}%` }}>
+                  <div
+                    className="explode-el"
+                    style={{ left: `${explodePos.x}%`, bottom: `${explodePos.y}%` }}
+                  >
                     💥
                   </div>
                 )}
@@ -1431,12 +1482,12 @@ export default function App() {
                 <svg className="csvg" viewBox="0 0 420 280" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="flGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.22" />
-                      <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+                      <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.02" />
                     </linearGradient>
                     <linearGradient id="crGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.18" />
-                      <stop offset="100%" stopColor="#f43f5e" stopOpacity="0" />
+                      <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.22" />
+                      <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.02" />
                     </linearGradient>
                     <filter id="glow">
                       <feGaussianBlur stdDeviation="2.5" result="blur" />
@@ -1444,39 +1495,41 @@ export default function App() {
                     </filter>
                   </defs>
 
-                  {/* flying state: amber smooth curve */}
+                  {/* flying: amber smooth curve going up */}
                   {gs === "flying" && linePath && (
                     <>
                       <path d={fillPath} fill="url(#flGrad)" />
-                      {/* glow layer */}
-                      <path d={linePath} fill="none" stroke="rgba(245,158,11,0.3)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                      {/* main line */}
+                      <path d={linePath} fill="none" stroke="rgba(245,158,11,0.3)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
                       <path d={linePath} fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" filter="url(#glow)" />
                     </>
                   )}
 
-                  {/* crashed state: red smooth curve */}
+                  {/* crashed: red curve */}
                   {gs === "crashed" && linePath && (
                     <>
                       <path d={fillPath} fill="url(#crGrad)" />
-                      <path d={linePath} fill="none" stroke="rgba(244,63,94,0.3)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d={linePath} fill="none" stroke="rgba(244,63,94,0.3)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
                       <path d={linePath} fill="none" stroke="#f43f5e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     </>
                   )}
 
                   {/* axis lines */}
-                  <line x1="33" y1="0" x2="33" y2="270" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-                  <line x1="33" y1="270" x2="420" y2="270" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+                  <line x1="33" y1="0" x2="33" y2="270" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                  <line x1="33" y1="270" x2="420" y2="270" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
                 </svg>
 
                 {gs === "waiting" && <CountdownRing cd={cd} total={5} />}
 
+                {/* PLANE: positioned at tip of curve, tilted to match angle */}
                 {(gs === "flying" || gs === "crashed") && (
                   <div
                     className={`plane-el ${planeCrashed ? "crashed-anim" : ""}`}
-                    style={{ left: `${planePos.x}%`, bottom: `${planePos.y}%` }}
+                    style={{
+                      left: `calc(${planePos.x}% - 20px)`,
+                      bottom: `calc(${planePos.y}% - 20px)`,
+                    }}
                   >
-                    <PlaneSVG size={40} />
+                    <PlaneSVG size={40} angle={planeCrashed ? 90 : planeAngle} />
                   </div>
                 )}
 
@@ -1490,16 +1543,6 @@ export default function App() {
                 )}
 
                 {winBanner && <div className="win-flash">{winBanner}</div>}
-              </div>
-
-              {/* CRASH HISTORY */}
-              <div className="cbar">
-                <span className="cbar-lbl">Recent</span>
-                {crashes.map((v, i) => (
-                  <span key={i} className={`cbadge ${cbCls(v)} ${i === 0 ? "new" : ""}`}>
-                    {Number(v).toFixed(2)}×
-                  </span>
-                ))}
               </div>
 
               <BetPanel
