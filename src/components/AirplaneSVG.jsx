@@ -1,109 +1,265 @@
 export default function AirplaneSVG({ crashed }) {
+  const bodyColor = crashed ? "#ff3355" : "#e8f2ff";
+  const wingColor = crashed ? "#cc2244" : "#b8d4f0";
+  const accentColor = crashed ? "#ff6680" : "#ffffff";
+  const engineColor = crashed ? "#882233" : "#6a8aaa";
+  const glowColor = crashed ? "255,51,85" : "180,210,255";
+  const stripeColor = crashed ? "rgba(255,120,140,0.7)" : "rgba(79,142,247,0.85)";
+
   return (
-    <div style={{
-      position: "relative",
-      width: 72,
-      height: 72,
-      filter: crashed
-        ? "drop-shadow(0 0 12px #ff4d6d) drop-shadow(0 0 24px #ff004466)"
-        : "drop-shadow(0 0 10px #f0b429) drop-shadow(0 0 22px #f0b42988)",
-      transform: crashed ? "rotate(20deg)" : "rotate(-12deg)",
-      transition: "transform 0.3s ease, filter 0.3s ease",
-    }}>
-      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div
+      style={{
+        position: "relative",
+        width: 88,
+        height: 56,
+        filter: crashed
+          ? `drop-shadow(0 0 8px rgba(255,51,85,0.9)) drop-shadow(0 0 20px rgba(255,0,40,0.5))`
+          : `drop-shadow(0 0 6px rgba(180,210,255,0.5)) drop-shadow(0 0 16px rgba(79,142,247,0.3))`,
+        transition: "filter 0.3s ease",
+      }}
+    >
+      <svg
+        width="88"
+        height="56"
+        viewBox="0 0 88 56"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <defs>
-          <linearGradient id="bodyGrad" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor={crashed ? "#ff8fa3" : "#ffffff"} />
-            <stop offset="40%" stopColor={crashed ? "#ff4d6d" : "#e8f4fd"} />
-            <stop offset="100%" stopColor={crashed ? "#c0002a" : "#9ec8e8"} />
+          {/* Fuselage gradient — top-lit */}
+          <linearGradient id="fuseGrad" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+            <stop offset="0%" stopColor={accentColor} stopOpacity="0.95" />
+            <stop offset="38%" stopColor={bodyColor} stopOpacity="1" />
+            <stop offset="100%" stopColor={engineColor} stopOpacity="0.9" />
           </linearGradient>
-          <linearGradient id="wingGrad" x1="0" y1="0" x2="0" y2="30" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor={crashed ? "#ff6b87" : "#d0e8f5"} />
-            <stop offset="100%" stopColor={crashed ? "#aa0020" : "#6aa8cc"} />
+
+          {/* Wing gradient */}
+          <linearGradient id="wingGrad" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+            <stop offset="0%" stopColor={bodyColor} stopOpacity="0.95" />
+            <stop offset="100%" stopColor={engineColor} stopOpacity="0.6" />
           </linearGradient>
-          <linearGradient id="engineGrad" x1="0" y1="0" x2="20" y2="0" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#888" />
-            <stop offset="100%" stopColor="#ccc" />
+
+          {/* Engine pod gradient */}
+          <linearGradient id="engGrad" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+            <stop offset="0%" stopColor="#1a2a3a" />
+            <stop offset="40%" stopColor="#3a5060" />
+            <stop offset="100%" stopColor="#223040" />
           </linearGradient>
-          <radialGradient id="windowGrad" cx="50%" cy="40%" r="60%">
-            <stop offset="0%" stopColor="#a8e4ff" />
-            <stop offset="100%" stopColor="#2b7baa" />
+
+          {/* Cockpit glass */}
+          <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+            <stop offset="0%" stopColor="rgba(160,220,255,0.9)" />
+            <stop offset="100%" stopColor="rgba(40,90,160,0.7)" />
+          </linearGradient>
+
+          {/* Exhaust glow */}
+          <radialGradient id="exhaustGrad" cx="100%" cy="50%" r="100%">
+            <stop offset="0%" stopColor="rgba(255,160,40,0.9)" />
+            <stop offset="50%" stopColor="rgba(255,80,20,0.4)" />
+            <stop offset="100%" stopColor="transparent" />
           </radialGradient>
         </defs>
 
-        {/* Engine nacelle */}
-        <ellipse cx="22" cy="40" rx="10" ry="5" fill="url(#engineGrad)" opacity="0.9" />
-        <ellipse cx="14" cy="40" rx="4" ry="4.5" fill="#555" />
-        <ellipse cx="14" cy="40" rx="2.5" ry="3" fill="#222" />
-        <path d="M11 37.5 Q14 36 17 37.5" stroke="#aaa" strokeWidth="0.8" fill="none" opacity="0.7" />
-
-        {/* Main wing */}
-        <path d="M30 34 L8 48 L14 49 L36 38 Z" fill="url(#wingGrad)" opacity="0.95" />
-        <path d="M30 34 L8 48" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" fill="none" />
-        <path d="M22 43 L30 34" stroke="rgba(0,0,0,0.15)" strokeWidth="0.6" fill="none" />
-
-        {/* Tail horizontal stabilizer */}
-        <path d="M52 30 L44 38 L48 39 L56 32 Z" fill="url(#wingGrad)" opacity="0.9" />
-
-        {/* Tail vertical stabilizer */}
-        <path d="M52 30 L50 22 L55 28 L56 32 Z" fill={crashed ? "#dd2244" : "#b8d8ee"} opacity="0.95" />
-        <path d="M52 30 L50 22" stroke="rgba(255,255,255,0.35)" strokeWidth="0.7" fill="none" />
-
-        {/* Fuselage */}
+        {/* ── MAIN WING — swept, low mounted ── */}
+        {/* Primary wing surface */}
         <path
-          d="M16 36 Q20 28 36 28 Q52 28 60 34 Q64 37 62 40 Q60 43 52 43 Q36 44 20 40 Z"
-          fill="url(#bodyGrad)"
+          d="M42 30 L10 46 L18 47 L46 34 Z"
+          fill="url(#wingGrad)"
+          opacity="0.92"
         />
+        {/* Wing leading edge highlight */}
         <path
-          d="M20 40 Q36 44 52 43 Q58 42 61 40 Q59 44 50 45 Q34 46 18 41 Z"
-          fill="rgba(0,0,0,0.12)"
+          d="M42 30 L10 46"
+          stroke={`rgba(${glowColor},0.45)`}
+          strokeWidth="0.7"
+          fill="none"
         />
+        {/* Wing fold crease */}
         <path
-          d="M22 30 Q36 27 52 29 Q58 30 61 33 Q56 29 36 29 Q22 29 18 33 Z"
-          fill="rgba(255,255,255,0.35)"
+          d="M28 39 L42 30"
+          stroke="rgba(0,0,0,0.2)"
+          strokeWidth="0.5"
+          fill="none"
         />
 
-        {/* Nose cone */}
-        <path d="M60 34 Q68 36 67 38 Q66 40 60 40 L62 37 Z" fill={crashed ? "#ff8fa3" : "#e0f0ff"} />
-        <path d="M60 34 Q68 36 67 38" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" fill="none" />
+        {/* ── HORIZONTAL STABILIZER ── */}
+        <path
+          d="M66 24 L56 32 L60 33 L70 27 Z"
+          fill="url(#wingGrad)"
+          opacity="0.85"
+        />
+        <path
+          d="M66 24 L56 32"
+          stroke={`rgba(${glowColor},0.3)`}
+          strokeWidth="0.5"
+          fill="none"
+        />
 
-        {/* Windows */}
-        {[38, 44, 50, 56].map((wx, i) => (
+        {/* ── VERTICAL STABILIZER / FIN ── */}
+        <path
+          d="M67 24 L64 14 L70 20 L70 27 Z"
+          fill={crashed ? "#cc2244" : "#c8dff0"}
+          opacity="0.9"
+        />
+        {/* Fin leading edge */}
+        <path
+          d="M67 24 L64 14"
+          stroke={accentColor}
+          strokeWidth="0.6"
+          strokeOpacity="0.5"
+          fill="none"
+        />
+
+        {/* ── ENGINE NACELLE — rear-mounted, low ── */}
+        {/* Pod body */}
+        <path
+          d="M30 34 Q26 30 24 32 Q22 34 24 37 Q26 40 30 38 Z"
+          fill="url(#engGrad)"
+          opacity="0.95"
+        />
+        {/* Intake lip */}
+        <ellipse cx="24.5" cy="34.5" rx="2.2" ry="3.2" fill="#111820" />
+        <ellipse cx="24.5" cy="34.5" rx="1.3" ry="2" fill="#050c14" />
+        {/* Fan face shimmer */}
+        <path
+          d="M22.5 32.8 Q24.5 31.8 26.5 32.8"
+          stroke="rgba(120,160,200,0.4)"
+          strokeWidth="0.6"
+          fill="none"
+        />
+        {/* Nozzle */}
+        <path
+          d="M30 34 Q32 35 30 38"
+          stroke="rgba(80,100,120,0.8)"
+          strokeWidth="1"
+          fill="none"
+        />
+
+        {/* ── FUSELAGE ── */}
+        {/* Main body — cigar shaped, flat bottom */}
+        <path
+          d="M18 30
+             Q22 24 36 23
+             Q52 22 64 26
+             Q72 28 76 31
+             Q80 33 78 35
+             Q76 37 70 38
+             Q52 40 32 38
+             Q22 36 18 33 Z"
+          fill="url(#fuseGrad)"
+        />
+
+        {/* Underside shadow */}
+        <path
+          d="M20 33
+             Q36 38 60 37
+             Q68 36 73 34
+             Q70 38 60 39
+             Q36 41 20 36 Z"
+          fill="rgba(0,0,0,0.18)"
+        />
+
+        {/* Upper fuselage highlight */}
+        <path
+          d="M22 26
+             Q40 23 62 25
+             Q70 26 75 29
+             Q68 25 54 24
+             Q36 23 22 27 Z"
+          fill="rgba(255,255,255,0.22)"
+        />
+
+        {/* ── NOSE — sharply tapered ── */}
+        <path
+          d="M76 31
+             Q82 31.5 86 33
+             Q85 35 82 35.5
+             Q80 35.5 78 35 Z"
+          fill={crashed ? "#ff8899" : "#deeeff"}
+        />
+        {/* Nose tip */}
+        <path
+          d="M84 33 Q86 33 86 33"
+          stroke={accentColor}
+          strokeWidth="0.5"
+          strokeOpacity="0.6"
+          fill="none"
+        />
+
+        {/* ── COCKPIT WINDSHIELD ── */}
+        <path
+          d="M70 27 Q74 26 78 29 Q76 27 72 27 Z"
+          fill="url(#glassGrad)"
+          opacity="0.85"
+        />
+        {/* Glass glint */}
+        <path
+          d="M71 27 Q74 26.2 77 28"
+          stroke="rgba(255,255,255,0.55)"
+          strokeWidth="0.5"
+          fill="none"
+        />
+
+        {/* ── CABIN WINDOWS ── */}
+        {[52, 58, 64].map((wx, i) => (
           <g key={i}>
-            <ellipse cx={wx} cy="34.5" rx="2.2" ry="2.8" fill="url(#windowGrad)" opacity="0.9" />
-            <ellipse cx={wx - 0.5} cy="33.5" rx="0.8" ry="0.9" fill="rgba(255,255,255,0.6)" />
+            <rect
+              x={wx - 2}
+              y="27"
+              width="4.2"
+              height="5.5"
+              rx="1.3"
+              fill="rgba(30,70,130,0.85)"
+            />
+            <rect
+              x={wx - 1}
+              y="27.5"
+              width="1.5"
+              height="2"
+              rx="0.5"
+              fill="rgba(180,230,255,0.55)"
+            />
           </g>
         ))}
 
-        {/* Cockpit windshield */}
-        <path d="M58 32 Q62 33 64 36 Q62 34 57 34 Z" fill="rgba(160,220,255,0.7)" />
-        <path d="M58 32 Q62 33 64 36" stroke="rgba(255,255,255,0.5)" strokeWidth="0.6" fill="none" />
-
-        {/* Airline stripe */}
+        {/* ── AIRLINE STRIPE ── */}
         <path
-          d="M20 39.5 Q36 41 52 40.5 Q56 40 58 39"
-          stroke={crashed ? "rgba(255,100,120,0.6)" : "rgba(240,180,41,0.7)"}
-          strokeWidth="1.8"
+          d="M22 36.5 Q44 39 68 37.5 Q72 37 74 36"
+          stroke={stripeColor}
+          strokeWidth="1.4"
+          fill="none"
+          strokeLinecap="round"
+        />
+        {/* Second thin accent stripe */}
+        <path
+          d="M22 34.8 Q44 37 68 35.8 Q72 35.2 74 34.4"
+          stroke={stripeColor}
+          strokeWidth="0.5"
+          strokeOpacity="0.45"
           fill="none"
           strokeLinecap="round"
         />
 
-        {/* Engine exhaust glow when flying */}
+        {/* ── LANDING GEAR FAIRING (subtle bump) ── */}
+        <ellipse cx="38" cy="39" rx="4" ry="1.5" fill="rgba(0,0,0,0.22)" />
+
+        {/* ── EXHAUST GLOW when flying ── */}
         {!crashed && (
-          <>
-            <ellipse cx="12" cy="40" rx="3" ry="2.5" fill="#f0b429" opacity="0.35" />
-            <ellipse cx="10" cy="40" rx="2" ry="1.8" fill="#fff" opacity="0.2" />
-          </>
+          <g>
+            <ellipse cx="29" cy="36" rx="2.5" ry="1.8" fill="rgba(255,160,40,0.5)" />
+            <ellipse cx="27" cy="36" rx="1.5" ry="1.2" fill="rgba(255,220,120,0.4)" />
+          </g>
         )}
 
-        {/* Crash sparks */}
+        {/* ── CRASH SPARKS ── */}
         {crashed && (
-          <g opacity="0.85">
-            <line x1="60" y1="32" x2="66" y2="26" stroke="#ffdd44" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="62" y1="35" x2="69" y2="32" stroke="#ff8844" strokeWidth="1.2" strokeLinecap="round" />
-            <line x1="61" y1="38" x2="68" y2="40" stroke="#ff4444" strokeWidth="1" strokeLinecap="round" />
-            <circle cx="66" cy="26" r="1.5" fill="#ffee00" />
-            <circle cx="69" cy="32" r="1" fill="#ffaa00" />
+          <g>
+            <line x1="78" y1="29" x2="85" y2="22" stroke="#ffdd44" strokeWidth="1.4" strokeLinecap="round" />
+            <line x1="80" y1="32" x2="88" y2="28" stroke="#ff9933" strokeWidth="1.1" strokeLinecap="round" />
+            <line x1="79" y1="36" x2="87" y2="39" stroke="#ff5533" strokeWidth="0.9" strokeLinecap="round" />
+            <circle cx="85" cy="22" r="1.6" fill="#ffee44" />
+            <circle cx="88" cy="28" r="1.1" fill="#ffaa22" />
+            <circle cx="87" cy="39" r="0.9" fill="#ff6644" />
           </g>
         )}
       </svg>
