@@ -6,7 +6,8 @@ import {
   TrendingUp, DollarSign, Award, Sun, Moon,
   MessageSquare, Users, User, Lock,
   Target, Percent, Activity, Send, Check,
-  ArrowUpCircle, ArrowDownCircle, RefreshCw
+  ArrowUpCircle, ArrowDownCircle, RefreshCw,
+  Volume2, VolumeX, RotateCcw, ShieldCheck
 } from "lucide-react";
 
 (() => {
@@ -212,6 +213,10 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
 
 /* BET PANEL */
 .bpanel{padding:14px 16px 18px}
+.bpanel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.bpanel-title{font-size:13px;font-weight:700;color:var(--text2);letter-spacing:0.3px;}
+.dual-toggle-row{display:flex;align-items:center;gap:8px;}
+.dual-lbl{font-size:11px;font-weight:600;color:var(--text2);}
 .bptabs{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:16px;gap:3px}
 .bptab{flex:1;padding:8px;border-radius:7px;border:none;background:transparent;color:var(--text2);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s}
 .bptab.on{background:var(--card2);color:var(--text);}
@@ -244,6 +249,35 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
 .toggle input:checked~.toggle-thumb{left:21px}
 .aco-input{width:64px;background:var(--surface);border:1px solid var(--border-md);border-radius:7px;padding:5px 8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;text-align:center;outline:none;transition:border-color 0.15s}
 .aco-input:focus{border-color:var(--blue)}
+
+/* DUAL BET PANELS */
+.dual-panels{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--border);}
+.dual-panel-wrap{border-right:1px solid var(--border);}
+.dual-panel-wrap:last-child{border-right:none;}
+.dual-panel-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);padding:8px 16px 0;display:flex;align-items:center;gap:6px;}
+.dual-panel-label .dot{width:6px;height:6px;border-radius:50%;background:var(--blue);}
+.dual-panel-label .dot.p2{background:var(--amber);}
+
+/* SPACEBAR HINT */
+.space-hint{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--text3);margin-top:-8px;margin-bottom:10px;user-select:none;}
+.space-key{display:inline-block;background:var(--surface);border:1px solid var(--border-md);border-radius:4px;padding:1px 8px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text2);}
+
+/* REPEAT BTN */
+.repeat-btn{display:flex;align-items:center;gap:4px;padding:6px 10px;background:var(--surface);border:1px solid var(--border-md);border-radius:6px;color:var(--text2);font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.12s;white-space:nowrap;}
+.repeat-btn:hover:not(:disabled){border-color:var(--border-strong);color:var(--text)}
+.repeat-btn:disabled{opacity:0.3;cursor:not-allowed}
+.qgrid-with-repeat{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.qgrid-inner{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+
+/* PROVABLY FAIR BAR */
+.pf-bar{border-top:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.pf-label{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);flex-shrink:0;}
+.pf-hash{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.pf-toggle{font-size:10px;font-weight:700;color:var(--blue);background:none;border:none;cursor:pointer;flex-shrink:0;padding:2px 6px;border-radius:4px;display:flex;align-items:center;gap:4px;}
+.pf-toggle:hover{background:var(--blue-dim);}
+.pf-expanded{background:var(--surface);border-top:1px solid var(--border);padding:12px 16px;}
+.pf-expanded-hash{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);word-break:break-all;line-height:1.7;margin-bottom:8px;}
+.round-id-badge{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--text3);background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:2px 7px;flex-shrink:0;}
 
 /* PLAYERS / SIDEBAR */
 .rcol{display:none;flex-direction:column;gap:10px}
@@ -372,6 +406,27 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
 .fnotif{background:var(--green-dim);border:1px solid var(--green-border);border-radius:10px;padding:8px 12px;font-size:12px;font-weight:600;color:var(--green);animation:floatUp 4s ease forwards;}
 @keyframes floatUp{0%{opacity:0;transform:translateY(16px)}10%{opacity:1;transform:translateY(0)}80%{opacity:1;transform:translateY(-8px)}100%{opacity:0;transform:translateY(-24px)}}
 
+/* BIG WIN OVERLAY */
+.bigwin-overlay{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px);pointer-events:none;animation:bwIn 0.3s ease;}
+@keyframes bwIn{from{opacity:0}to{opacity:1}}
+.bigwin-box{text-align:center;animation:bwPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275);}
+@keyframes bwPop{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+.bigwin-emoji{font-size:48px;line-height:1;margin-bottom:8px;animation:bwSpin 0.5s ease}
+@keyframes bwSpin{from{transform:rotate(-20deg) scale(0.7)}to{transform:rotate(0deg) scale(1)}}
+.bigwin-mult{font-family:'JetBrains Mono',monospace;font-size:52px;font-weight:700;color:var(--purple);text-shadow:0 0 40px rgba(168,85,247,0.9),0 0 80px rgba(168,85,247,0.4);line-height:1;animation:bigPulse 0.3s ease infinite;}
+.bigwin-name{font-size:14px;font-weight:700;color:var(--text2);margin-top:6px;letter-spacing:0.5px;}
+.bigwin-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(168,85,247,0.7);margin-top:4px;}
+.confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall 2s ease forwards;}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(120px) rotate(720deg)}}
+
+/* PROVABLY FAIR MODAL */
+.pf-modal-body{padding:20px 20px 32px}
+.pf-step{display:flex;gap:12px;margin-bottom:16px;align-items:flex-start;}
+.pf-step-num{width:24px;height:24px;border-radius:50%;background:var(--blue-dim);border:1px solid var(--blue-border);color:var(--blue);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.pf-step-text{font-size:13px;color:var(--text2);line-height:1.6;}
+.pf-step-text strong{color:var(--text);}
+.pf-code{background:var(--surface);border:1px solid var(--border-md);border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);word-break:break-all;margin-top:8px;line-height:1.7;}
+
 /* SPLASH */
 .splash{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;}
 .splash-logo{font-size:26px;font-weight:800;letter-spacing:-0.5px}
@@ -434,16 +489,210 @@ const FLOAT_WINS = [
   "FatumA*** cashed ×12.1",
 ];
 
-// Plane SVG that tilts upward to follow the curve angle
+// ─── SOUND ENGINE ───────────────────────────────────────────────────────────
+function useSoundEngine() {
+  const ctxRef = useRef(null);
+  const humRef = useRef(null);
+  const gainRef = useRef(null);
+  const soundOnRef = useRef(true);
+
+  const getCtx = useCallback(() => {
+    if (!ctxRef.current) {
+      try { ctxRef.current = new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; }
+    }
+    return ctxRef.current;
+  }, []);
+
+  const startHum = useCallback((mult = 1) => {
+    if (!soundOnRef.current) return;
+    const ctx = getCtx(); if (!ctx) return;
+    try {
+      if (humRef.current) { try { humRef.current.stop(); } catch {} }
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(80 + mult * 20, ctx.currentTime);
+      gain.gain.setValueAtTime(0.04, ctx.currentTime);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start();
+      humRef.current = osc; gainRef.current = gain;
+    } catch {}
+  }, [getCtx]);
+
+  const updateHum = useCallback((mult) => {
+    if (!humRef.current || !soundOnRef.current) return;
+    const ctx = getCtx(); if (!ctx) return;
+    try {
+      const freq = Math.min(80 + mult * 22, 420);
+      humRef.current.frequency.setTargetAtTime(freq, ctx.currentTime, 0.3);
+    } catch {}
+  }, [getCtx]);
+
+  const stopHum = useCallback(() => {
+    if (!humRef.current) return;
+    try { humRef.current.stop(); } catch {}
+    humRef.current = null;
+  }, []);
+
+  const playCashout = useCallback(() => {
+    if (!soundOnRef.current) return;
+    const ctx = getCtx(); if (!ctx) return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(520, ctx.currentTime);
+      osc.frequency.setTargetAtTime(880, ctx.currentTime, 0.05);
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.setTargetAtTime(0, ctx.currentTime + 0.3, 0.1);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(); osc.stop(ctx.currentTime + 0.5);
+    } catch {}
+  }, [getCtx]);
+
+  const playCrash = useCallback(() => {
+    if (!soundOnRef.current) return;
+    const ctx = getCtx(); if (!ctx) return;
+    try {
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.5, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2);
+      const src = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      const filt = ctx.createBiquadFilter();
+      filt.type = "lowpass"; filt.frequency.value = 280;
+      src.buffer = buf;
+      gain.gain.setValueAtTime(0.35, ctx.currentTime);
+      gain.gain.setTargetAtTime(0, ctx.currentTime + 0.1, 0.15);
+      src.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+      src.start();
+    } catch {}
+  }, [getCtx]);
+
+  const setSoundOn = useCallback((val) => { soundOnRef.current = val; if (!val) stopHum(); }, [stopHum]);
+
+  return { startHum, updateHum, stopHum, playCashout, playCrash, setSoundOn };
+}
+
+// ─── ANIMATED BALANCE ───────────────────────────────────────────────────────
+function useAnimatedBalance(target) {
+  const [display, setDisplay] = useState(target);
+  const prevRef = useRef(target);
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    const from = prevRef.current;
+    const to = target;
+    if (from === to) return;
+    const start = performance.now();
+    const dur = 800;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    const step = (now) => {
+      const t = Math.min((now - start) / dur, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      setDisplay(from + (to - from) * ease);
+      if (t < 1) rafRef.current = requestAnimationFrame(step);
+      else { setDisplay(to); prevRef.current = to; }
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [target]);
+
+  return display;
+}
+
+function AnimatedBalance({ value }) {
+  const disp = useAnimatedBalance(value);
+  return <span>{fKES(disp)}</span>;
+}
+
+// ─── CONFETTI ───────────────────────────────────────────────────────────────
+function Confetti() {
+  const pieces = Array.from({ length: 18 }, (_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 40}%`,
+    bg: ["#f59e0b","#a855f7","#22c55e","#3b82f6","#f43f5e"][i % 5],
+    delay: `${Math.random() * 0.6}s`,
+    size: `${6 + Math.random() * 6}px`,
+  }));
+  return (
+    <>
+      {pieces.map(p => (
+        <div key={p.id} className="confetti-piece" style={{
+          left: p.left, top: p.top, background: p.bg,
+          width: p.size, height: p.size, animationDelay: p.delay, position: "absolute",
+        }} />
+      ))}
+    </>
+  );
+}
+
+// ─── BIG WIN OVERLAY ─────────────────────────────────────────────────────────
+function BigWinOverlay({ player, mult }) {
+  return (
+    <div className="bigwin-overlay">
+      <Confetti />
+      <div className="bigwin-box">
+        <div className="bigwin-emoji">🚀</div>
+        <div className="bigwin-mult">{Number(mult).toFixed(2)}×</div>
+        <div className="bigwin-name">{player}</div>
+        <div className="bigwin-label">Mega Win!</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PROVABLY FAIR MODAL ─────────────────────────────────────────────────────
+function ProvablyFairModal({ onClose, hash, roundId }) {
+  return (
+    <div className="overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal">
+        <div className="modal-drag" />
+        <div className="mhead">
+          <div>
+            <div className="mtitle">Provably Fair</div>
+            <div className="msub">Verify round #{String(roundId).padStart(5, "0")}</div>
+          </div>
+          <button className="mclose" onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="pf-modal-body">
+          <div className="pf-step">
+            <div className="pf-step-num">1</div>
+            <div className="pf-step-text">
+              <strong>Server Seed Hash</strong> — Before each round, our server commits to a seed by publishing its SHA-256 hash.
+              <div className="pf-code">{hash || "Awaiting next round hash..."}</div>
+            </div>
+          </div>
+          <div className="pf-step">
+            <div className="pf-step-num">2</div>
+            <div className="pf-step-text">
+              <strong>After the round</strong>, the server reveals the full seed. You can verify by hashing it yourself with SHA-256 and comparing to the published hash above.
+            </div>
+          </div>
+          <div className="pf-step">
+            <div className="pf-step-num">3</div>
+            <div className="pf-step-text">
+              <strong>Crash point</strong> is derived deterministically from the seed using HMAC-SHA256. This means the crash point was fixed before any bets were placed and cannot be manipulated.
+            </div>
+          </div>
+          <div className="pf-step">
+            <div className="pf-step-num">4</div>
+            <div className="pf-step-text">
+              Use any online SHA-256 tool or run <strong>echo -n "YOUR_SEED" | sha256sum</strong> in a terminal to verify.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PLANE SVG ───────────────────────────────────────────────────────────────
 function PlaneSVG({ size = 36, angle = -30 }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 40 40"
-      fill="none"
-      style={{ transform: `rotate(${angle}deg)`, display: "block" }}
-    >
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none"
+      style={{ transform: `rotate(${angle}deg)`, display: "block" }}>
       <path d="M2 20 L38 8 L30 20 L38 32 Z" fill="#f59e0b" opacity="0.95" />
       <path d="M16 20 L25 15 L25 25 Z" fill="#fff" opacity="0.35" />
       <path d="M30 20 L25 15 L29 20 L25 25 Z" fill="#fbbf24" />
@@ -466,12 +715,9 @@ function PhoneInput({ value, onChange }) {
   return (
     <div className="phone-wrap">
       <div className="phone-flag">🇰🇪 +254</div>
-      <input
-        className="phone-input"
-        placeholder="7XX XXX XXX"
+      <input className="phone-input" placeholder="7XX XXX XXX"
         value={value.replace(/^254/, "")}
-        onChange={e => onChange("254" + e.target.value.replace(/^0/, "").replace(/\D/g, ""))}
-      />
+        onChange={e => onChange("254" + e.target.value.replace(/^0/, "").replace(/\D/g, ""))} />
     </div>
   );
 }
@@ -480,14 +726,8 @@ function PwInput({ placeholder, value, onChange, onKeyDown }) {
   const [show, setShow] = useState(false);
   return (
     <div className="pw-wrap">
-      <input
-        className="finput"
-        type={show ? "text" : "password"}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        onKeyDown={onKeyDown}
-      />
+      <input className="finput" type={show ? "text" : "password"} placeholder={placeholder}
+        value={value} onChange={onChange} onKeyDown={onKeyDown} />
       <button className="pw-eye" onClick={() => setShow(s => !s)} type="button">
         {show ? <EyeOff size={16} /> : <Eye size={16} />}
       </button>
@@ -506,52 +746,33 @@ function LoginModal({ onClose, onLogin, goRegister }) {
     setLoading(true); setErr("");
     try {
       const res = await fetch(`${API}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone, password: pass }),
       });
       const data = await res.json();
       if (!res.ok) { setErr(data.error || "Login failed"); setLoading(false); return; }
       localStorage.setItem("avipesa_token", data.token);
-      onLogin(data.user);
-      onClose();
-    } catch {
-      setErr("Network error. Please try again.");
-      setLoading(false);
-    }
+      onLogin(data.user); onClose();
+    } catch { setErr("Network error. Please try again."); setLoading(false); }
   };
 
   return (
     <Modal onClose={onClose}>
       <div className="mhead">
-        <div>
-          <div className="mtitle">Welcome back</div>
-          <div className="msub">Sign in with your registered phone number</div>
-        </div>
+        <div><div className="mtitle">Welcome back</div><div className="msub">Sign in with your registered phone number</div></div>
         <button className="mclose" onClick={onClose}><X size={16} /></button>
       </div>
       <div className="mbody">
         {err && <div className="ferr">{err}</div>}
-        <div className="fg">
-          <label className="flbl">M-Pesa Number</label>
-          <PhoneInput value={phone} onChange={setPhone} />
-        </div>
+        <div className="fg"><label className="flbl">M-Pesa Number</label><PhoneInput value={phone} onChange={setPhone} /></div>
         <div className="fg">
           <label className="flbl">Password</label>
-          <PwInput
-            placeholder="••••••••"
-            value={pass}
-            onChange={e => setPass(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && submit()}
-          />
+          <PwInput placeholder="••••••••" value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} />
         </div>
         <button className="btn-form" onClick={submit} disabled={loading} style={{ marginTop: 4 }}>
           {loading ? "Signing in..." : "Sign In"}
         </button>
-        <div className="ffoot">
-          No account?{" "}
-          <button className="flink" onClick={() => { onClose(); goRegister(); }}>Create one free</button>
-        </div>
+        <div className="ffoot">No account?{" "}<button className="flink" onClick={() => { onClose(); goRegister(); }}>Create one free</button></div>
       </div>
     </Modal>
   );
@@ -581,28 +802,20 @@ function RegisterModal({ onClose, onLogin, goLogin }) {
     setLoading(true); setErr("");
     try {
       const res = await fetch(`${API}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firstName: f.fn, lastName: f.ln, phone: f.phone, password: f.pass }),
       });
       const data = await res.json();
       if (!res.ok) { setErr(data.error || "Registration failed"); setLoading(false); return; }
       localStorage.setItem("avipesa_token", data.token);
-      onLogin(data.user);
-      onClose();
-    } catch {
-      setErr("Network error. Please try again.");
-      setLoading(false);
-    }
+      onLogin(data.user); onClose();
+    } catch { setErr("Network error. Please try again."); setLoading(false); }
   };
 
   return (
     <Modal onClose={onClose}>
       <div className="mhead">
-        <div>
-          <div className="mtitle">Create Account</div>
-          <div className="msub">Join thousands of AviPesa players</div>
-        </div>
+        <div><div className="mtitle">Create Account</div><div className="msub">Join thousands of AviPesa players</div></div>
         <button className="mclose" onClick={onClose}><X size={16} /></button>
       </div>
       <div className="mbody">
@@ -610,22 +823,14 @@ function RegisterModal({ onClose, onLogin, goLogin }) {
         <div className="frow">
           <div className="fg">
             <label className="flbl">First Name</label>
-            <input
-              className={`finput ${errs.fn ? "err-field" : ""}`}
-              placeholder="John"
-              value={f.fn}
-              onChange={e => { set("fn")(e.target.value); setErrs(p => ({ ...p, fn: "" })); }}
-            />
+            <input className={`finput ${errs.fn ? "err-field" : ""}`} placeholder="John"
+              value={f.fn} onChange={e => { set("fn")(e.target.value); setErrs(p => ({ ...p, fn: "" })); }} />
             {errs.fn && <div className="ferr-inline">{errs.fn}</div>}
           </div>
           <div className="fg">
             <label className="flbl">Last Name</label>
-            <input
-              className={`finput ${errs.ln ? "err-field" : ""}`}
-              placeholder="Kamau"
-              value={f.ln}
-              onChange={e => { set("ln")(e.target.value); setErrs(p => ({ ...p, ln: "" })); }}
-            />
+            <input className={`finput ${errs.ln ? "err-field" : ""}`} placeholder="Kamau"
+              value={f.ln} onChange={e => { set("ln")(e.target.value); setErrs(p => ({ ...p, ln: "" })); }} />
             {errs.ln && <div className="ferr-inline">{errs.ln}</div>}
           </div>
         </div>
@@ -637,20 +842,14 @@ function RegisterModal({ onClose, onLogin, goLogin }) {
         <div className="frow">
           <div className="fg">
             <label className="flbl">Password</label>
-            <PwInput
-              placeholder="Min 6 chars"
-              value={f.pass}
-              onChange={e => { set("pass")(e.target.value); setErrs(p => ({ ...p, pass: "" })); }}
-            />
+            <PwInput placeholder="Min 6 chars" value={f.pass}
+              onChange={e => { set("pass")(e.target.value); setErrs(p => ({ ...p, pass: "" })); }} />
             {errs.pass && <div className="ferr-inline">{errs.pass}</div>}
           </div>
           <div className="fg">
             <label className="flbl">Confirm</label>
-            <PwInput
-              placeholder="Repeat"
-              value={f.confirm}
-              onChange={e => { set("confirm")(e.target.value); setErrs(p => ({ ...p, confirm: "" })); }}
-            />
+            <PwInput placeholder="Repeat" value={f.confirm}
+              onChange={e => { set("confirm")(e.target.value); setErrs(p => ({ ...p, confirm: "" })); }} />
             {errs.confirm && <div className="ferr-inline">{errs.confirm}</div>}
           </div>
         </div>
@@ -661,10 +860,7 @@ function RegisterModal({ onClose, onLogin, goLogin }) {
         <button className="btn-form" onClick={submit} disabled={loading}>
           {loading ? "Creating account..." : "Create Account"}
         </button>
-        <div className="ffoot">
-          Have an account?{" "}
-          <button className="flink" onClick={() => { onClose(); goLogin(); }}>Sign in</button>
-        </div>
+        <div className="ffoot">Have an account?{" "}<button className="flink" onClick={() => { onClose(); goLogin(); }}>Sign in</button></div>
       </div>
     </Modal>
   );
@@ -692,38 +888,23 @@ function DepositModal({ onClose, onDeposit }) {
       if (!res.ok) { setErr(data.error || "Deposit failed"); setLoading(false); return; }
       setStep(1);
       setTimeout(() => { onDeposit(data.balance, amt); onClose(); }, 3000);
-    } catch {
-      setErr("Network error.");
-      setLoading(false);
-    }
+    } catch { setErr("Network error."); setLoading(false); }
   };
 
   return (
     <Modal onClose={step === 0 ? onClose : () => {}}>
       <div className="mhead">
-        <div>
-          <div className="mtitle">Deposit via M-Pesa</div>
-          <div className="msub">Instant STK push · Safaricom</div>
-        </div>
+        <div><div className="mtitle">Deposit via M-Pesa</div><div className="msub">Instant STK push · Safaricom</div></div>
         {step === 0 && <button className="mclose" onClick={onClose}><X size={16} /></button>}
       </div>
       <div className="mbody">
         {step === 0 ? (
           <>
             {err && <div className="ferr">{err}</div>}
-            <div className="fg">
-              <label className="flbl">M-Pesa Number</label>
-              <PhoneInput value={phone} onChange={setPhone} />
-            </div>
+            <div className="fg"><label className="flbl">M-Pesa Number</label><PhoneInput value={phone} onChange={setPhone} /></div>
             <div className="fg">
               <label className="flbl">Amount (KES)</label>
-              <input
-                className="finput"
-                type="number"
-                placeholder="Minimum KES 10"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-              />
+              <input className="finput" type="number" placeholder="Minimum KES 10" value={amount} onChange={e => setAmount(e.target.value)} />
               <div className="presets">
                 {[50, 100, 500, 1000, 2000, 5000].map(v => (
                   <button key={v} className="preset" onClick={() => setAmount(String(v))}>{v}</button>
@@ -777,40 +958,24 @@ function WithdrawModal({ onClose, balance, onWithdraw }) {
       });
       const data = await res.json();
       if (!res.ok) { setErr(data.error || "Withdrawal failed"); setLoading(false); setStep(0); return; }
-      onWithdraw(data.balance, amt);
-      onClose();
-    } catch {
-      setErr("Network error.");
-      setLoading(false); setStep(0);
-    }
+      onWithdraw(data.balance, amt); onClose();
+    } catch { setErr("Network error."); setLoading(false); setStep(0); }
   };
 
   return (
     <Modal onClose={step === 0 ? onClose : () => {}}>
       <div className="mhead">
-        <div>
-          <div className="mtitle">Withdraw Funds</div>
-          <div className="msub">Send to M-Pesa · approx. 2 minutes</div>
-        </div>
+        <div><div className="mtitle">Withdraw Funds</div><div className="msub">Send to M-Pesa · approx. 2 minutes</div></div>
         {step === 0 && <button className="mclose" onClick={onClose}><X size={16} /></button>}
       </div>
       <div className="mbody">
         {step === 0 ? (
           <>
             {err && <div className="ferr">{err}</div>}
-            <div className="fg">
-              <label className="flbl">M-Pesa Number</label>
-              <PhoneInput value={phone} onChange={setPhone} />
-            </div>
+            <div className="fg"><label className="flbl">M-Pesa Number</label><PhoneInput value={phone} onChange={setPhone} /></div>
             <div className="fg">
               <label className="flbl">Amount (KES)</label>
-              <input
-                className="finput"
-                type="number"
-                placeholder="Min KES 100"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-              />
+              <input className="finput" type="number" placeholder="Min KES 100" value={amount} onChange={e => setAmount(e.target.value)} />
               <div className="presets">
                 {[100, 500, 1000, 2000, 5000].map(v => (
                   <button key={v} className="preset" onClick={() => setAmount(String(v))} disabled={v > balance}>{v}</button>
@@ -836,8 +1001,7 @@ function WithdrawModal({ onClose, balance, onWithdraw }) {
                 <span style={{ fontFamily: "monospace" }}>+{phone}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 10 }}>
-                <span style={{ color: "var(--text2)" }}>Amount</span>
-                <span>{fKES(amt)}</span>
+                <span style={{ color: "var(--text2)" }}>Amount</span><span>{fKES(amt)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, borderTop: "1px solid var(--border)", paddingTop: 10, fontWeight: 700 }}>
                 <span style={{ color: "var(--text2)" }}>You receive</span>
@@ -847,9 +1011,7 @@ function WithdrawModal({ onClose, balance, onWithdraw }) {
             <button className="btn-mpesa-full" style={{ background: "var(--amber)", color: "#000", marginBottom: 10 }} onClick={confirm}>
               <Check size={18} /> Confirm Withdrawal
             </button>
-            <button className="btn-ghost" style={{ width: "100%", textAlign: "center" }} onClick={() => setStep(0)}>
-              Edit Details
-            </button>
+            <button className="btn-ghost" style={{ width: "100%", textAlign: "center" }} onClick={() => setStep(0)}>Edit Details</button>
           </>
         )}
       </div>
@@ -879,8 +1041,7 @@ function CountdownRing({ cd, total = 5 }) {
       <div className="cd-ring">
         <svg width="72" height="72" viewBox="0 0 72 72">
           <circle className="cd-track" cx="36" cy="36" r={r} />
-          <circle className="cd-fill" cx="36" cy="36" r={r}
-            strokeDasharray={circ} strokeDashoffset={offset} />
+          <circle className="cd-fill" cx="36" cy="36" r={r} strokeDasharray={circ} strokeDashoffset={offset} />
         </svg>
         <div className="cd-val">{cd}</div>
       </div>
@@ -889,7 +1050,9 @@ function CountdownRing({ cd, total = 5 }) {
   );
 }
 
-function BetPanel({ gs, user, hasBet, cashedOut, betAmt, setBetAmt, autoCO, setAutoCO, onBet, onCashout, onLogin, md }) {
+// ─── SINGLE BET PANEL (shared component) ────────────────────────────────────
+function SingleBetPanel({ gs, user, hasBet, cashedOut, betAmt, setBetAmt, autoCO, setAutoCO,
+  onBet, onCashout, onLogin, md, lastBetRef, compact = false }) {
   const [bpTab, setBpTab] = useState("bet");
   const [autoCOOn, setAutoCOOn] = useState(false);
   const amt = parseFloat(betAmt) || 0;
@@ -901,14 +1064,10 @@ function BetPanel({ gs, user, hasBet, cashedOut, betAmt, setBetAmt, autoCO, setA
 
   const BigBtn = () => {
     if (!user) return (
-      <button className="bet-cta login-btn" onClick={onLogin}>
-        <Lock size={16} /> Sign In to Play
-      </button>
+      <button className="bet-cta login-btn" onClick={onLogin}><Lock size={16} /> Sign In to Play</button>
     );
     if (gs === "flying" && hasBet && !cashedOut) return (
-      <button className="bet-cta cashout" onClick={onCashout}>
-        Cash Out  ×{md}
-      </button>
+      <button className="bet-cta cashout" onClick={onCashout}>Cash Out ×{md}</button>
     );
     if (gs === "waiting") return (
       <button className="bet-cta place" onClick={onBet} disabled={hasBet}>
@@ -918,34 +1077,49 @@ function BetPanel({ gs, user, hasBet, cashedOut, betAmt, setBetAmt, autoCO, setA
     return <button className="bet-cta waiting-btn" disabled>Waiting for next round...</button>;
   };
 
-  return (
-    <div className="bpanel">
-      <div className="bptabs">
-        <button className={`bptab ${bpTab === "bet" ? "on" : ""}`} onClick={() => setBpTab("bet")}>Bet</button>
-        <button className={`bptab ${bpTab === "auto" ? "on" : ""}`} onClick={() => setBpTab("auto")}>Auto</button>
-      </div>
+  const SpaceHint = () => {
+    if (gs === "waiting" && !hasBet) return (
+      <div className="space-hint"><span className="space-key">SPACE</span> to place bet</div>
+    );
+    if (gs === "flying" && hasBet && !cashedOut) return (
+      <div className="space-hint"><span className="space-key">SPACE</span> to cash out</div>
+    );
+    return null;
+  };
 
-      {bpTab === "bet" && (
+  return (
+    <div className="bpanel" style={compact ? { padding: "10px 12px 14px" } : {}}>
+      {!compact && (
+        <div className="bptabs">
+          <button className={`bptab ${bpTab === "bet" ? "on" : ""}`} onClick={() => setBpTab("bet")}>Bet</button>
+          <button className={`bptab ${bpTab === "auto" ? "on" : ""}`} onClick={() => setBpTab("auto")}>Auto</button>
+        </div>
+      )}
+
+      {(bpTab === "bet" || compact) && (
         <>
           <div className="stepper-row">
             <button className="step-btn" onClick={() => adjust(-10)} disabled={hasBet}><Minus size={18} /></button>
-            <input
-              className="step-val"
-              type="number"
-              value={betAmt}
-              onChange={e => setBetAmt(e.target.value)}
-              disabled={hasBet}
-            />
+            <input className="step-val" type="number" value={betAmt}
+              onChange={e => setBetAmt(e.target.value)} disabled={hasBet}
+              style={compact ? { fontSize: 15 } : {}} />
             <button className="step-btn" onClick={() => adjust(10)} disabled={hasBet}><Plus size={18} /></button>
           </div>
-          <div className="qgrid">
-            {[100, 200, 500, 1000].map(v => (
-              <button key={v} className="qgbtn" onClick={() => setBetAmt(String(v))} disabled={hasBet}>
-                {v.toLocaleString()}
-              </button>
-            ))}
+          <div className="qgrid-with-repeat">
+            <div className="qgrid-inner">
+              {[100, 200, 500, 1000].map(v => (
+                <button key={v} className="qgbtn" onClick={() => setBetAmt(String(v))} disabled={hasBet}>
+                  {v.toLocaleString()}
+                </button>
+              ))}
+            </div>
+            <button className="repeat-btn" disabled={!lastBetRef.current || hasBet}
+              onClick={() => { if (lastBetRef.current) setBetAmt(String(lastBetRef.current)); }}>
+              <RotateCcw size={11} /> Repeat {lastBetRef.current ? fKES(lastBetRef.current) : ""}
+            </button>
           </div>
           <BigBtn />
+          {!compact && <SpaceHint />}
           <div className="auto-row">
             <span className="auto-lbl">Auto Cash Out</span>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -954,42 +1128,26 @@ function BetPanel({ gs, user, hasBet, cashedOut, betAmt, setBetAmt, autoCO, setA
                 <div className="toggle-track" /><div className="toggle-thumb" />
               </label>
               {autoCOOn && (
-                <input
-                  className="aco-input"
-                  type="number"
-                  value={autoCO}
-                  onChange={e => setAutoCO(e.target.value)}
-                  min="1.1"
-                  step="0.1"
-                />
+                <input className="aco-input" type="number" value={autoCO}
+                  onChange={e => setAutoCO(e.target.value)} min="1.1" step="0.1" />
               )}
             </div>
           </div>
         </>
       )}
 
-      {bpTab === "auto" && (
+      {bpTab === "auto" && !compact && (
         <>
           <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: 14, marginBottom: 14 }}>
             <div style={{ marginBottom: 12 }}>
               <label className="flbl">Bet Amount (KES)</label>
-              <input
-                style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border-md)", borderRadius: 8, padding: "9px 12px", color: "var(--text)", fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, outline: "none" }}
-                type="number"
-                value={betAmt}
-                onChange={e => setBetAmt(e.target.value)}
-              />
+              <input style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border-md)", borderRadius: 8, padding: "9px 12px", color: "var(--text)", fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, outline: "none" }}
+                type="number" value={betAmt} onChange={e => setBetAmt(e.target.value)} />
             </div>
             <div>
               <label className="flbl">Auto Cash Out ×</label>
-              <input
-                style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border-md)", borderRadius: 8, padding: "9px 12px", color: "var(--text)", fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, outline: "none" }}
-                type="number"
-                value={autoCO}
-                onChange={e => setAutoCO(e.target.value)}
-                min="1.1"
-                step="0.1"
-              />
+              <input style={{ width: "100%", background: "var(--card)", border: "1px solid var(--border-md)", borderRadius: 8, padding: "9px 12px", color: "var(--text)", fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, outline: "none" }}
+                type="number" value={autoCO} onChange={e => setAutoCO(e.target.value)} min="1.1" step="0.1" />
             </div>
           </div>
           <button className="bet-cta place" onClick={onBet} disabled={!user || hasBet || gs !== "waiting"}>
@@ -998,6 +1156,50 @@ function BetPanel({ gs, user, hasBet, cashedOut, betAmt, setBetAmt, autoCO, setA
         </>
       )}
     </div>
+  );
+}
+
+// ─── BET PANEL WRAPPER (handles dual toggle) ─────────────────────────────────
+function BetPanel({ gs, user, hasBet, cashedOut, betAmt, setBetAmt, autoCO, setAutoCO,
+  onBet, onCashout, onLogin, md, lastBetRef,
+  hasBet2, cashedOut2, betAmt2, setBetAmt2, autoCO2, setAutoCO2,
+  onBet2, onCashout2, lastBet2Ref }) {
+  const [dualMode, setDualMode] = useState(false);
+
+  return (
+    <>
+      <div style={{ padding: "10px 16px 0", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span className="bpanel-title">Bet Controls</span>
+        <div className="dual-toggle-row">
+          <span className="dual-lbl">2 Bets</span>
+          <label className="toggle">
+            <input type="checkbox" checked={dualMode} onChange={e => setDualMode(e.target.checked)} />
+            <div className="toggle-track" /><div className="toggle-thumb" />
+          </label>
+        </div>
+      </div>
+
+      {!dualMode ? (
+        <SingleBetPanel gs={gs} user={user} hasBet={hasBet} cashedOut={cashedOut}
+          betAmt={betAmt} setBetAmt={setBetAmt} autoCO={autoCO} setAutoCO={setAutoCO}
+          onBet={onBet} onCashout={onCashout} onLogin={onLogin} md={md} lastBetRef={lastBetRef} />
+      ) : (
+        <div className="dual-panels">
+          <div className="dual-panel-wrap">
+            <div className="dual-panel-label"><div className="dot" /> Bet 1</div>
+            <SingleBetPanel compact gs={gs} user={user} hasBet={hasBet} cashedOut={cashedOut}
+              betAmt={betAmt} setBetAmt={setBetAmt} autoCO={autoCO} setAutoCO={setAutoCO}
+              onBet={onBet} onCashout={onCashout} onLogin={onLogin} md={md} lastBetRef={lastBetRef} />
+          </div>
+          <div className="dual-panel-wrap">
+            <div className="dual-panel-label"><div className="dot p2" /> Bet 2</div>
+            <SingleBetPanel compact gs={gs} user={user} hasBet={hasBet2} cashedOut={cashedOut2}
+              betAmt={betAmt2} setBetAmt={setBetAmt2} autoCO={autoCO2} setAutoCO={setAutoCO2}
+              onBet={onBet2} onCashout={onCashout2} onLogin={onLogin} md={md} lastBetRef={lastBet2Ref} />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -1039,23 +1241,20 @@ function LiveChat() {
         ))}
       </div>
       <div className="chat-input-row">
-        <input
-          className="chat-input"
-          placeholder="Say something..."
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && send()}
-        />
+        <input className="chat-input" placeholder="Say something..." value={input}
+          onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && send()} />
         <button className="chat-send" onClick={send}><Send size={15} /></button>
       </div>
     </div>
   );
 }
 
+// ─── MAIN APP ────────────────────────────────────────────────────────────────
 export default function App() {
   const [user, setUser] = useState(null);
   const [appReady, setAppReady] = useState(false);
   const [lightMode, setLightMode] = useState(false);
+  const [soundOn, setSoundOnState] = useState(true);
   const [modal, setModal] = useState(null);
   const [tab, setTab] = useState("game");
   const [ddOpen, setDdOpen] = useState(false);
@@ -1065,12 +1264,21 @@ export default function App() {
   const [txnFilter, setTxnFilter] = useState("all");
   const [leaderboard, setLeaderboard] = useState([]);
   const [stats, setStats] = useState({ totalWon: 0, totalBets: 0, biggestWin: 0, totalWagered: 0, totalLost: 0, streak: 0, streakType: "win", avgCashout: 0, cashoutCount: 0 });
+
+  // Game state
   const [gs, setGs] = useState("waiting");
   const [mult, setMult] = useState(1);
   const [hasBet, setHasBet] = useState(false);
   const [cashedOut, setCashedOut] = useState(false);
   const [betAmt, setBetAmt] = useState("50");
   const [autoCO, setAutoCO] = useState("2.00");
+
+  // Bet 2 state
+  const [hasBet2, setHasBet2] = useState(false);
+  const [cashedOut2, setCashedOut2] = useState(false);
+  const [betAmt2, setBetAmt2] = useState("50");
+  const [autoCO2, setAutoCO2] = useState("2.00");
+
   const [planePos, setPlanePos] = useState({ x: 8, y: 18 });
   const [planeAngle, setPlaneAngle] = useState(-30);
   const [planeCrashed, setPlaneCrashed] = useState(false);
@@ -1083,31 +1291,48 @@ export default function App() {
   const [winBanner, setWinBanner] = useState(null);
   const [floatNotifs, setFloatNotifs] = useState([]);
 
+  // New feature state
+  const [pfHash, setPfHash] = useState(null);
+  const [pfExpanded, setPfExpanded] = useState(false);
+  const [roundId, setRoundId] = useState(1);
+  const roundIdRef = useRef(1);
+  const [bigWin, setBigWin] = useState(null);
+  const seenBigWinsRef = useRef(new Set());
+
   const mRef = useRef(1);
   const gsRef = useRef("waiting");
   const betRef = useRef(false);
   const coRef = useRef(false);
+  const betRef2 = useRef(false);
+  const coRef2 = useRef(false);
+  const lastBetRef = useRef(null);
+  const lastBet2Ref = useRef(null);
   const socketRef = useRef(null);
   const planePosRef = useRef({ x: 8, y: 18 });
   const prevPosRef = useRef({ x: 8, y: 18 });
 
+  const sound = useSoundEngine();
+
+  // Sync soundOn state with engine ref
+  const handleSoundToggle = () => {
+    const next = !soundOn;
+    setSoundOnState(next);
+    sound.setSoundOn(next);
+  };
+
+  // ─── AUTH ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("avipesa_token");
     if (!token) { setAppReady(true); return; }
     const timer = setTimeout(() => setAppReady(true), 2000);
     fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => {
-        setUser(data.user); setBalance(data.user.balance || 0);
-        clearTimeout(timer); setAppReady(true);
-      })
-      .catch(() => {
-        localStorage.removeItem("avipesa_token");
-        clearTimeout(timer); setAppReady(true);
-      });
+      .then(data => { setUser(data.user); setBalance(data.user.balance || 0); clearTimeout(timer); setAppReady(true); })
+      .catch(() => { localStorage.removeItem("avipesa_token"); clearTimeout(timer); setAppReady(true); });
     return () => clearTimeout(timer);
   }, []);
 
+  // ─── SOCKET ────────────────────────────────────────────────────────────────
   const connectSocket = useCallback((token) => {
     if (socketRef.current) socketRef.current.disconnect();
     const socket = io(SOCKET_URL, { auth: { token: token || "" }, transports: ["websocket"] });
@@ -1118,59 +1343,84 @@ export default function App() {
       setCd(data.countdown || 5); setCrashes(data.history || []); setPlayers(data.bets || []);
       gsRef.current = data.state;
     });
+
     socket.on("game:waiting", data => {
       gsRef.current = "waiting"; setGs("waiting"); setMult(1); mRef.current = 1;
       const startPos = { x: 8, y: 18 };
       setPlanePos(startPos); planePosRef.current = startPos; prevPosRef.current = startPos;
-      setPlaneAngle(-30);
-      setPlaneCrashed(false); setPathPts([]);
+      setPlaneAngle(-30); setPlaneCrashed(false); setPathPts([]);
       setCashedOut(false); setHasBet(false); betRef.current = false; coRef.current = false;
+      setCashedOut2(false); setHasBet2(false); betRef2.current = false; coRef2.current = false;
       setCrashes(data.history || []); setPlayers(data.bets || []);
+      seenBigWinsRef.current.clear();
+      sound.stopHum();
+      // Increment round ID
+      roundIdRef.current += 1;
+      setRoundId(roundIdRef.current);
     });
+
     socket.on("game:countdown", data => setCd(data.countdown));
+
     socket.on("game:flying", data => {
       gsRef.current = "flying"; setGs("flying"); setPlaneCrashed(false);
       const startPos = { x: 8, y: 18 };
       setPathPts([{ x: startPos.x, y: 100 - startPos.y }]);
       setPlayers(data.bets || []);
+      if (data.roundId) { roundIdRef.current = data.roundId; setRoundId(data.roundId); }
+      sound.startHum(1);
     });
+
     socket.on("game:tick", data => {
       const m = data.multiplier; setMult(m); mRef.current = m;
-      // Exponential growth curve: x grows linearly with log(m), y grows faster
       const elapsed = Math.log(m) / 0.35;
       const px = Math.min(8 + elapsed * 11, 82);
       const py = Math.min(18 + elapsed * 13, 88);
-
-      // Calculate angle from previous position to current
       const prev = prevPosRef.current;
-      const dx = px - prev.x;
-      const dy = py - prev.y; // positive dy = moving up in screen coords (y% from bottom)
+      const dx = px - prev.x; const dy = py - prev.y;
       if (dx > 0) {
-        // angle: negative = tilting up-right. dy positive means going up, so negative angle
         const angleRad = Math.atan2(-dy, dx);
         const angleDeg = angleRad * (180 / Math.PI);
         setPlaneAngle(Math.max(-80, Math.min(0, angleDeg)));
       }
-
       prevPosRef.current = { x: px, y: py };
       planePosRef.current = { x: px, y: py };
       setPlanePos({ x: px, y: py });
-      // pathPts use SVG coords where y=0 is top, so convert: svgY = 100 - py (as percentage)
       setPathPts(p => [...p.slice(-120), { x: px, y: 100 - py }]);
-      setPlayers(data.bets || []);
+      const bets = data.bets || [];
+      setPlayers(bets);
+      sound.updateHum(m);
+
+      // Check for big wins (×10+) from other players
+      bets.forEach(p => {
+        if (p.cashed && parseFloat(p.cashMult) >= 10 && !seenBigWinsRef.current.has(p.id || p.name)) {
+          seenBigWinsRef.current.add(p.id || p.name);
+          setBigWin({ player: p.name, mult: p.cashMult });
+          setTimeout(() => setBigWin(null), 2500);
+        }
+      });
     });
+
     socket.on("game:crashed", data => {
       gsRef.current = "crashed"; setGs("crashed"); setPlaneCrashed(true);
       setExplodePos({ ...planePosRef.current }); setTimeout(() => setExplodePos(null), 800);
       setCrashes(p => [data.multiplier, ...p].slice(0, 14)); setPlayers(data.bets || []);
+      if (data.hash) setPfHash(data.hash);
+      if (data.roundId) { roundIdRef.current = data.roundId; setRoundId(data.roundId); }
+      sound.stopHum();
+      sound.playCrash();
       if (betRef.current && !coRef.current) {
         toast_(`Crashed ×${data.multiplier.toFixed(2)} — Lost ${fKES(parseFloat(betRef.current))}`, "err");
       }
+      if (betRef2.current && !coRef2.current) {
+        toast_(`Bet 2 lost — Crashed ×${data.multiplier.toFixed(2)}`, "err");
+      }
       betRef.current = false; setHasBet(false);
+      betRef2.current = false; setHasBet2(false);
     });
+
     socket.on("game:bets", bets => setPlayers(bets || []));
     return socket;
-  }, []);
+  }, [sound]);
 
   useEffect(() => {
     const token = localStorage.getItem("avipesa_token") || "";
@@ -1178,6 +1428,7 @@ export default function App() {
     return () => { if (socketRef.current) socketRef.current.disconnect(); };
   }, [connectSocket]);
 
+  // ─── FLOAT NOTIFS ─────────────────────────────────────────────────────────
   useEffect(() => {
     const t = setInterval(() => {
       if (gsRef.current === "flying" && Math.random() < 0.3) {
@@ -1199,7 +1450,8 @@ export default function App() {
     setTxns(p => [{ id: Date.now(), type, label, amount, time: new Date() }, ...p]);
   }, []);
 
-  const handleBet = () => {
+  // ─── BET HANDLERS ─────────────────────────────────────────────────────────
+  const handleBet = useCallback(() => {
     if (!user) { setModal("login"); return; }
     const a = parseFloat(betAmt);
     if (isNaN(a) || a < 10) { toast_("Minimum bet is KES 10", "err"); return; }
@@ -1208,12 +1460,26 @@ export default function App() {
     socketRef.current.once("bet:result", result => {
       if (result.ok) {
         setBalance(result.balance); setHasBet(true); betRef.current = String(a);
-        toast_(`Bet placed — KES ${a}`);
-      } else {
-        toast_(result.error, "err");
-      }
+        lastBetRef.current = a;
+        toast_(`Bet 1 placed — KES ${a}`);
+      } else { toast_(result.error, "err"); }
     });
-  };
+  }, [user, betAmt, balance, toast_]);
+
+  const handleBet2 = useCallback(() => {
+    if (!user) { setModal("login"); return; }
+    const a = parseFloat(betAmt2);
+    if (isNaN(a) || a < 10) { toast_("Minimum bet is KES 10", "err"); return; }
+    if (a > balance) { toast_("Insufficient balance", "err"); return; }
+    socketRef.current.emit("bet:place", { amount: a, panelId: 2 });
+    socketRef.current.once("bet:result", result => {
+      if (result.ok) {
+        setBalance(result.balance); setHasBet2(true); betRef2.current = String(a);
+        lastBet2Ref.current = a;
+        toast_(`Bet 2 placed — KES ${a}`);
+      } else { toast_(result.error, "err"); }
+    });
+  }, [user, betAmt2, balance, toast_]);
 
   const doCashout = useCallback(() => {
     if (!betRef.current || coRef.current) return;
@@ -1225,12 +1491,39 @@ export default function App() {
         setWinBanner(`×${result.mult.toFixed(2)} — Won ${fKES(result.payout)}`);
         setTimeout(() => setWinBanner(null), 3000);
         toast_(`Cashed out ×${result.mult.toFixed(2)} — Won ${fKES(result.payout)}`);
-      } else {
-        toast_(result.error, "err");
-      }
+        sound.playCashout();
+      } else { toast_(result.error, "err"); }
     });
-  }, [addTxn, toast_]);
+  }, [addTxn, toast_, sound]);
 
+  const doCashout2 = useCallback(() => {
+    if (!betRef2.current || coRef2.current) return;
+    socketRef.current.emit("bet:cashout", { panelId: 2 });
+    socketRef.current.once("cashout:result", result => {
+      if (result.ok) {
+        coRef2.current = true; setCashedOut2(true); setBalance(result.balance);
+        addTxn("win", `Bet 2 Win ×${result.mult.toFixed(2)}`, result.profit);
+        toast_(`Bet 2 cashed ×${result.mult.toFixed(2)} — Won ${fKES(result.payout)}`);
+        sound.playCashout();
+      } else { toast_(result.error, "err"); }
+    });
+  }, [addTxn, toast_, sound]);
+
+  // ─── SPACEBAR SHORTCUT ────────────────────────────────────────────────────
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.code !== "Space") return;
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      e.preventDefault();
+      if (gsRef.current === "waiting" && !betRef.current) { handleBet(); return; }
+      if (gsRef.current === "flying" && betRef.current && !coRef.current) { doCashout(); return; }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleBet, doCashout]);
+
+  // ─── TAB DATA FETCHING ────────────────────────────────────────────────────
   useEffect(() => {
     if (tab === "history" && user) {
       fetch(`${API}/wallet/transactions`, { headers: { Authorization: `Bearer ${localStorage.getItem("avipesa_token")}` } })
@@ -1271,6 +1564,7 @@ export default function App() {
     connectSocket("");
     setUser(null); setBalance(0); setDdOpen(false);
     setHasBet(false); betRef.current = false;
+    setHasBet2(false); betRef2.current = false;
     toast_("Signed out");
   };
 
@@ -1287,28 +1581,21 @@ export default function App() {
   const md = mult.toFixed(2);
   const multClass = () => { const m = parseFloat(md); if (m >= 10) return "hi10"; if (m >= 5) return "hi5"; return ""; };
 
-  // Build smooth SVG path through all points
-  // pathPts are stored as { x: percent-from-left, y: percent-from-top }
   const buildPath = () => {
     if (pathPts.length < 2) return { linePath: "", fillPath: "" };
     const W = 420; const H = 280;
     const toSX = p => (p.x / 100) * W;
     const toSY = p => (p.y / 100) * H;
-
     let d = `M ${toSX(pathPts[0])} ${toSY(pathPts[0])}`;
     for (let i = 1; i < pathPts.length; i++) {
-      const prev = pathPts[i - 1];
-      const cur = pathPts[i];
-      // Use cubic bezier for smooth curve
+      const prev = pathPts[i - 1]; const cur = pathPts[i];
       const cpx1 = toSX(prev) + (toSX(cur) - toSX(prev)) * 0.5;
       const cpy1 = toSY(prev);
       const cpx2 = toSX(prev) + (toSX(cur) - toSX(prev)) * 0.5;
       const cpy2 = toSY(cur);
       d += ` C ${cpx1} ${cpy1}, ${cpx2} ${cpy2}, ${toSX(cur)} ${toSY(cur)}`;
     }
-
-    const last = pathPts[pathPts.length - 1];
-    const first = pathPts[0];
+    const last = pathPts[pathPts.length - 1]; const first = pathPts[0];
     const fillPath = d + ` L ${toSX(last)} ${H} L ${toSX(first)} ${H} Z`;
     return { linePath: d, fillPath };
   };
@@ -1322,10 +1609,12 @@ export default function App() {
     if (txnFilter === "withdrawals") return t.type === "wd";
     return true;
   });
+
   const openLogin = () => setModal("login");
   const openRegister = () => setModal("register");
   const rankCls = i => i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
   const rankLabel = i => i === 0 ? "1st" : i === 1 ? "2nd" : i === 2 ? "3rd" : `${i + 1}`;
+  const fmtRoundId = id => `#${String(id).padStart(5, "0")}`;
 
   const NAV_TABS = [
     { id: "game", icon: <Zap size={15} />, label: "Game" },
@@ -1364,6 +1653,13 @@ export default function App() {
         {floatNotifs.map(n => <div key={n.id} className="fnotif">{n.msg}</div>)}
       </div>
 
+      {/* MODALS */}
+      {modal === "login" && <LoginModal onClose={() => setModal(null)} onLogin={handleLogin} goRegister={() => setModal("register")} />}
+      {modal === "register" && <RegisterModal onClose={() => setModal(null)} onLogin={handleLogin} goLogin={() => setModal("login")} />}
+      {modal === "deposit" && <DepositModal onClose={() => setModal(null)} onDeposit={handleDeposit} />}
+      {modal === "withdraw" && <WithdrawModal onClose={() => setModal(null)} balance={balance} onWithdraw={handleWithdraw} />}
+      {modal === "pf" && <ProvablyFairModal onClose={() => setModal(null)} hash={pfHash} roundId={roundId} />}
+
       {/* NAV */}
       <nav className="nav">
         <div className="nav-i">
@@ -1379,6 +1675,10 @@ export default function App() {
             ))}
           </div>
           <div className="nav-r">
+            {/* Sound toggle */}
+            <button className="icon-btn" onClick={handleSoundToggle} title={soundOn ? "Mute sounds" : "Unmute sounds"}>
+              {soundOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            </button>
             <button className="icon-btn" onClick={() => setLightMode(l => !l)}>
               {lightMode ? <Moon size={16} /> : <Sun size={16} />}
             </button>
@@ -1386,7 +1686,7 @@ export default function App() {
               <>
                 <div className="bal-chip">
                   <div className="bal-lbl">Balance</div>
-                  <div className="bal-val">{fKES(balance)}</div>
+                  <div className="bal-val"><AnimatedBalance value={balance} /></div>
                 </div>
                 <button className="btn-deposit" onClick={() => setModal("deposit")}>
                   <ArrowDownCircle size={15} />
@@ -1437,27 +1737,21 @@ export default function App() {
         ))}
       </div>
 
-      {/* MODALS */}
-      {modal === "login" && <LoginModal onClose={() => setModal(null)} onLogin={handleLogin} goRegister={() => setModal("register")} />}
-      {modal === "register" && <RegisterModal onClose={() => setModal(null)} onLogin={handleLogin} goLogin={() => setModal("login")} />}
-      {modal === "deposit" && <DepositModal onClose={() => setModal(null)} onDeposit={handleDeposit} />}
-      {modal === "withdraw" && <WithdrawModal onClose={() => setModal(null)} balance={balance} onWithdraw={handleWithdraw} />}
-
       {/* GAME TAB */}
       {tab === "game" && (
         <div className="layout">
           <div>
             <div className="gcard">
 
-              {/* COMBINED TOP BAR: status + crash history */}
+              {/* TOP BAR */}
               <div className="gtopbar">
                 <div className="live-ind">
-                  <div className="live-dot" />
-                  Live
+                  <div className="live-dot" />Live
                 </div>
                 <div className={`rbadge ${gs}`}>
                   {gs === "waiting" ? `Next in ${cd}s` : gs === "crashed" ? "Crashed" : "In Play"}
                 </div>
+                <span className="round-id-badge">{fmtRoundId(roundId)}</span>
                 <div className="topbar-sep" />
                 <div className="crashes-inline">
                   {crashes.map((v, i) => (
@@ -1471,13 +1765,11 @@ export default function App() {
               {/* CANVAS */}
               <div className="canvas">
                 {explodePos && (
-                  <div
-                    className="explode-el"
-                    style={{ left: `${explodePos.x}%`, bottom: `${explodePos.y}%` }}
-                  >
-                    💥
-                  </div>
+                  <div className="explode-el" style={{ left: `${explodePos.x}%`, bottom: `${explodePos.y}%` }}>💥</div>
                 )}
+
+                {/* Big win overlay — pointer-events none so cashout still works */}
+                {bigWin && <BigWinOverlay player={bigWin.player} mult={bigWin.mult} />}
 
                 <svg className="csvg" viewBox="0 0 420 280" preserveAspectRatio="none">
                   <defs>
@@ -1494,8 +1786,6 @@ export default function App() {
                       <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
                     </filter>
                   </defs>
-
-                  {/* flying: amber smooth curve going up */}
                   {gs === "flying" && linePath && (
                     <>
                       <path d={fillPath} fill="url(#flGrad)" />
@@ -1503,8 +1793,6 @@ export default function App() {
                       <path d={linePath} fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" filter="url(#glow)" />
                     </>
                   )}
-
-                  {/* crashed: red curve */}
                   {gs === "crashed" && linePath && (
                     <>
                       <path d={fillPath} fill="url(#crGrad)" />
@@ -1512,23 +1800,15 @@ export default function App() {
                       <path d={linePath} fill="none" stroke="#f43f5e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     </>
                   )}
-
-                  {/* axis lines */}
                   <line x1="33" y1="0" x2="33" y2="270" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
                   <line x1="33" y1="270" x2="420" y2="270" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
                 </svg>
 
                 {gs === "waiting" && <CountdownRing cd={cd} total={5} />}
 
-                {/* PLANE: positioned at tip of curve, tilted to match angle */}
                 {(gs === "flying" || gs === "crashed") && (
-                  <div
-                    className={`plane-el ${planeCrashed ? "crashed-anim" : ""}`}
-                    style={{
-                      left: `calc(${planePos.x}% - 20px)`,
-                      bottom: `calc(${planePos.y}% - 20px)`,
-                    }}
-                  >
+                  <div className={`plane-el ${planeCrashed ? "crashed-anim" : ""}`}
+                    style={{ left: `calc(${planePos.x}% - 20px)`, bottom: `calc(${planePos.y}% - 20px)` }}>
                     <PlaneSVG size={40} angle={planeCrashed ? 90 : planeAngle} />
                   </div>
                 )}
@@ -1536,20 +1816,47 @@ export default function App() {
                 {gs !== "waiting" && (
                   <div className="mult-center">
                     <div className={`mult-num ${gs} ${gs === "flying" ? multClass() : ""}`}>{md}×</div>
-                    <div className={`mult-label ${gs}`}>
-                      {gs === "crashed" ? "Crashed" : "Flying"}
-                    </div>
+                    <div className={`mult-label ${gs}`}>{gs === "crashed" ? "Crashed" : "Flying"}</div>
                   </div>
                 )}
 
                 {winBanner && <div className="win-flash">{winBanner}</div>}
               </div>
 
+              {/* BET PANEL */}
               <BetPanel
                 gs={gs} user={user} hasBet={hasBet} cashedOut={cashedOut}
                 betAmt={betAmt} setBetAmt={setBetAmt} autoCO={autoCO} setAutoCO={setAutoCO}
                 onBet={handleBet} onCashout={doCashout} onLogin={() => setModal("login")} md={md}
+                lastBetRef={lastBetRef}
+                hasBet2={hasBet2} cashedOut2={cashedOut2}
+                betAmt2={betAmt2} setBetAmt2={setBetAmt2} autoCO2={autoCO2} setAutoCO2={setAutoCO2}
+                onBet2={handleBet2} onCashout2={doCashout2}
+                lastBet2Ref={lastBet2Ref}
               />
+
+              {/* PROVABLY FAIR BAR */}
+              <div className="pf-bar">
+                <span className="pf-label">Provably Fair</span>
+                <span className="pf-hash">{pfHash || "Hash available after each round"}</span>
+                <button className="pf-toggle" onClick={() => setModal("pf")}>
+                  <ShieldCheck size={12} /> Verify
+                </button>
+                <button className="pf-toggle" onClick={() => setPfExpanded(e => !e)}>
+                  {pfExpanded ? "▲" : "▼"}
+                </button>
+              </div>
+              {pfExpanded && (
+                <div className="pf-expanded">
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: "var(--text2)", marginBottom: 6 }}>
+                    Round {fmtRoundId(roundId)} · Server Seed Hash
+                  </div>
+                  <div className="pf-expanded-hash">{pfHash || "No hash yet — play a round to see the server commitment hash here."}</div>
+                  <button className="pf-toggle" style={{ fontSize: 11 }} onClick={() => setModal("pf")}>
+                    <ShieldCheck size={12} /> How to verify →
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1584,7 +1891,7 @@ export default function App() {
                   <>
                     <div className="wm-bal">
                       <div className="wm-lbl">Balance</div>
-                      <div className="wm-amt">{fKES(balance)}</div>
+                      <div className="wm-amt"><AnimatedBalance value={balance} /></div>
                       <div className="wm-sub">AviPesa Wallet</div>
                     </div>
                     <button className="btn-mpesa-full" onClick={() => setModal("deposit")}>
@@ -1642,7 +1949,7 @@ export default function App() {
                 <div className="pcard-body">
                   <div className="big-bal">
                     <div className="bb-lbl">Available Balance</div>
-                    <div className="bb-amt">{fKES(balance)}</div>
+                    <div className="bb-amt"><AnimatedBalance value={balance} /></div>
                     <div className="bb-sub">Kenyan Shilling · AviPesa Account</div>
                   </div>
                   <div className="tab-row">
@@ -1791,16 +2098,14 @@ export default function App() {
                   <div className="acct-info">
                     <div className="acct-section-lbl">Account Details</div>
                     <div className="acct-row">
-                      <span className="acct-key">Name</span>
-                      <span className="acct-val">{user.name}</span>
+                      <span className="acct-key">Name</span><span className="acct-val">{user.name}</span>
                     </div>
                     <div className="acct-row">
-                      <span className="acct-key">Phone</span>
-                      <span className="acct-val mono">+{user.phone}</span>
+                      <span className="acct-key">Phone</span><span className="acct-val mono">+{user.phone}</span>
                     </div>
                     <div className="acct-row">
                       <span className="acct-key">Balance</span>
-                      <span className="acct-val green">{fKES(balance)}</span>
+                      <span className="acct-val green"><AnimatedBalance value={balance} /></span>
                     </div>
                   </div>
                 </div>
