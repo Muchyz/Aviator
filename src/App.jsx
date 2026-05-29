@@ -85,10 +85,16 @@ export default function App() {
   const betAmtRef = useRef("50");
   const betAmt2StrRef = useRef("50");
 
+  // ── Auto cashout refs — always current, no stale closure ──
+  const autoCORef = useRef("2.00");
+  const autoCO2Ref = useRef("2.00");
+
   useEffect(() => { balanceRef.current = balance; }, [balance]);
   useEffect(() => { userRef.current = user; }, [user]);
   useEffect(() => { betAmtRef.current = betAmt; }, [betAmt]);
   useEffect(() => { betAmt2StrRef.current = betAmt2; }, [betAmt2]);
+  useEffect(() => { autoCORef.current = autoCO; }, [autoCO]);
+  useEffect(() => { autoCO2Ref.current = autoCO2; }, [autoCO2]);
 
   const sound = useSoundEngine();
 
@@ -120,7 +126,6 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // ── connectSocket — only creates socket, no listeners ──
   const connectSocket = useCallback((token) => {
     if (socketRef.current) socketRef.current.disconnect();
     const socket = io(SOCKET_URL, {
@@ -134,7 +139,7 @@ export default function App() {
     return socket;
   }, []);
 
-  // ── All listeners in ONE useEffect, runs once ──
+  // ── All socket listeners in ONE useEffect, runs once ──
   useEffect(() => {
     const token = localStorage.getItem("avipesa_token") || "";
     const socket = connectSocket(token);
@@ -190,6 +195,32 @@ export default function App() {
       });
       setPlayers(data.bets || []);
       sound.updateHum(m);
+
+      // ── Auto cashout panel 1 ──
+      const autoCOVal1 = parseFloat(autoCORef.current);
+      if (
+        betAmountRef.current &&
+        !cashedOutRef.current &&
+        !isNaN(autoCOVal1) &&
+        autoCOVal1 >= 1.01 &&
+        m >= autoCOVal1
+      ) {
+        socket.emit("bet:cashout");
+      }
+
+      // ── Auto cashout panel 2 ──
+      const autoCOVal2 = parseFloat(autoCO2Ref.current);
+      if (
+        betAmount2Ref.current &&
+        !cashedOut2Ref.current &&
+        !isNaN(autoCOVal2) &&
+        autoCOVal2 >= 1.01 &&
+        m >= autoCOVal2
+      ) {
+        socket.emit("bet:cashout", { panelId: 2 });
+      }
+
+      // Big win overlay
       (data.bets || []).forEach(p => {
         if (p.cashed && parseFloat(p.cashMult) >= 10 && !seenBigWinsRef.current.has(p.id || p.name)) {
           seenBigWinsRef.current.add(p.id || p.name);
@@ -218,7 +249,6 @@ export default function App() {
     socket.on("game:bets", bets => setPlayers(bets || []));
 
     socket.on("bet:result", result => {
-      console.log("bet:result", result);
       if (result.panelId === 2) {
         if (result.ok) {
           setBalance(result.balance); balanceRef.current = result.balance;
@@ -239,7 +269,6 @@ export default function App() {
     });
 
     socket.on("cashout:result", result => {
-      console.log("cashout:result", result);
       if (result.panelId === 2) {
         if (result.ok) {
           cashedOut2Ref.current = true; setCashedOut2(true);
@@ -262,7 +291,7 @@ export default function App() {
     });
 
     return () => { socket.disconnect(); };
-  }, []); // ← empty deps, runs once only
+  }, []);
 
   // ── Float notifs ──
   useEffect(() => {
@@ -277,7 +306,6 @@ export default function App() {
     return () => clearInterval(t);
   }, []);
 
-  // ── Bet handlers — check !socket only, not socket.connected ──
   const handleBet = useCallback(() => {
     const u = userRef.current;
     if (!u) { setModal("login"); return; }
@@ -288,7 +316,6 @@ export default function App() {
     if (betAmountRef.current) { toast_("Bet already placed", "err"); return; }
     const socket = socketRef.current;
     if (!socket) { toast_("Not connected. Please refresh.", "err"); return; }
-    console.log("Emitting bet:place", { amount: a });
     socket.emit("bet:place", { amount: a });
   }, [toast_]);
 
@@ -302,7 +329,6 @@ export default function App() {
     if (betAmount2Ref.current) { toast_("Bet 2 already placed", "err"); return; }
     const socket = socketRef.current;
     if (!socket) { toast_("Not connected. Please refresh.", "err"); return; }
-    console.log("Emitting bet:place panelId 2", { amount: a, panelId: 2 });
     socket.emit("bet:place", { amount: a, panelId: 2 });
   }, [toast_]);
 
@@ -372,7 +398,6 @@ export default function App() {
     }
   }, [tab]);
 
-  // ── Login/logout — reuse socket with new auth, don't recreate ──
   const handleLogin = useCallback((u) => {
     setUser(u); setBalance(u.balance || 0);
     userRef.current = u; balanceRef.current = u.balance || 0;
