@@ -1,14 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Minus, Plus, Check, Lock, RotateCcw } from "lucide-react";
 import { fKES } from "../utils/format";
 
 export default function SingleBetPanel({
   gs, user, hasBet, cashedOut, betAmt, setBetAmt,
   autoCO, setAutoCO, onBet, onCashout, onLogin,
-  md, lastBetRef, compact = false
+  md, lastBetRef, compact = false,
+  socket, // pass the socket instance as a prop
+  panelId = 1,
 }) {
   const [autoCOOn, setAutoCOOn] = useState(false);
   const amt = parseFloat(betAmt) || 0;
+
+  // Whenever autoCOOn or autoCO value changes, tell the server
+  useEffect(() => {
+    if (!socket) return;
+    if (autoCOOn) {
+      const val = parseFloat(autoCO);
+      if (!isNaN(val) && val >= 1.01) {
+        socket.emit("autocashout:set", { target: val, panelId });
+      }
+    } else {
+      socket.emit("autocashout:set", { target: null, panelId });
+    }
+  }, [autoCOOn, autoCO, socket, panelId]);
 
   const adjust = delta => {
     const cur = parseFloat(betAmt) || 0;
@@ -81,7 +96,11 @@ export default function SingleBetPanel({
         <span className="auto-lbl">Auto Cash Out</span>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <label className="toggle">
-            <input type="checkbox" checked={autoCOOn} onChange={e => setAutoCOOn(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={autoCOOn}
+              onChange={e => setAutoCOOn(e.target.checked)}
+            />
             <div className="toggle-track" /><div className="toggle-thumb" />
           </label>
           {autoCOOn && (

@@ -419,12 +419,6 @@ export default function App() {
   };
 
   const md = mult.toFixed(2);
-  const multClass = () => {
-    const m = parseFloat(md);
-    if (m >= 10) return "hi10";
-    if (m >= 5) return "hi5";
-    return "";
-  };
 
   const filteredTxns = txns.filter(t => {
     if (txnFilter === "all") return true;
@@ -582,15 +576,10 @@ export default function App() {
                     mult={mult}
                     pathPts={pathPts}
                     crashed={planeCrashed}
+                    roundId={roundId}
                   />
                 )}
                 {gs === "waiting" && <CountdownRing cd={cd} total={5} />}
-                {gs !== "waiting" && (
-                  <div className="mult-overlay">
-                    <div className={`mult-num ${gs} ${gs === "flying" ? multClass() : ""}`}>{md}×</div>
-                    <div className={`mult-label ${gs}`}>{gs === "crashed" ? "CRASHED" : "FLYING"}</div>
-                  </div>
-                )}
                 {winBanner && <div className="win-flash">{winBanner}</div>}
               </div>
 
@@ -603,6 +592,7 @@ export default function App() {
                 betAmt2={betAmt2} setBetAmt2={setBetAmt2} autoCO2={autoCO2} setAutoCO2={setAutoCO2}
                 onBet2={handleBet2} onCashout2={doCashout2}
                 lastBet2Ref={lastBet2Ref}
+                socket={socketRef.current}
               />
 
               <div className="pf-bar">

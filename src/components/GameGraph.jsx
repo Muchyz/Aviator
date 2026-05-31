@@ -1,13 +1,15 @@
 import { useRef, useEffect } from "react";
 
-function lerp(a, b, t) {
-  return a + (b - a) * t;
-}
+// ─── math helpers ────────────────────────────────────────────────────────────
+function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-function getCurvedY(mult, maxMult, gH, padding) {
+function getCurvedY(mult, maxMult, gH) {
   const normalized = (mult - 1) / (Math.max(maxMult, 1.5) - 1);
-  const curved = Math.pow(Math.max(0, Math.min(normalized, 1)), 1.6);
-  return gH - padding.bottom - curved * (gH - padding.top - padding.bottom);
+  const curved = Math.pow(clamp(normalized, 0, 1), 2.4);
+  const bottomPad = gH * 0.04;
+  const topPad = gH * 0.08;
+  return gH - bottomPad - curved * (gH - topPad - bottomPad);
 }
 
 function loadImage(src) {
@@ -19,99 +21,126 @@ function loadImage(src) {
   });
 }
 
-// Catmull-Rom spline interpolation for ultra-smooth curves
-function catmullRomPoints(pts, segments = 6) {
-  if (pts.length < 2) return pts;
-  const result = [];
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[Math.max(0, i - 1)];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[Math.min(pts.length - 1, i + 2)];
-    for (let t = 0; t < segments; t++) {
-      const tt = t / segments;
-      const tt2 = tt * tt;
-      const tt3 = tt2 * tt;
-      const x =
-        0.5 *
-        (2 * p1.x +
-          (-p0.x + p2.x) * tt +
-          (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * tt2 +
-          (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * tt3);
-      const y =
-        0.5 *
-        (2 * p1.y +
-          (-p0.y + p2.y) * tt +
-          (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * tt2 +
-          (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * tt3);
-      result.push({ x, y });
-    }
-  }
-  result.push(pts[pts.length - 1]);
-  return result;
+// Multiplier → accent color (green safe zone → yellow caution → red danger)
+function multColor(mult, alpha = 1) {
+  if (mult < 2)   return `rgba(0,230,120,${alpha})`;
+  if (mult < 5)   return `rgba(255,210,0,${alpha})`;
+  if (mult < 10)  return `rgba(255,120,0,${alpha})`;
+  return `rgba(255,40,80,${alpha})`;
 }
 
-export default function GameGraph({ gs, mult, pathPts, crashed }) {
+function multColorSolid(mult) {
+  if (mult < 2)   return "#00e678";
+  if (mult < 5)   return "#ffd200";
+  if (mult < 10)  return "#ff7800";
+  return "#ff2850";
+}
+
+// ─── main component ───────────────────────────────────────────────────────────
+export default function GameGraph({
+  gs,
+  mult = 1,
+  pathPts = [],
+  crashed = false,
+  roundId,
+  onlinePlayers,
+  waiting = false,         // NEW: show waiting/countdown state
+  countdown = 0,           // NEW: seconds until next round
+}) {
   const canvasRef = useRef(null);
-  const animRef = useRef(null);
-  const frameRef = useRef(0);
+  const animRef   = useRef(null);
+  const frameRef  = useRef(0);
 
-  const planeXRef = useRef(0);
-  const planeYRef = useRef(0);
-  const planeTiltRef = useRef(-15);
-  const velXRef = useRef(0);
-  const velYRef = useRef(0);
-  const bankAngleRef = useRef(0);
+  // Plane state
+  const planeXRef    = useRef(-999);
+  const planeYRef    = useRef(-999);
+  const planeTiltRef = useRef(-20);
+  const velXRef      = useRef(0);
+  const velYRef      = useRef(0);
 
-  const crashFrameRef = useRef(0);
-  const prevCrashedRef = useRef(false);
-  const shakeRef = useRef({ intensity: 0, decay: 0 });
-  const contrailRef = useRef([]);
-  const crashDebrisRef = useRef([]);
-
-  const planeImgRef = useRef(null);
+  // Assets
+  const planeImgRef  = useRef(null);
   const imgsReadyRef = useRef(false);
 
-  const gsRef = useRef(gs);
-  const multRef = useRef(mult);
-  const pathPtsRef = useRef(pathPts);
-  const crashedRef = useRef(crashed);
-  const displayMultRef = useRef(1.0);
+  // Effects
+  const shakeRef      = useRef(0);
+  const flashRef      = useRef(0);
+  const crashFrameRef = useRef(0);
+  const prevCrashedRef = useRef(false);
 
-  gsRef.current = gs;
-  multRef.current = mult;
-  pathPtsRef.current = pathPts;
-  crashedRef.current = crashed;
+  // Particles / explosion
+  const trailRef     = useRef([]);      // engine exhaust trail
+  const particlesRef = useRef([]);      // exhaust glow particles
+  const explosionRef = useRef([]);
+  const debrisRef    = useRef([]);      // NEW: crash debris chunks
 
+  // Camera
+  const cameraYRef = useRef(0);
+
+  // Stars (persistent, randomised once)
+  const starsRef = useRef(
+    Array.from({ length: 150 }, () => ({
+      x: Math.random(), y: Math.random(),
+      size: Math.random() * 1.8 + 0.3,
+      phase: Math.random() * Math.PI * 2,
+      speed: Math.random() * 0.01 + 0.005,
+    }))
+  );
+
+  // Refs that bridge React renders → animation loop
+  const gsRef             = useRef(gs);
+  const multRef           = useRef(mult);
+  const pathPtsRef        = useRef(pathPts);
+  const crashedRef        = useRef(crashed);
+  const waitingRef        = useRef(waiting);
+  const countdownRef      = useRef(countdown);
+  const roundIdRef        = useRef(roundId    || Math.floor(Math.random() * 90000 + 10000));
+  const onlinePlayersRef  = useRef(onlinePlayers || Math.floor(Math.random() * 800 + 200));
+
+  gsRef.current            = gs;
+  multRef.current          = mult;
+  pathPtsRef.current       = pathPts;
+  crashedRef.current       = crashed;
+  waitingRef.current       = waiting;
+  countdownRef.current     = countdown;
+  if (roundId)         roundIdRef.current        = roundId;
+  if (onlinePlayers)   onlinePlayersRef.current  = onlinePlayers;
+
+  // ── load plane image ────────────────────────────────────────────────────────
   useEffect(() => {
     loadImage("/plane.png")
-      .then((img) => {
-        planeImgRef.current = img;
-        imgsReadyRef.current = true;
-      })
-      .catch(() => {
-        imgsReadyRef.current = false;
-      });
+      .then(img => { planeImgRef.current = img; imgsReadyRef.current = true; })
+      .catch(() => { imgsReadyRef.current = false; });
   }, []);
 
+  // ── crash trigger ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (crashed && !prevCrashedRef.current) {
       crashFrameRef.current = 0;
-      shakeRef.current = { intensity: 8, decay: 0.85 };
-      crashDebrisRef.current = Array.from({ length: 18 }, () => ({
-        x: planeXRef.current,
-        y: planeYRef.current,
-        vx: (Math.random() - 0.5) * 5,
-        vy: -(Math.random() * 4 + 1),
+      shakeRef.current      = 18;
+      flashRef.current      = 1;
+
+      explosionRef.current = Array.from({ length: 80 }, (_, i) => ({
+        angle: (Math.PI * 2 * i) / 80,
+        speed: Math.random() * 9 + 3,
+        life:  1,
+        size:  Math.random() * 4 + 2,
+      }));
+
+      debrisRef.current = Array.from({ length: 18 }, () => ({
+        angle: Math.random() * Math.PI * 2,
+        speed: Math.random() * 5 + 2,
+        rot:   Math.random() * Math.PI * 2,
+        rotV:  (Math.random() - 0.5) * 0.25,
+        w: Math.random() * 14 + 6,
+        h: Math.random() * 6 + 3,
         life: 1,
-        decay: 0.02 + Math.random() * 0.02,
-        size: Math.random() * 3 + 1,
-        color: Math.random() > 0.5 ? "#ff3355" : "#ff8844",
       }));
     }
     prevCrashedRef.current = crashed;
   }, [crashed]);
 
+  // ── main render loop ───────────────────────────────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -123,433 +152,457 @@ export default function GameGraph({ gs, mult, pathPts, crashed }) {
 
     const render = () => {
       frameRef.current++;
-      const frame = frameRef.current;
-      const mult = multRef.current;
+      const frame   = frameRef.current;
+      const mult    = multRef.current;
       const pathPts = pathPtsRef.current;
       const crashed = crashedRef.current;
+      const waiting = waitingRef.current;
 
       const { W, H } = getDims();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-      if (
-        canvas.width !== Math.round(W * dpr) ||
-        canvas.height !== Math.round(H * dpr)
-      ) {
-        canvas.width = Math.round(W * dpr);
+      if (canvas.width  !== Math.round(W * dpr) ||
+          canvas.height !== Math.round(H * dpr)) {
+        canvas.width  = Math.round(W * dpr);
         canvas.height = Math.round(H * dpr);
       }
 
       const ctx = canvas.getContext("2d");
 
-      // Padding for graph area
-      const pad = { top: 60, bottom: 48, left: 52, right: 24 };
+      const pad = { top: 56, bottom: 40, left: 52, right: 20 };
       const gW = W - pad.left - pad.right;
-      const gH = H - pad.top - pad.bottom;
+      const gH = H - pad.top  - pad.bottom;
 
-      // Screen shake
+      // ── screen shake ──────────────────────────────────────────────────────
       let sx = 0, sy = 0;
-      if (crashed && shakeRef.current.intensity > 0.1) {
-        const sh = shakeRef.current.intensity;
-        sx = (Math.random() - 0.5) * sh;
-        sy = (Math.random() - 0.5) * sh;
-        shakeRef.current.intensity *= shakeRef.current.decay;
+      if (shakeRef.current > 0.4) {
+        sx = (Math.random() - 0.5) * shakeRef.current;
+        sy = (Math.random() - 0.5) * shakeRef.current;
+        shakeRef.current *= 0.80;
       }
-
       ctx.setTransform(dpr, 0, 0, dpr, sx, sy);
+
+      // ── background ────────────────────────────────────────────────────────
       ctx.clearRect(0, 0, W, H);
 
-      // ── BACKGROUND ──
       const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
-      bgGrad.addColorStop(0, "#0d1117");
-      bgGrad.addColorStop(1, "#111827");
+      bgGrad.addColorStop(0, "#0a1020");
+      bgGrad.addColorStop(1, "#03050e");
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, W, H);
 
-      // Subtle vignette
-      const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.2, W / 2, H / 2, H * 0.9);
+      // subtle radial vignette
+      const vig = ctx.createRadialGradient(W/2, H/2, H*0.1, W/2, H/2, H*0.9);
       vig.addColorStop(0, "rgba(0,0,0,0)");
-      vig.addColorStop(1, "rgba(0,0,0,0.35)");
+      vig.addColorStop(1, "rgba(0,0,0,0.55)");
       ctx.fillStyle = vig;
       ctx.fillRect(0, 0, W, H);
 
-      // ── GRID ──
-      ctx.save();
-      ctx.translate(pad.left, pad.top);
+      // ── stars ─────────────────────────────────────────────────────────────
+      starsRef.current.forEach(star => {
+        const alpha = 0.15 + Math.sin(frame * star.speed + star.phase) * 0.18;
+        ctx.beginPath();
+        ctx.arc(star.x * W, star.y * H, star.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(200,210,255,${alpha})`;
+        ctx.fill();
+      });
 
-      // Determine multiplier scale for Y axis
-      const maxMult = Math.max(1.5, mult * 1.15 + 0.3);
-      const multLevels = [];
-      const step = maxMult <= 2 ? 0.25 : maxMult <= 5 ? 0.5 : maxMult <= 10 ? 1 : maxMult <= 20 ? 2 : 5;
-      for (let m = 1; m <= maxMult + step; m += step) {
-        multLevels.push(parseFloat(m.toFixed(2)));
+      // ── flash overlay (crash) ─────────────────────────────────────────────
+      if (flashRef.current > 0.01) {
+        ctx.fillStyle = `rgba(255,60,60,${flashRef.current * 0.22})`;
+        ctx.fillRect(0, 0, W, H);
+        flashRef.current *= 0.84;
       }
 
-      // Horizontal grid lines with multiplier labels
-      multLevels.forEach((m) => {
-        const y = getCurvedY(m, maxMult, gH, { top: 0, bottom: 0 });
-        if (y < 0 || y > gH) return;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(gW, y);
-        ctx.strokeStyle = "rgba(255,255,255,0.045)";
-        ctx.lineWidth = 1;
+      // ── coordinate helpers ────────────────────────────────────────────────
+      const maxMult  = Math.max(1.5, mult * 1.18 + 0.2);
+      const toX      = pct  => pad.left + pct * gW;
+      const toY      = m    => pad.top  + getCurvedY(m, maxMult, gH) + cameraYRef.current;
+      const originX  = pad.left;
+      const originY  = pad.top + gH + cameraYRef.current;
+
+      // camera scroll at high multipliers
+      const targetCam = mult > 10 ? -Math.min(100, (mult - 10) * 3.5) : 0;
+      cameraYRef.current = lerp(cameraYRef.current, targetCam, 0.04);
+
+      // ── grid ──────────────────────────────────────────────────────────────
+      ctx.save();
+      ctx.translate(pad.left, pad.top + cameraYRef.current);
+
+      const gridOffset = (frame * 0.4) % 80;
+      const vCount = Math.floor(gW / 80) + 2;
+      for (let i = 0; i < vCount; i++) {
+        const x = i * 80 - gridOffset;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, gH);
+        ctx.strokeStyle = "rgba(255,255,255,0.03)";
+        ctx.lineWidth   = 1;
+        ctx.stroke();
+      }
+
+      // horizontal grid lines with labels
+      const allLevels = [1, 1.5, 2, 3, 5, 8, 10, 15, 20, 30, 50, 100];
+      allLevels.filter(m => m <= maxMult * 1.05).forEach(m => {
+        const y = getCurvedY(m, maxMult, gH);
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(gW, y);
+        ctx.strokeStyle = "rgba(255,255,255,0.055)";
+        ctx.lineWidth   = 1;
         ctx.setLineDash([4, 6]);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Y-axis label
-        ctx.font = `500 ${Math.max(9, Math.min(11, W * 0.018))}px 'Inter', 'SF Pro Display', sans-serif`;
-        ctx.fillStyle = "rgba(255,255,255,0.28)";
-        ctx.textAlign = "right";
-        ctx.fillText(`${m.toFixed(2)}x`, -8, y + 3.5);
+        ctx.font         = "bold 10px 'Courier New', monospace";
+        ctx.fillStyle    = "rgba(255,255,255,0.3)";
+        ctx.textAlign    = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`${m}x`, -10, y);
       });
 
-      // Vertical grid lines (time-based)
-      const vLines = 6;
-      for (let i = 0; i <= vLines; i++) {
-        const x = (gW / vLines) * i;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, gH);
-        ctx.strokeStyle = "rgba(255,255,255,0.03)";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-
-      // Axis lines
-      ctx.beginPath();
-      ctx.moveTo(0, gH);
-      ctx.lineTo(gW, gH);
-      ctx.strokeStyle = "rgba(255,255,255,0.08)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(0, gH);
-      ctx.strokeStyle = "rgba(255,255,255,0.08)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      // axes
+      ctx.beginPath(); ctx.moveTo(0, gH); ctx.lineTo(gW, gH);
+      ctx.strokeStyle = "rgba(255,255,255,0.14)"; ctx.lineWidth = 1; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, gH);
+      ctx.strokeStyle = "rgba(255,255,255,0.14)"; ctx.lineWidth = 1; ctx.stroke();
 
       ctx.restore();
 
-      if (pathPts.length < 2) {
-        // Smooth display mult toward 1.0
-        displayMultRef.current = lerp(displayMultRef.current, mult, 0.12);
+      // ── waiting state ─────────────────────────────────────────────────────
+      if (waiting) {
+        const pulse = 0.5 + Math.sin(frame * 0.08) * 0.5;
+        ctx.textAlign    = "center";
+        ctx.textBaseline = "middle";
+        ctx.font         = `900 52px 'Courier New', monospace`;
+        ctx.fillStyle    = `rgba(255,255,255,${0.6 + pulse * 0.4})`;
+        ctx.shadowColor  = "#4488ff";
+        ctx.shadowBlur   = 30 + pulse * 20;
+        ctx.fillText(`STARTING IN`, W / 2, H * 0.38);
+        ctx.font       = `900 80px 'Courier New', monospace`;
+        ctx.fillStyle  = "#ffffff";
+        ctx.shadowBlur = 40 + pulse * 20;
+        ctx.fillText(`${countdownRef.current}s`, W / 2, H * 0.58);
+        ctx.shadowBlur = 0;
 
-        // Draw multiplier display even before curve starts
-        drawMultiplierDisplay(ctx, W, H, displayMultRef.current, crashed, frame, pad);
         animRef.current = requestAnimationFrame(render);
         return;
       }
 
-      // Coordinate mappers into graph space
-      const toX = (pct) => pad.left + pct * gW;
-      const toY = (m) => pad.top + getCurvedY(m, maxMult, gH, { top: 0, bottom: 0 });
-
-      const originX = pad.left;
-      const originY = pad.top + gH;
-
-      const rawPts = pathPts.map((p) => ({ x: toX(p.pct), y: toY(p.mult) }));
-      // Reduce points for spline (every Nth for perf)
-      const stride = Math.max(1, Math.floor(rawPts.length / 120));
-      const reduced = rawPts.filter((_, i) => i % stride === 0 || i === rawPts.length - 1);
-      const smoothPts = catmullRomPoints(reduced, 8);
-      const last = rawPts[rawPts.length - 1];
-
-      // ── PLANE PHYSICS ──
-      const targetX = last.x;
-      const targetY = last.y;
-      const spring = crashed ? 0.12 : 0.032;
-      const damp = 0.82;
-      velXRef.current = velXRef.current * damp + (targetX - planeXRef.current) * spring;
-      velYRef.current = velYRef.current * damp + (targetY - planeYRef.current) * spring;
-      planeXRef.current += velXRef.current;
-      planeYRef.current += velYRef.current;
-
-      // Realistic banking based on velocity
-      const speed = Math.sqrt(velXRef.current ** 2 + velYRef.current ** 2);
-      const trajectoryAngle = speed > 0.1
-        ? Math.atan2(velYRef.current, velXRef.current) * (180 / Math.PI)
-        : planeTiltRef.current;
-
-      if (!crashed) {
-        const targetTilt = Math.max(-40, Math.min(10, trajectoryAngle * 0.7));
-        planeTiltRef.current = lerp(planeTiltRef.current, targetTilt, 0.06);
-        bankAngleRef.current = lerp(bankAngleRef.current, trajectoryAngle * 0.15, 0.05);
-      } else {
-        planeTiltRef.current = lerp(planeTiltRef.current, 70, 0.04);
-        bankAngleRef.current = lerp(bankAngleRef.current, 30, 0.03);
+      // ── early exit if no path ─────────────────────────────────────────────
+      if (pathPts.length < 2) {
+        animRef.current = requestAnimationFrame(render);
+        return;
       }
 
-      const px = planeXRef.current;
-      const py = planeYRef.current;
+      // ── path points ───────────────────────────────────────────────────────
+      const rawPts = pathPts.map(p => ({ x: toX(p.pct), y: toY(p.mult) }));
+      const last   = rawPts[rawPts.length - 1];
 
-      // ── CONTRAIL ──
-      if (!crashed && px > pad.left + 10) {
-        contrailRef.current.push({
-          x: px - Math.cos((planeTiltRef.current * Math.PI) / 180) * 20,
-          y: py - Math.sin((planeTiltRef.current * Math.PI) / 180) * 20,
+      // ── plane physics ─────────────────────────────────────────────────────
+      const dist = Math.hypot(planeXRef.current - last.x, planeYRef.current - last.y);
+      if (planeXRef.current < 0 || dist > 120) {
+        planeXRef.current = last.x;
+        planeYRef.current = last.y;
+      } else {
+        const spring = crashed ? 0.10 : 0.22;
+        const damp   = 0.75;
+        velXRef.current = velXRef.current * damp + (last.x - planeXRef.current) * spring;
+        velYRef.current = velYRef.current * damp + (last.y - planeYRef.current) * spring;
+        planeXRef.current += velXRef.current;
+        planeYRef.current += velYRef.current;
+      }
+
+      if (rawPts.length >= 2 && !crashed) {
+        const p0    = rawPts[Math.max(0, rawPts.length - 6)];
+        const p1    = rawPts[rawPts.length - 1];
+        const angle = Math.atan2(p1.y - p0.y, p1.x - p0.x) * (180 / Math.PI);
+        planeTiltRef.current = lerp(planeTiltRef.current, clamp(angle, -55, 5), 0.10);
+      }
+
+      const px      = planeXRef.current;
+      const py      = planeYRef.current;
+      const tiltRad = (planeTiltRef.current * Math.PI) / 180;
+
+      // ── engine trail (exhaust) ────────────────────────────────────────────
+      if (!crashed) {
+        trailRef.current.push({ x: px, y: py, life: 1 });
+        if (trailRef.current.length > 60) trailRef.current.shift();
+
+        particlesRef.current.push({
+          x:  px - Math.cos(tiltRad) * 20 + (Math.random() - 0.5) * 4,
+          y:  py - Math.sin(tiltRad) * 20 + (Math.random() - 0.5) * 4,
+          vx: -Math.cos(tiltRad) * (Math.random() * 3 + 1),
+          vy: -Math.sin(tiltRad) * (Math.random() * 3 + 1) + (Math.random() - 0.5),
+          size: Math.random() * 5 + 2,
           life: 1,
-          size: 3 + Math.random() * 1.5,
         });
       }
-      if (contrailRef.current.length > 80) contrailRef.current.shift();
-      contrailRef.current.forEach((p) => { p.life -= 0.018; });
-      contrailRef.current = contrailRef.current.filter((p) => p.life > 0);
 
-      contrailRef.current.forEach((p) => {
+      particlesRef.current = particlesRef.current
+        .map(p => ({ ...p, x: p.x + p.vx, y: p.y + p.vy, size: p.size * 0.97, life: p.life - 0.03 }))
+        .filter(p => p.life > 0);
+
+      // draw exhaust trail
+      if (trailRef.current.length > 1) {
+        for (let i = 1; i < trailRef.current.length; i++) {
+          const t0 = trailRef.current[i - 1];
+          const t1 = trailRef.current[i];
+          const a  = (i / trailRef.current.length) * 0.35;
+          ctx.beginPath();
+          ctx.moveTo(t0.x, t0.y);
+          ctx.lineTo(t1.x, t1.y);
+          ctx.strokeStyle = `rgba(255,140,60,${a})`;
+          ctx.lineWidth   = (i / trailRef.current.length) * 5;
+          ctx.lineCap     = "round";
+          ctx.stroke();
+        }
+      }
+
+      // draw exhaust particles
+      particlesRef.current.forEach(p => {
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
+        g.addColorStop(0, `rgba(255,160,80,${p.life * 0.8})`);
+        g.addColorStop(1, `rgba(255,60,0,0)`);
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(200,215,255,${p.life * 0.12})`;
+        ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+        ctx.fillStyle = g;
         ctx.fill();
       });
 
-      // ── BUILD PATH ──
+      // ── build curve path helper ───────────────────────────────────────────
       const buildPath = (c) => {
         c.beginPath();
         c.moveTo(originX, originY);
-        if (smoothPts.length > 0) {
-          c.lineTo(smoothPts[0].x, smoothPts[0].y);
-          for (let i = 1; i < smoothPts.length; i++) {
-            c.lineTo(smoothPts[i].x, smoothPts[i].y);
-          }
+        c.lineTo(rawPts[0].x, rawPts[0].y);
+        for (let i = 1; i < rawPts.length; i++) {
+          const p0 = rawPts[i - 1], p1 = rawPts[i];
+          const cp = p0.x + (p1.x - p0.x) * 0.5;
+          c.bezierCurveTo(cp, p0.y, cp, p1.y, p1.x, p1.y);
         }
       };
 
-      // ── AREA FILL ──
+      // ── area fill ─────────────────────────────────────────────────────────
       buildPath(ctx);
       ctx.lineTo(last.x, originY);
       ctx.lineTo(originX, originY);
       ctx.closePath();
       const areaGrad = ctx.createLinearGradient(0, pad.top, 0, originY);
-      areaGrad.addColorStop(0, "rgba(220,40,60,0.22)");
-      areaGrad.addColorStop(0.5, "rgba(180,20,40,0.08)");
-      areaGrad.addColorStop(1, "rgba(0,0,0,0)");
+      areaGrad.addColorStop(0, multColor(mult, 0.22));
+      areaGrad.addColorStop(1, multColor(mult, 0));
       ctx.fillStyle = areaGrad;
       ctx.fill();
 
-      // ── OUTER SOFT GLOW ──
+      // ── glow line ─────────────────────────────────────────────────────────
       buildPath(ctx);
-      ctx.strokeStyle = "rgba(255,50,80,0.06)";
-      ctx.lineWidth = 14;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
+      ctx.strokeStyle = multColor(mult, 0.15);
+      ctx.lineWidth   = 16;
+      ctx.lineCap = ctx.lineJoin = "round";
       ctx.stroke();
 
-      // ── MAIN LINE ──
       buildPath(ctx);
-      ctx.strokeStyle = crashed ? "rgba(255,60,80,0.5)" : "rgba(255,40,70,0.65)";
-      ctx.lineWidth = 5;
-      ctx.shadowColor = "rgba(255,30,60,0.4)";
-      ctx.shadowBlur = 8;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
+      ctx.strokeStyle  = multColorSolid(mult);
+      ctx.shadowColor  = multColorSolid(mult);
+      ctx.shadowBlur   = 18;
+      ctx.lineWidth    = 3.5;
       ctx.stroke();
+      ctx.shadowBlur   = 0;
+
+      // shimmer highlight
+      buildPath(ctx);
+      const shimmer = (frame * 4) % gW;
+      const glow    = ctx.createLinearGradient(shimmer - 140, 0, shimmer + 140, 0);
+      glow.addColorStop(0, "rgba(255,255,255,0)");
+      glow.addColorStop(0.5, "rgba(255,255,255,0.65)");
+      glow.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.strokeStyle = glow;
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+
+      // ── multiplier HUD ────────────────────────────────────────────────────
+      const pulse    = 0.5 + Math.sin(frame * 0.14) * 0.5;
+      const multSize = clamp(W * 0.09, 36, 72);
+      const accentCol = multColorSolid(mult);
+
+      // outer pulse ring
+      ctx.beginPath();
+      ctx.arc(W / 2, H * 0.22, multSize * 0.8 + pulse * 8, 0, Math.PI * 2);
+      ctx.strokeStyle = `${accentCol}33`;
+      ctx.lineWidth   = 2;
+      ctx.stroke();
+
+      ctx.textAlign    = "center";
+      ctx.textBaseline = "middle";
+      ctx.font         = `900 ${multSize}px 'Courier New', monospace`;
+      ctx.shadowColor  = accentCol;
+      ctx.shadowBlur   = 24 + pulse * 12;
+      ctx.fillStyle    = crashed ? "#ff5555" : "#ffffff";
+      ctx.fillText(`${mult.toFixed(2)}x`, W / 2, H * 0.22);
       ctx.shadowBlur = 0;
 
-      // ── CRISP HIGHLIGHT ──
-      buildPath(ctx);
-      const lineGrad = ctx.createLinearGradient(originX, 0, last.x, 0);
-      lineGrad.addColorStop(0, "#cc1133");
-      lineGrad.addColorStop(0.5, "#ff2244");
-      lineGrad.addColorStop(1, "#ff5577");
-      ctx.strokeStyle = lineGrad;
-      ctx.lineWidth = 2;
-      ctx.shadowColor = "rgba(255,40,70,0.5)";
-      ctx.shadowBlur = 4;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.stroke();
-      ctx.shadowBlur = 0;
+      // round + players HUD badges
+      ctx.font      = "600 11px 'Courier New', monospace";
+      ctx.fillStyle = "rgba(255,255,255,0.4)";
+      ctx.fillText(`ROUND #${roundIdRef.current}`, W / 2, H * 0.22 + multSize * 0.68);
 
-      // ── ENDPOINT PULSE ──
-      if (!crashed) {
-        const pulse = 0.5 + 0.5 * Math.sin(frame * 0.12);
-        // Outer ring
-        ctx.beginPath();
-        ctx.arc(last.x, last.y, 6 + pulse * 4, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255,60,90,${0.3 * pulse})`;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        // Inner dot
-        ctx.beginPath();
-        ctx.arc(last.x, last.y, 3.5, 0, Math.PI * 2);
-        ctx.fillStyle = "#ff2244";
-        ctx.shadowColor = "rgba(255,30,60,0.8)";
-        ctx.shadowBlur = 8;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        // Bright center
-        ctx.beginPath();
-        ctx.arc(last.x, last.y, 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = "#ffffff";
-        ctx.fill();
-      }
+      // online players badge (top-right)
+      const bx = W - pad.right - 5, by = 10;
+      ctx.font      = "bold 10px 'Courier New', monospace";
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      ctx.textAlign = "right";
+      ctx.fillText(`● ${onlinePlayersRef.current} online`, bx, by + 8);
 
-      // ── CRASH FX ──
+      // ── crash effects ─────────────────────────────────────────────────────
       if (crashed) {
         crashFrameRef.current++;
         const cf = crashFrameRef.current;
 
-        // Brief red flash
-        if (cf < 12) {
-          const flashAlpha = Math.max(0, (12 - cf) / 12) * 0.25;
-          ctx.fillStyle = `rgba(220,20,50,${flashAlpha})`;
-          ctx.fillRect(0, 0, W, H);
-        }
+        // expanding ring
+        ctx.beginPath();
+        ctx.arc(last.x, last.y, cf * 5, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255,80,80,${Math.max(0, 0.9 - cf * 0.025)})`;
+        ctx.lineWidth   = 3;
+        ctx.stroke();
 
-        // Expanding ring
-        for (let r = 0; r < 2; r++) {
-          const rad = 6 + r * 12 + Math.min(cf * 1.2, 40);
-          const alpha = Math.max(0, 0.5 - r * 0.15 - cf * 0.012);
-          if (alpha <= 0) continue;
+        // second ring (delayed)
+        if (cf > 6) {
           ctx.beginPath();
-          ctx.arc(last.x, last.y, rad, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(255,40,70,${alpha})`;
-          ctx.lineWidth = 2 - r * 0.5;
+          ctx.arc(last.x, last.y, (cf - 6) * 4, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255,180,0,${Math.max(0, 0.7 - (cf-6) * 0.03)})`;
+          ctx.lineWidth   = 2;
           ctx.stroke();
         }
 
-        // Crash X mark — clean, not cartoon
-        const xs = 7;
-        ctx.strokeStyle = "rgba(255,50,80,0.9)";
-        ctx.lineWidth = 2;
-        ctx.lineCap = "round";
-        ctx.shadowColor = "rgba(255,30,60,0.6)";
-        ctx.shadowBlur = 6;
-        [[-1, -1, 1, 1], [1, -1, -1, 1]].forEach(([x1, y1, x2, y2]) => {
+        // explosion sparks
+        explosionRef.current.forEach(p => {
+          const x = last.x + Math.cos(p.angle) * p.speed * cf;
+          const y = last.y + Math.sin(p.angle) * p.speed * cf;
+          const gp = ctx.createRadialGradient(x, y, 0, x, y, p.size * 2);
+          gp.addColorStop(0, `rgba(255,${140 + Math.random()*80|0},40,${p.life})`);
+          gp.addColorStop(1, "rgba(255,40,0,0)");
           ctx.beginPath();
-          ctx.moveTo(last.x + x1 * xs, last.y + y1 * xs);
-          ctx.lineTo(last.x + x2 * xs, last.y + y2 * xs);
-          ctx.stroke();
-        });
-        ctx.shadowBlur = 0;
-
-        // Debris particles (small, realistic)
-        crashDebrisRef.current = crashDebrisRef.current.filter((p) => p.life > 0);
-        crashDebrisRef.current.forEach((p) => {
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy += 0.12;
-          p.vx *= 0.97;
-          p.life -= p.decay;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-          ctx.fillStyle = p.color.replace(")", `,${p.life * 0.7})`).replace("rgb", "rgba");
+          ctx.arc(x, y, p.size * 2, 0, Math.PI * 2);
+          ctx.fillStyle = gp;
           ctx.fill();
+          p.life *= 0.955;
         });
+
+        // debris chunks
+        debrisRef.current.forEach(p => {
+          const x = last.x + Math.cos(p.angle) * p.speed * cf;
+          const y = last.y + Math.sin(p.angle) * p.speed * cf + cf * cf * 0.08;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(p.rot + p.rotV * cf);
+          ctx.fillStyle = `rgba(180,180,200,${p.life * 0.9})`;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+          p.life *= 0.965;
+        });
+
+        // CRASHED text with flicker
+        const flicker = Math.random() > 0.08 ? 1 : 0;
+        ctx.font      = `900 42px 'Courier New', monospace`;
+        ctx.textAlign = "center";
+        ctx.fillStyle = `rgba(255,60,60,${flicker})`;
+        ctx.shadowColor = "#ff0000";
+        ctx.shadowBlur  = 28;
+        ctx.fillText("CRASHED", W / 2, H * 0.30);
+        ctx.shadowBlur  = 0;
       }
 
-      // ── PLANE ──
-      if (px > pad.left + 4) {
-        const tilt = (planeTiltRef.current * Math.PI) / 180;
-        const planeSize = Math.max(38, Math.min(64, W * 0.1));
+      // ── plane ─────────────────────────────────────────────────────────────
+      if (px > pad.left) {
+        const tilt      = (planeTiltRef.current * Math.PI) / 180;
+        const planeSize = clamp(W * 0.10, 44, 72);
+        const ePulse    = 0.6 + Math.sin(frame * 0.22) * 0.4;
 
         ctx.save();
         ctx.translate(px, py);
-        ctx.rotate(tilt);
+        ctx.rotate(crashed ? tilt + crashFrameRef.current * 0.09 : tilt);
 
+        // engine glow
+        const eGrad = ctx.createRadialGradient(
+          -planeSize * 0.4, 0, 0,
+          -planeSize * 0.4, 0, planeSize * 0.5 * ePulse
+        );
+        eGrad.addColorStop(0, "rgba(255,160,40,0.9)");
+        eGrad.addColorStop(0.4, "rgba(255,60,0,0.5)");
+        eGrad.addColorStop(1, "rgba(255,0,0,0)");
+        ctx.beginPath();
+        ctx.ellipse(
+          -planeSize * 0.38, 0,
+          planeSize * 0.28 * ePulse, planeSize * 0.1, 0, 0, Math.PI * 2
+        );
+        ctx.fillStyle = eGrad;
+        ctx.fill();
+
+        // plane image or fallback polygon
         if (imgsReadyRef.current && planeImgRef.current) {
-          // Shadow/glow
-          ctx.shadowColor = crashed ? "rgba(255,40,70,0.6)" : "rgba(255,120,140,0.3)";
-          ctx.shadowBlur = crashed ? 16 : 12;
-
-          ctx.drawImage(
-            planeImgRef.current,
-            -planeSize * 0.5,
-            -planeSize * 0.5,
-            planeSize,
-            planeSize
-          );
-
-          if (crashed) {
-            ctx.globalCompositeOperation = "multiply";
-            ctx.fillStyle = "rgba(255,40,60,0.45)";
-            ctx.fillRect(-planeSize * 0.5, -planeSize * 0.5, planeSize, planeSize);
-            ctx.globalCompositeOperation = "source-over";
-          }
-          ctx.shadowBlur = 0;
+          ctx.shadowColor = "#ffffff";
+          ctx.shadowBlur  = 14;
+          ctx.drawImage(planeImgRef.current, -planeSize / 2, -planeSize / 2, planeSize, planeSize);
+          ctx.shadowBlur  = 0;
+        } else {
+          // nice fallback plane silhouette
+          ctx.beginPath();
+          ctx.moveTo( planeSize * 0.48,  0);
+          ctx.lineTo(-planeSize * 0.18, -planeSize * 0.17);
+          ctx.lineTo(-planeSize * 0.05,  0);
+          ctx.lineTo(-planeSize * 0.18,  planeSize * 0.17);
+          ctx.closePath();
+          ctx.fillStyle   = "#e8eaf6";
+          ctx.shadowColor = "#aabbff";
+          ctx.shadowBlur  = 10;
+          ctx.fill();
+          // wing
+          ctx.beginPath();
+          ctx.moveTo(planeSize * 0.1, -planeSize * 0.02);
+          ctx.lineTo(planeSize * 0.1,  -planeSize * 0.28);
+          ctx.lineTo(-planeSize * 0.1,  -planeSize * 0.04);
+          ctx.closePath();
+          ctx.fillStyle   = "#c5cae9";
+          ctx.shadowBlur  = 0;
+          ctx.fill();
+          // tailfin
+          ctx.beginPath();
+          ctx.moveTo(-planeSize * 0.14, -planeSize * 0.03);
+          ctx.lineTo(-planeSize * 0.28, -planeSize * 0.17);
+          ctx.lineTo(-planeSize * 0.22,  0);
+          ctx.closePath();
+          ctx.fillStyle = "#9fa8da";
+          ctx.fill();
         }
 
         ctx.restore();
       }
 
-      // ── MULTIPLIER DISPLAY ──
-      displayMultRef.current = lerp(displayMultRef.current, mult, crashed ? 0.05 : 0.15);
-      drawMultiplierDisplay(ctx, W, H, displayMultRef.current, crashed, frame, pad);
-
       animRef.current = requestAnimationFrame(render);
     };
 
     animRef.current = requestAnimationFrame(render);
-    return () => {
-      if (animRef.current) cancelAnimationFrame(animRef.current);
-    };
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      style={{
-        position: "absolute",
-        inset: 0,
-        width: "100%",
-        height: "100%",
-        display: "block",
-      }}
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
     />
   );
 }
 
-function drawMultiplierDisplay(ctx, W, H, mult, crashed, frame, pad) {
-  const cx = W / 2;
-  const cy = (pad.top + (H - pad.bottom)) / 2 - 10;
-
-  const displayText = `${mult.toFixed(2)}x`;
-  const fontSize = Math.max(28, Math.min(56, W * 0.09));
-
-  ctx.save();
-
-  // Subtle background pill
-  const pillW = fontSize * displayText.length * 0.62;
-  const pillH = fontSize * 1.35;
-  const rx = 10;
+// ── roundRect helper (kept for external use) ─────────────────────────────────
+export function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
-  ctx.roundRect
-    ? ctx.roundRect(cx - pillW / 2, cy - pillH / 2, pillW, pillH, rx)
-    : ctx.rect(cx - pillW / 2, cy - pillH / 2, pillW, pillH);
-  ctx.fillStyle = "rgba(0,0,0,0.28)";
-  ctx.fill();
-
-  // Multiplier text
-  ctx.font = `700 ${fontSize}px 'Inter', 'SF Pro Display', -apple-system, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-
-  if (crashed) {
-    ctx.fillStyle = "#ff2244";
-    ctx.shadowColor = "rgba(255,30,60,0.5)";
-    ctx.shadowBlur = 16;
+  if (ctx.roundRect) {
+    ctx.roundRect(x, y, w, h, r);
   } else {
-    // Gentle pulse on the text color
-    const pulse = 0.85 + 0.15 * Math.sin(frame * 0.1);
-    ctx.fillStyle = `rgba(255,${Math.floor(220 + 35 * pulse)},${Math.floor(220 + 35 * pulse)},1)`;
-    ctx.shadowColor = "rgba(255,100,120,0.25)";
-    ctx.shadowBlur = 10;
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
   }
-
-  ctx.fillText(displayText, cx, cy);
-  ctx.shadowBlur = 0;
-
-  // Subtext label
-  if (crashed) {
-    const subSize = Math.max(11, Math.min(16, W * 0.025));
-    ctx.font = `600 ${subSize}px 'Inter', sans-serif`;
-    ctx.fillStyle = "rgba(255,80,100,0.75)";
-    ctx.shadowBlur = 0;
-    ctx.fillText("FLEW AWAY", cx, cy + fontSize * 0.75);
-  }
-
-  ctx.restore();
 }

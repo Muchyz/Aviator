@@ -5,7 +5,8 @@ export default function BetPanel({
   gs, user, hasBet, cashedOut, betAmt, setBetAmt, autoCO, setAutoCO,
   onBet, onCashout, onLogin, md, lastBetRef,
   hasBet2, cashedOut2, betAmt2, setBetAmt2, autoCO2, setAutoCO2,
-  onBet2, onCashout2, lastBet2Ref
+  onBet2, onCashout2, lastBet2Ref,
+  socket,
 }) {
   const [dualMode, setDualMode] = useState(false);
 
@@ -25,7 +26,8 @@ export default function BetPanel({
         <SingleBetPanel
           gs={gs} user={user} hasBet={hasBet} cashedOut={cashedOut}
           betAmt={betAmt} setBetAmt={setBetAmt} autoCO={autoCO} setAutoCO={setAutoCO}
-          onBet={onBet} onCashout={onCashout} onLogin={onLogin} md={md} lastBetRef={lastBetRef}
+          onBet={onBet} onCashout={onCashout} onLogin={onLogin} md={md}
+          lastBetRef={lastBetRef} socket={socket} panelId={1}
         />
       ) : (
         <div className="dual-panels">
@@ -34,7 +36,8 @@ export default function BetPanel({
             <SingleBetPanel compact
               gs={gs} user={user} hasBet={hasBet} cashedOut={cashedOut}
               betAmt={betAmt} setBetAmt={setBetAmt} autoCO={autoCO} setAutoCO={setAutoCO}
-              onBet={onBet} onCashout={onCashout} onLogin={onLogin} md={md} lastBetRef={lastBetRef}
+              onBet={onBet} onCashout={onCashout} onLogin={onLogin} md={md}
+              lastBetRef={lastBetRef} socket={socket} panelId={1}
             />
           </div>
           <div className="dual-panel-wrap">
@@ -42,7 +45,8 @@ export default function BetPanel({
             <SingleBetPanel compact
               gs={gs} user={user} hasBet={hasBet2} cashedOut={cashedOut2}
               betAmt={betAmt2} setBetAmt={setBetAmt2} autoCO={autoCO2} setAutoCO={setAutoCO2}
-              onBet={onBet2} onCashout={onCashout2} onLogin={onLogin} md={md} lastBetRef={lastBet2Ref}
+              onBet={onBet2} onCashout={onCashout2} onLogin={onLogin} md={md}
+              lastBetRef={lastBet2Ref} socket={socket} panelId={2}
             />
           </div>
         </div>
