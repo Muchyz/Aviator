@@ -17,7 +17,6 @@ import AnimatedBalance from "./components/AnimatedBalance";
 import GameGraph from "./components/GameGraph";
 import BigWinOverlay from "./components/BigWinOverlay";
 import CountdownRing from "./components/CountdownRing";
-import PlaneOverlay from "./components/PlaneOverlay";
 import BetPanel from "./components/BetPanel";
 import LiveChat from "./components/LiveChat";
 import Locked from "./components/Locked";
@@ -84,8 +83,6 @@ export default function App() {
   const userRef = useRef(null);
   const betAmtRef = useRef("50");
   const betAmt2StrRef = useRef("50");
-
-  // ── Auto cashout refs — always current, no stale closure ──
   const autoCORef = useRef("2.00");
   const autoCO2Ref = useRef("2.00");
 
@@ -107,7 +104,6 @@ export default function App() {
     setTxns(p => [{ id: Date.now(), type, label, amount, time: new Date() }, ...p]);
   }, []);
 
-  // ── Auth check on mount ──
   useEffect(() => {
     const token = localStorage.getItem("avipesa_token");
     if (!token) { setAppReady(true); return; }
@@ -139,7 +135,6 @@ export default function App() {
     return socket;
   }, []);
 
-  // ── All socket listeners in ONE useEffect, runs once ──
   useEffect(() => {
     const token = localStorage.getItem("avipesa_token") || "";
     const socket = connectSocket(token);
@@ -196,31 +191,22 @@ export default function App() {
       setPlayers(data.bets || []);
       sound.updateHum(m);
 
-      // ── Auto cashout panel 1 ──
       const autoCOVal1 = parseFloat(autoCORef.current);
       if (
-        betAmountRef.current &&
-        !cashedOutRef.current &&
-        !isNaN(autoCOVal1) &&
-        autoCOVal1 >= 1.01 &&
-        m >= autoCOVal1
+        betAmountRef.current && !cashedOutRef.current &&
+        !isNaN(autoCOVal1) && autoCOVal1 >= 1.01 && m >= autoCOVal1
       ) {
         socket.emit("bet:cashout");
       }
 
-      // ── Auto cashout panel 2 ──
       const autoCOVal2 = parseFloat(autoCO2Ref.current);
       if (
-        betAmount2Ref.current &&
-        !cashedOut2Ref.current &&
-        !isNaN(autoCOVal2) &&
-        autoCOVal2 >= 1.01 &&
-        m >= autoCOVal2
+        betAmount2Ref.current && !cashedOut2Ref.current &&
+        !isNaN(autoCOVal2) && autoCOVal2 >= 1.01 && m >= autoCOVal2
       ) {
         socket.emit("bet:cashout", { panelId: 2 });
       }
 
-      // Big win overlay
       (data.bets || []).forEach(p => {
         if (p.cashed && parseFloat(p.cashMult) >= 10 && !seenBigWinsRef.current.has(p.id || p.name)) {
           seenBigWinsRef.current.add(p.id || p.name);
@@ -293,7 +279,6 @@ export default function App() {
     return () => { socket.disconnect(); };
   }, []);
 
-  // ── Float notifs ──
   useEffect(() => {
     const t = setInterval(() => {
       if (gsRef.current === "flying" && Math.random() < 0.3) {
@@ -348,7 +333,6 @@ export default function App() {
     socket.emit("bet:cashout", { panelId: 2 });
   }, []);
 
-  // ── Spacebar shortcut ──
   useEffect(() => {
     const onKey = e => {
       if (e.code !== "Space") return;
@@ -362,7 +346,6 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [handleBet, doCashout]);
 
-  // ── Tab data fetching ──
   useEffect(() => {
     if (tab === "history" && userRef.current) {
       fetch(`${API}/wallet/transactions`, {
@@ -456,7 +439,6 @@ export default function App() {
   const rankCls = i => i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
   const rankLabel = i => ["1st", "2nd", "3rd"][i] || `${i + 1}`;
   const fmtRoundId = id => `#${String(id).padStart(5, "0")}`;
-  const lastPt = pathPts.length > 0 ? pathPts[pathPts.length - 1] : null;
 
   const histIcon = type => {
     if (type === "dep") return <ArrowDownCircle size={15} />;
@@ -466,11 +448,11 @@ export default function App() {
   };
 
   const NAV_TABS = [
-    { id: "game", icon: <Zap size={14} />, label: "Game" },
-    { id: "wallet", icon: <Wallet size={14} />, label: "Wallet" },
-    { id: "history", icon: <History size={14} />, label: "History" },
-    { id: "leaderboard", icon: <Trophy size={14} />, label: "Leaders" },
-    { id: "stats", icon: <BarChart2 size={14} />, label: "Stats" },
+    { id: "game",        icon: <Zap size={14} />,      label: "Game"    },
+    { id: "wallet",      icon: <Wallet size={14} />,    label: "Wallet"  },
+    { id: "history",     icon: <History size={14} />,   label: "History" },
+    { id: "leaderboard", icon: <Trophy size={14} />,    label: "Leaders" },
+    { id: "stats",       icon: <BarChart2 size={14} />, label: "Stats"   },
   ];
 
   if (!appReady) {
@@ -495,11 +477,11 @@ export default function App() {
         {floatNotifs.map(n => <div key={n.id} className="fnotif">{n.msg}</div>)}
       </div>
 
-      {modal === "login" && <LoginModal onClose={() => setModal(null)} onLogin={handleLogin} goRegister={() => setModal("register")} />}
-      {modal === "register" && <RegisterModal onClose={() => setModal(null)} onLogin={handleLogin} goLogin={() => setModal("login")} />}
-      {modal === "deposit" && <DepositModal onClose={() => setModal(null)} onDeposit={handleDeposit} />}
+      {modal === "login"    && <LoginModal    onClose={() => setModal(null)} onLogin={handleLogin}  goRegister={() => setModal("register")} />}
+      {modal === "register" && <RegisterModal onClose={() => setModal(null)} onLogin={handleLogin}  goLogin={() => setModal("login")} />}
+      {modal === "deposit"  && <DepositModal  onClose={() => setModal(null)} onDeposit={handleDeposit} />}
       {modal === "withdraw" && <WithdrawModal onClose={() => setModal(null)} balance={balance} onWithdraw={handleWithdraw} />}
-      {modal === "pf" && <ProvablyFairModal onClose={() => setModal(null)} hash={pfHash} roundId={roundId} />}
+      {modal === "pf"       && <ProvablyFairModal onClose={() => setModal(null)} hash={pfHash} roundId={roundId} />}
 
       <nav className="nav">
         <div className="nav-i">
@@ -595,17 +577,14 @@ export default function App() {
               <div className="canvas">
                 {bigWin && <BigWinOverlay player={bigWin.player} mult={bigWin.mult} />}
                 {(gs === "flying" || gs === "crashed") && pathPts.length >= 2 && (
-                  <GameGraph gs={gs} mult={mult} pathPts={pathPts} crashed={planeCrashed} />
-                )}
-                {gs === "waiting" && <CountdownRing cd={cd} total={5} />}
-                {(gs === "flying" || gs === "crashed") && lastPt && (
-                  <PlaneOverlay
-                    pct={lastPt.pct}
-                    mult={lastPt.mult}
-                    maxMult={Math.max(1.5, mult * 1.2 + 0.3)}
+                  <GameGraph
+                    gs={gs}
+                    mult={mult}
+                    pathPts={pathPts}
                     crashed={planeCrashed}
                   />
                 )}
+                {gs === "waiting" && <CountdownRing cd={cd} total={5} />}
                 {gs !== "waiting" && (
                   <div className="mult-overlay">
                     <div className={`mult-num ${gs} ${gs === "flying" ? multClass() : ""}`}>{md}×</div>
@@ -851,14 +830,14 @@ export default function App() {
                 <div className="pcard-body">
                   <div className="stats-grid">
                     {[
-                      { icon: <Activity size={15} />, val: stats.totalBets, lbl: "Total Bets", cls: "amber" },
-                      { icon: <TrendingUp size={15} />, val: fKES(stats.totalWon), lbl: "Total Won", cls: "green" },
-                      { icon: <DollarSign size={15} />, val: fKES(stats.totalLost || 0), lbl: "Total Lost", cls: "red" },
-                      { icon: <Award size={15} />, val: stats.biggestWin > 0 ? `×${Number(stats.biggestWin).toFixed(2)}` : "—", lbl: "Best Cashout", cls: "amber" },
-                      { icon: <Target size={15} />, val: stats.avgCashout > 0 ? `×${Number(stats.avgCashout).toFixed(2)}` : "—", lbl: "Avg Cashout", cls: "" },
-                      { icon: <Percent size={15} />, val: stats.totalBets > 0 ? `${Math.round((stats.cashoutCount / stats.totalBets) * 100)}%` : "—", lbl: "Win Rate", cls: "" },
-                      { icon: <DollarSign size={15} />, val: fKES(stats.totalWagered || 0), lbl: "Total Wagered", cls: "" },
-                      { icon: <TrendingUp size={15} />, val: fKES(stats.totalWon - (stats.totalLost || 0)), lbl: "Net Profit", cls: (stats.totalWon - (stats.totalLost || 0)) >= 0 ? "green" : "red" },
+                      { icon: <Activity size={15} />,    val: stats.totalBets,                                          lbl: "Total Bets",    cls: "amber" },
+                      { icon: <TrendingUp size={15} />,  val: fKES(stats.totalWon),                                     lbl: "Total Won",     cls: "green" },
+                      { icon: <DollarSign size={15} />,  val: fKES(stats.totalLost || 0),                               lbl: "Total Lost",    cls: "red"   },
+                      { icon: <Award size={15} />,       val: stats.biggestWin > 0 ? `×${Number(stats.biggestWin).toFixed(2)}` : "—", lbl: "Best Cashout", cls: "amber" },
+                      { icon: <Target size={15} />,      val: stats.avgCashout > 0 ? `×${Number(stats.avgCashout).toFixed(2)}` : "—", lbl: "Avg Cashout",  cls: "" },
+                      { icon: <Percent size={15} />,     val: stats.totalBets > 0 ? `${Math.round((stats.cashoutCount / stats.totalBets) * 100)}%` : "—", lbl: "Win Rate", cls: "" },
+                      { icon: <DollarSign size={15} />,  val: fKES(stats.totalWagered || 0),                            lbl: "Total Wagered", cls: "" },
+                      { icon: <TrendingUp size={15} />,  val: fKES(stats.totalWon - (stats.totalLost || 0)),            lbl: "Net Profit",    cls: (stats.totalWon - (stats.totalLost || 0)) >= 0 ? "green" : "red" },
                     ].map((s, i) => (
                       <div key={i} className="stat-card">
                         <div className="stat-icon">{s.icon}</div>
@@ -870,8 +849,8 @@ export default function App() {
                   <div className="acct-info">
                     <div className="acct-section-lbl">Account Details</div>
                     {[
-                      { k: "Name", v: user.name, cls: "" },
-                      { k: "Phone", v: `+${user.phone}`, cls: "mono" },
+                      { k: "Name",    v: user.name,                   cls: ""      },
+                      { k: "Phone",   v: `+${user.phone}`,            cls: "mono"  },
                       { k: "Balance", v: <AnimatedBalance value={balance} />, cls: "green" },
                     ].map(row => (
                       <div key={row.k} className="acct-row">
