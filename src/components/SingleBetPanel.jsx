@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Minus, Plus, Check, Lock, RotateCcw } from "lucide-react";
 import { fKES } from "../utils/format";
 
@@ -12,24 +12,49 @@ export default function SingleBetPanel({
   const [autoCOOn, setAutoCOOn] = useState(false);
   const amt = parseFloat(betAmt) || 0;
 
+  // Track previous values to avoid redundant emits
+  const prevAutoCOOn = useRef(false);
+  const prevAutoCO = useRef(autoCO);
+  const prevSocket = useRef(null);
+
+  // Emit autocashout:set whenever the relevant values actually change
   useEffect(() => {
     if (!socket || !socket.connected) return;
+
     const pid = parseInt(panelId) === 2 ? 2 : 1;
-    if (autoCOOn) {
-      const val = parseFloat(autoCO);
-      if (!isNaN(val) && val >= 1.01) {
-        console.log(`[CLIENT] autocashout:set panelId=${pid} target=${val}`);
-        socket.emit("autocashout:set", { target: val, panelId: pid });
+    const val = parseFloat(autoCO);
+    const socketChanged = socket !== prevSocket.current;
+    const toggleChanged = autoCOOn !== prevAutoCOOn.current;
+    const valChanged = autoCO !== prevAutoCO.current;
+
+    // Only emit if something meaningful changed
+    if (!socketChanged && !toggleChanged && !valChanged) return;
+
+    prevSocket.current = socket;
+    prevAutoCOOn.current = autoCOOn;
+    prevAutoCO.current = autoCO;
+
+    if (autoCOOn && !isNaN(val) && val >= 1.01) {
+      console.log(`[CLIENT] autocashout:set panelId=${pid} target=${val}`);
+      socket.emit("autocashout:set", { target: val, panelId: pid });
+    } else if (!autoCOOn) {
+      // Only clear if we were previously on, or socket just connected
+      if (toggleChanged || socketChanged) {
+        console.log(`[CLIENT] autocashout:set panelId=${pid} target=null`);
+        socket.emit("autocashout:set", { target: null, panelId: pid });
       }
-    } else {
-      console.log(`[CLIENT] autocashout:set panelId=${pid} target=null`);
-      socket.emit("autocashout:set", { target: null, panelId: pid });
     }
   }, [autoCOOn, autoCO, socket, socket?.connected, panelId]);
 
   const adjust = delta => {
     const cur = parseFloat(betAmt) || 0;
     setBetAmt(String(Math.max(10, Math.round((cur + delta) * 100) / 100)));
+  };
+
+  const handleManualCashout = () => {
+    // Only call the parent handler — do NOT emit socket here.
+    // The parent (App.jsx doCashout) emits the socket event.
+    onCashout();
   };
 
   const BigBtn = () => {
@@ -39,14 +64,7 @@ export default function SingleBetPanel({
       </button>
     );
     if (gs === "flying" && hasBet && !cashedOut) return (
-      <button className="bet-cta cashout" onClick={() => {
-        const pid = parseInt(panelId) === 2 ? 2 : 1;
-        if (socket && socket.connected) {
-          console.log(`[CLIENT] bet:cashout panelId=${pid}`);
-          socket.emit("bet:cashout", pid === 2 ? { panelId: 2 } : {});
-        }
-        onCashout();
-      }}>
+      <button className="bet-cta cashout" onClick={handleManualCashout}>
         💰 Cash Out ×{md}
       </button>
     );
