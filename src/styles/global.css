@@ -329,3 +329,10 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
   .layout{display:grid;grid-template-columns:1fr 280px;gap:10px;padding:10px 16px;}
   .rcol{display:flex}.mob-players{display:none}.canvas{height:310px}.mult-num{font-size:68px}
 }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+  display: inline-block;
+}
