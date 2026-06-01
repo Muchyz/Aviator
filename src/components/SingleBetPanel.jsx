@@ -14,13 +14,16 @@ export default function SingleBetPanel({
 
   useEffect(() => {
     if (!socket || !socket.connected) return;
+    const pid = parseInt(panelId) === 2 ? 2 : 1;
     if (autoCOOn) {
       const val = parseFloat(autoCO);
       if (!isNaN(val) && val >= 1.01) {
-        socket.emit("autocashout:set", { target: val, panelId });
+        console.log(`[CLIENT] autocashout:set panelId=${pid} target=${val}`);
+        socket.emit("autocashout:set", { target: val, panelId: pid });
       }
     } else {
-      socket.emit("autocashout:set", { target: null, panelId });
+      console.log(`[CLIENT] autocashout:set panelId=${pid} target=null`);
+      socket.emit("autocashout:set", { target: null, panelId: pid });
     }
   }, [autoCOOn, autoCO, socket, socket?.connected, panelId]);
 
@@ -37,8 +40,10 @@ export default function SingleBetPanel({
     );
     if (gs === "flying" && hasBet && !cashedOut) return (
       <button className="bet-cta cashout" onClick={() => {
+        const pid = parseInt(panelId) === 2 ? 2 : 1;
         if (socket && socket.connected) {
-          socket.emit("bet:cashout", panelId === 2 ? { panelId: 2 } : {});
+          console.log(`[CLIENT] bet:cashout panelId=${pid}`);
+          socket.emit("bet:cashout", pid === 2 ? { panelId: 2 } : {});
         }
         onCashout();
       }}>
