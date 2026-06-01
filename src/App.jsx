@@ -66,6 +66,7 @@ export default function App() {
   const [roundId, setRoundId] = useState(1);
   const [bigWin, setBigWin] = useState(null);
   const [toastState, setToastState] = useState(null);
+  const [socketReady, setSocketReady] = useState(false);
 
   const gsRef = useRef("waiting");
   const multRef = useRef(1);
@@ -139,8 +140,16 @@ export default function App() {
     const token = localStorage.getItem("avipesa_token") || "";
     const socket = connectSocket(token);
 
-    socket.on("connect", () => console.log("✅ Connected:", socket.id));
-    socket.on("disconnect", reason => console.log("⚠️ Disconnected:", reason));
+    socket.on("connect", () => {
+      console.log("✅ Connected:", socket.id);
+      setSocketReady(true);
+    });
+
+    socket.on("disconnect", reason => {
+      console.log("⚠️ Disconnected:", reason);
+      setSocketReady(false);
+    });
+
     socket.on("connect_error", e => console.warn("❌ Error:", e.message));
 
     socket.on("game:state", data => {
@@ -191,22 +200,6 @@ export default function App() {
       setPlayers(data.bets || []);
       sound.updateHum(m);
 
-      const autoCOVal1 = parseFloat(autoCORef.current);
-      if (
-        betAmountRef.current && !cashedOutRef.current &&
-        !isNaN(autoCOVal1) && autoCOVal1 >= 1.01 && m >= autoCOVal1
-      ) {
-        socket.emit("bet:cashout");
-      }
-
-      const autoCOVal2 = parseFloat(autoCO2Ref.current);
-      if (
-        betAmount2Ref.current && !cashedOut2Ref.current &&
-        !isNaN(autoCOVal2) && autoCOVal2 >= 1.01 && m >= autoCOVal2
-      ) {
-        socket.emit("bet:cashout", { panelId: 2 });
-      }
-
       (data.bets || []).forEach(p => {
         if (p.cashed && parseFloat(p.cashMult) >= 10 && !seenBigWinsRef.current.has(p.id || p.name)) {
           seenBigWinsRef.current.add(p.id || p.name);
@@ -225,9 +218,9 @@ export default function App() {
       if (data.roundId) { roundIdRef.current = data.roundId; setRoundId(data.roundId); }
       sound.stopHum(); sound.playCrash();
       if (betAmountRef.current && !cashedOutRef.current)
-        toast_(`Crashed ×${cm.toFixed(2)} — Lost ${fKES(parseFloat(betAmountRef.current))}`, "err");
+        toast_(`Crashed x${cm.toFixed(2)} — Lost ${fKES(parseFloat(betAmountRef.current))}`, "err");
       if (betAmount2Ref.current && !cashedOut2Ref.current)
-        toast_(`Bet 2 crashed ×${cm.toFixed(2)}`, "err");
+        toast_(`Bet 2 crashed x${cm.toFixed(2)}`, "err");
       betAmountRef.current = null; setHasBet(false);
       betAmount2Ref.current = null; setHasBet2(false);
     });
@@ -259,18 +252,18 @@ export default function App() {
         if (result.ok) {
           cashedOut2Ref.current = true; setCashedOut2(true);
           setBalance(result.balance); balanceRef.current = result.balance;
-          addTxn("win", `Bet 2 Win ×${result.mult.toFixed(2)}`, result.profit);
-          toast_(`Bet 2 cashed ×${result.mult.toFixed(2)} — Won ${fKES(result.payout)}`);
+          addTxn("win", `Bet 2 Win x${result.mult.toFixed(2)}`, result.profit);
+          toast_(`Bet 2 cashed x${result.mult.toFixed(2)} — Won ${fKES(result.payout)}`);
           sound.playCashout();
         } else { toast_(result.error || "Cashout failed", "err"); }
       } else {
         if (result.ok) {
           cashedOutRef.current = true; setCashedOut(true);
           setBalance(result.balance); balanceRef.current = result.balance;
-          addTxn("win", `Win ×${result.mult.toFixed(2)}`, result.profit);
-          setWinBanner(`×${result.mult.toFixed(2)} — Won ${fKES(result.payout)}`);
+          addTxn("win", `Win x${result.mult.toFixed(2)}`, result.profit);
+          setWinBanner(`x${result.mult.toFixed(2)} — Won ${fKES(result.payout)}`);
           setTimeout(() => setWinBanner(null), 3000);
-          toast_(`Cashed out ×${result.mult.toFixed(2)} — Won ${fKES(result.payout)}`);
+          toast_(`Cashed out x${result.mult.toFixed(2)} — Won ${fKES(result.payout)}`);
           sound.playCashout();
         } else { toast_(result.error || "Cashout failed", "err"); }
       }
@@ -592,7 +585,7 @@ export default function App() {
                 betAmt2={betAmt2} setBetAmt2={setBetAmt2} autoCO2={autoCO2} setAutoCO2={setAutoCO2}
                 onBet2={handleBet2} onCashout2={doCashout2}
                 lastBet2Ref={lastBet2Ref}
-                socket={socketRef.current}
+                socket={socketReady ? socketRef.current : null}
               />
 
               <div className="pf-bar">

@@ -6,15 +6,14 @@ export default function SingleBetPanel({
   gs, user, hasBet, cashedOut, betAmt, setBetAmt,
   autoCO, setAutoCO, onBet, onCashout, onLogin,
   md, lastBetRef, compact = false,
-  socket, // pass the socket instance as a prop
+  socket,
   panelId = 1,
 }) {
   const [autoCOOn, setAutoCOOn] = useState(false);
   const amt = parseFloat(betAmt) || 0;
 
-  // Whenever autoCOOn or autoCO value changes, tell the server
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !socket.connected) return;
     if (autoCOOn) {
       const val = parseFloat(autoCO);
       if (!isNaN(val) && val >= 1.01) {
@@ -23,7 +22,7 @@ export default function SingleBetPanel({
     } else {
       socket.emit("autocashout:set", { target: null, panelId });
     }
-  }, [autoCOOn, autoCO, socket, panelId]);
+  }, [autoCOOn, autoCO, socket, socket?.connected, panelId]);
 
   const adjust = delta => {
     const cur = parseFloat(betAmt) || 0;
@@ -37,7 +36,12 @@ export default function SingleBetPanel({
       </button>
     );
     if (gs === "flying" && hasBet && !cashedOut) return (
-      <button className="bet-cta cashout" onClick={onCashout}>
+      <button className="bet-cta cashout" onClick={() => {
+        if (socket && socket.connected) {
+          socket.emit("bet:cashout", panelId === 2 ? { panelId: 2 } : {});
+        }
+        onCashout();
+      }}>
         💰 Cash Out ×{md}
       </button>
     );
