@@ -1,10 +1,27 @@
 import { useRef, useCallback } from "react";
 
-export function useSoundEngine() {
-  const ctxRef = useRef(null);
-  const humRef = useRef(null);
-  const soundOnRef = useRef(true);
+/**
+ * SOUND FILES — put these in your project:
+ *
+ *   public/
+ *     sounds/
+ *       counting.mp3   ← the ticking/countdown sound during betting phase
+ *       flyaway.mp3    ← the whoosh when the plane flies away (crash)
+ */
 
+const SOUNDS = {
+  counting: "/sounds/counting.mp3",
+  flyaway:  "/sounds/flyaway.mp3",
+};
+
+export function useSoundEngine() {
+  const ctxRef      = useRef(null);
+  const buffersRef  = useRef({});       // decoded AudioBuffers
+  const countingRef = useRef(null);     // currently playing counting node
+  const soundOnRef  = useRef(true);
+  const loadedRef   = useRef(false);
+
+  // ── AudioContext ────────────────────────────────────────────────────────
   const getCtx = useCallback(() => {
     if (!ctxRef.current) {
       try {
@@ -15,72 +32,82 @@ export function useSoundEngine() {
     return ctxRef.current;
   }, []);
 
-  const startHum = useCallback(() => {
-    if (!soundOnRef.current) return;
+  // ── Preload both files once ─────────────────────────────────────────────
+  const preload = useCallback(async () => {
+    if (loadedRef.current) return;
     const ctx = getCtx(); if (!ctx) return;
     try {
-      if (humRef.current) { try { humRef.current.stop(); } catch {} }
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sawtooth"; osc.frequency.value = 80; gain.gain.value = 0.04;
-      osc.connect(gain); gain.connect(ctx.destination); osc.start();
-      humRef.current = osc;
-    } catch {}
-  }, [getCtx]);
-
-  const updateHum = useCallback((mult) => {
-    if (!humRef.current || !soundOnRef.current) return;
-    const ctx = getCtx(); if (!ctx) return;
-    try {
-      humRef.current.frequency.setTargetAtTime(
-        Math.min(80 + mult * 22, 420), ctx.currentTime, 0.3
+      await Promise.all(
+        Object.entries(SOUNDS).map(async ([key, path]) => {
+          const res  = await fetch(path);
+          const ab   = await res.arrayBuffer();
+          buffersRef.current[key] = await ctx.decodeAudioData(ab);
+        })
       );
-    } catch {}
+      loadedRef.current = true;
+    } catch (e) {
+      console.warn("useSoundEngine: failed to load sound files.", e);
+    }
   }, [getCtx]);
 
-  const stopHum = useCallback(() => {
-    if (!humRef.current) return;
-    try { humRef.current.stop(); } catch {}
-    humRef.current = null;
+  // ── Helper: play a buffer ───────────────────────────────────────────────
+  const playBuffer = useCallback((key, { loop = false, volume = 1 } = {}) => {
+    const ctx = getCtx(); if (!ctx) return null;
+    const buffer = buffersRef.current[key]; if (!buffer) return null;
+    try {
+      const src  = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      src.buffer      = buffer;
+      src.loop        = loop;
+      gain.gain.value = volume;
+      src.connect(gain); gain.connect(ctx.destination);
+      src.start();
+      return { src, gain };
+    } catch { return null; }
+  }, [getCtx]);
+
+  // ── 1. COUNTING — loops during betting phase ────────────────────────────
+  const startCounting = useCallback(async () => {
+    if (!soundOnRef.current) return;
+    await preload();
+    if (countingRef.current) return; // already playing
+    const node = playBuffer("counting", { loop: true, volume: 0.9 });
+    if (node) countingRef.current = node;
+  }, [preload, playBuffer]);
+
+  const stopCounting = useCallback(() => {
+    if (!countingRef.current) return;
+    try {
+      const { src, gain } = countingRef.current;
+      const ctx = ctxRef.current;
+      if (ctx) {
+        gain.gain.setTargetAtTime(0, ctx.currentTime, 0.08);
+        setTimeout(() => { try { src.stop(); } catch {} }, 300);
+      } else {
+        src.stop();
+      }
+    } catch {}
+    countingRef.current = null;
   }, []);
 
-  const playCashout = useCallback(() => {
+  // ── 2. FLY AWAY — one-shot when plane crashes ───────────────────────────
+  const playFlyaway = useCallback(async () => {
     if (!soundOnRef.current) return;
-    const ctx = getCtx(); if (!ctx) return;
-    try {
-      const osc = ctx.createOscillator(); const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(520, ctx.currentTime);
-      osc.frequency.setTargetAtTime(880, ctx.currentTime, 0.05);
-      gain.gain.setValueAtTime(0.18, ctx.currentTime);
-      gain.gain.setTargetAtTime(0, ctx.currentTime + 0.3, 0.1);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(); osc.stop(ctx.currentTime + 0.5);
-    } catch {}
-  }, [getCtx]);
+    await preload();
+    playBuffer("flyaway", { loop: false, volume: 1.0 });
+  }, [preload, playBuffer]);
 
-  const playCrash = useCallback(() => {
-    if (!soundOnRef.current) return;
-    const ctx = getCtx(); if (!ctx) return;
-    try {
-      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.5, ctx.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let i = 0; i < data.length; i++)
-        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2);
-      const src = ctx.createBufferSource(); const gain = ctx.createGain();
-      const filt = ctx.createBiquadFilter();
-      filt.type = "lowpass"; filt.frequency.value = 280;
-      src.buffer = buf;
-      gain.gain.setValueAtTime(0.35, ctx.currentTime);
-      gain.gain.setTargetAtTime(0, ctx.currentTime + 0.1, 0.15);
-      src.connect(filt); filt.connect(gain); gain.connect(ctx.destination); src.start();
-    } catch {}
-  }, [getCtx]);
+  // ── Master mute ─────────────────────────────────────────────────────────
+  const setSoundOn = useCallback((val) => {
+    soundOnRef.current = val;
+    if (!val) stopCounting();
+  }, [stopCounting]);
 
-  const setSoundOn = useCallback(
-    (val) => { soundOnRef.current = val; if (!val) stopHum(); },
-    [stopHum]
-  );
-
-  return { startHum, updateHum, stopHum, playCashout, playCrash, setSoundOn };
+  return {
+    preload,          // call on app mount to load files early
+    startCounting,    // call when betting phase begins
+    stopCounting,     // call when betting phase ends
+    playFlyaway,      // call when plane flies away
+    setSoundOn,       // true/false to mute/unmute
+  };
 }
