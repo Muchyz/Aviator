@@ -1,113 +1,123 @@
 import { useRef, useCallback } from "react";
 
-/**
- * SOUND FILES — put these in your project:
- *
- *   public/
- *     sounds/
- *       counting.mp3   ← the ticking/countdown sound during betting phase
- *       flyaway.mp3    ← the whoosh when the plane flies away (crash)
- */
-
 const SOUNDS = {
   counting: "/sounds/counting.mp3",
   flyaway:  "/sounds/flyaway.mp3",
 };
 
 export function useSoundEngine() {
-  const ctxRef      = useRef(null);
-  const buffersRef  = useRef({});       // decoded AudioBuffers
-  const countingRef = useRef(null);     // currently playing counting node
-  const soundOnRef  = useRef(true);
-  const loadedRef   = useRef(false);
+  const ctxRef     = useRef(null);
+  const buffersRef = useRef({});
+  const humRef     = useRef(null);
+  const soundOnRef = useRef(true);
+  const loadedRef  = useRef(false);
 
-  // ── AudioContext ────────────────────────────────────────────────────────
   const getCtx = useCallback(() => {
     if (!ctxRef.current) {
-      try {
-        ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      } catch { return null; }
+      try { ctxRef.current = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch { return null; }
     }
     if (ctxRef.current.state === "suspended") ctxRef.current.resume();
     return ctxRef.current;
   }, []);
 
-  // ── Preload both files once ─────────────────────────────────────────────
   const preload = useCallback(async () => {
     if (loadedRef.current) return;
     const ctx = getCtx(); if (!ctx) return;
     try {
       await Promise.all(
         Object.entries(SOUNDS).map(async ([key, path]) => {
-          const res  = await fetch(path);
-          const ab   = await res.arrayBuffer();
+          const res = await fetch(path);
+          if (!res.ok) throw new Error(`Failed: ${path}`);
+          const ab  = await res.arrayBuffer();
           buffersRef.current[key] = await ctx.decodeAudioData(ab);
         })
       );
       loadedRef.current = true;
-    } catch (e) {
-      console.warn("useSoundEngine: failed to load sound files.", e);
-    }
+      console.log("✅ Sounds loaded");
+    } catch (e) { console.warn("Sound load error:", e.message); }
   }, [getCtx]);
 
-  // ── Helper: play a buffer ───────────────────────────────────────────────
-  const playBuffer = useCallback((key, { loop = false, volume = 1 } = {}) => {
-    const ctx = getCtx(); if (!ctx) return null;
-    const buffer = buffersRef.current[key]; if (!buffer) return null;
+  const startHum = useCallback(async () => {
+    if (!soundOnRef.current) return;
+    await preload();
+    const ctx = getCtx(); if (!ctx) return;
+    const buffer = buffersRef.current["counting"]; if (!buffer) return;
+    try {
+      if (humRef.current) { try { humRef.current.src.stop(); } catch {} humRef.current = null; }
+      const src  = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      src.buffer = buffer; src.loop = true;
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.9, ctx.currentTime + 0.6);
+      src.connect(gain); gain.connect(ctx.destination);
+      src.start();
+      humRef.current = { src, gain };
+    } catch (e) { console.warn("startHum:", e); }
+  }, [preload, getCtx]);
+
+  const updateHum = useCallback((mult) => {
+    if (!humRef.current || !soundOnRef.current) return;
+    const ctx = getCtx(); if (!ctx) return;
+    try {
+      const rate = Math.min(1 + (mult - 1) * 0.02, 1.8);
+      humRef.current.src.playbackRate.setTargetAtTime(rate, ctx.currentTime, 0.4);
+    } catch {}
+  }, [getCtx]);
+
+  const stopHum = useCallback(() => {
+    if (!humRef.current) return;
+    const ctx = ctxRef.current;
+    try {
+      if (ctx) {
+        humRef.current.gain.gain.setTargetAtTime(0, ctx.currentTime, 0.12);
+        const s = humRef.current.src;
+        setTimeout(() => { try { s.stop(); } catch {} }, 500);
+      } else { humRef.current.src.stop(); }
+    } catch {}
+    humRef.current = null;
+  }, []);
+
+  const playCrash = useCallback(async () => {
+    if (!soundOnRef.current) return;
+    await preload();
+    const ctx = getCtx(); if (!ctx) return;
+    const buffer = buffersRef.current["flyaway"]; if (!buffer) return;
     try {
       const src  = ctx.createBufferSource();
       const gain = ctx.createGain();
-      src.buffer      = buffer;
-      src.loop        = loop;
-      gain.gain.value = volume;
+      src.buffer = buffer; gain.gain.value = 1.0;
       src.connect(gain); gain.connect(ctx.destination);
       src.start();
-      return { src, gain };
-    } catch { return null; }
+    } catch (e) { console.warn("playCrash:", e); }
+  }, [preload, getCtx]);
+
+  const playCashout = useCallback(() => {
+    if (!soundOnRef.current) return;
+    const ctx = getCtx(); if (!ctx) return;
+    try {
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.22, ctx.currentTime);
+      master.gain.setTargetAtTime(0, ctx.currentTime + 0.5, 0.1);
+      master.connect(ctx.destination);
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const env = ctx.createGain();
+        const t   = ctx.currentTime + i * 0.08;
+        osc.type = "sine"; osc.frequency.value = freq;
+        env.gain.setValueAtTime(0, t);
+        env.gain.linearRampToValueAtTime(1, t + 0.015);
+        env.gain.setTargetAtTime(0, t + 0.06, 0.08);
+        osc.connect(env); env.connect(master);
+        osc.start(t); osc.stop(t + 0.4);
+      });
+    } catch (e) { console.warn("playCashout:", e); }
   }, [getCtx]);
 
-  // ── 1. COUNTING — loops during betting phase ────────────────────────────
-  const startCounting = useCallback(async () => {
-    if (!soundOnRef.current) return;
-    await preload();
-    if (countingRef.current) return; // already playing
-    const node = playBuffer("counting", { loop: true, volume: 0.9 });
-    if (node) countingRef.current = node;
-  }, [preload, playBuffer]);
-
-  const stopCounting = useCallback(() => {
-    if (!countingRef.current) return;
-    try {
-      const { src, gain } = countingRef.current;
-      const ctx = ctxRef.current;
-      if (ctx) {
-        gain.gain.setTargetAtTime(0, ctx.currentTime, 0.08);
-        setTimeout(() => { try { src.stop(); } catch {} }, 300);
-      } else {
-        src.stop();
-      }
-    } catch {}
-    countingRef.current = null;
-  }, []);
-
-  // ── 2. FLY AWAY — one-shot when plane crashes ───────────────────────────
-  const playFlyaway = useCallback(async () => {
-    if (!soundOnRef.current) return;
-    await preload();
-    playBuffer("flyaway", { loop: false, volume: 1.0 });
-  }, [preload, playBuffer]);
-
-  // ── Master mute ─────────────────────────────────────────────────────────
   const setSoundOn = useCallback((val) => {
     soundOnRef.current = val;
-    if (!val) stopCounting();
-  }, [stopCounting]);
+    if (!val) stopHum();
+  }, [stopHum]);
 
-  return {
-    preload,          // call on app mount to load files early
-    startCounting,    // call when betting phase begins
-    stopCounting,     // call when betting phase ends
-    playFlyaway,      // call when plane flies away
-    setSoundOn,       // true/false to mute/unmute
-  };
+  return { startHum, updateHum, stopHum, playCrash, playCashout, setSoundOn, preload };
 }
