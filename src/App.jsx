@@ -764,8 +764,11 @@ export default function App() {
                         <div className="hist-time">{fDate(t.time)} · {fTime(t.time)}</div>
                       </div>
                     </div>
-                    <div className={`hist-amt ${t.amount >= 0 ? "pos" : "neg"}`}>
-                      {t.amount >= 0 ? "+" : ""}{fKES(Math.abs(t.amount))}
+                    <div style={{textAlign:"right"}}>
+                      <div className={`hist-amt ${t.amount >= 0 ? "pos" : "neg"}`}>
+                        {t.amount >= 0 ? "+" : ""}{fKES(Math.abs(t.amount))}
+                      </div>
+                      {t.status === "pending" && <div style={{fontSize:9,fontWeight:700,color:"#ffb703",marginTop:2}}>pending</div>}
                     </div>
                   </div>
                 ))}
