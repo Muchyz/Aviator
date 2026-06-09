@@ -122,7 +122,18 @@ export default function App() {
         localStorage.removeItem("avipesa_token");
         clearTimeout(timer); setAppReady(true);
       });
+    fetchGameConfig();
     return () => clearTimeout(timer);
+  }, []);
+
+  // Fetch initial game config (pause state, banner)
+  const fetchGameConfig = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/admin/game/config`);
+      const data = await res.json();
+      if (data.paused !== undefined) setGamePaused(data.paused);
+      if (data.bannerMsg !== undefined) setAdminBanner(data.bannerMsg || "");
+    } catch {}
   }, []);
 
   const connectSocket = useCallback((token) => {
@@ -316,7 +327,7 @@ export default function App() {
     const socket = socketRef.current;
     if (!socket) { toast_("Not connected. Please refresh.", "err"); return; }
     socket.emit("bet:place", { amount: a });
-  }, [toast_]);
+  }, [toast_, gamePaused]);
 
   const handleBet2 = useCallback(() => {
     const u = userRef.current;
@@ -331,7 +342,7 @@ export default function App() {
     const socket = socketRef.current;
     if (!socket) { toast_("Not connected. Please refresh.", "err"); return; }
     socket.emit("bet:place", { amount: a, panelId: 2 });
-  }, [toast_]);
+  }, [toast_, gamePaused]);
 
   const doCashout = useCallback(() => {
     if (!betAmountRef.current || cashedOutRef.current) return;
