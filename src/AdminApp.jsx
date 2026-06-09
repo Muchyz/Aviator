@@ -515,6 +515,8 @@ export default function AdminApp() {
                     </div>
                     <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                       <span style={{fontSize:10,padding:"2px 6px",borderRadius:4,fontWeight:700,background:t.type==="dep"?"rgba(0,230,118,0.1)":t.type==="win"?"rgba(255,183,3,0.1)":t.type==="wd"?"rgba(79,142,247,0.1)":"rgba(255,77,109,0.1)",color:t.type==="dep"?"#00e676":t.type==="win"?"#ffb703":t.type==="wd"?"#4f8ef7":"#ff4d6d"}}>{t.type}</span>
+                      {t.status && t.status!=="success" && <span style={{fontSize:10,padding:"2px 6px",borderRadius:4,fontWeight:700,background:t.status==="pending"?"rgba(255,183,3,0.1)":"rgba(255,77,109,0.1)",color:t.status==="pending"?"#ffb703":"#ff4d6d"}}>{t.status}</span>}
+                      {(!t.status||t.status==="success") && t.type==="dep" && <span style={{fontSize:10,padding:"2px 6px",borderRadius:4,fontWeight:700,background:"rgba(0,230,118,0.1)",color:"#00e676"}}>✓ paid</span>}
                       <span style={{fontSize:10,color:"#6b7a99",flex:1}}>{t.label}</span>
                       <span style={{fontSize:9,color:"#6b7a99",fontFamily:"monospace"}}>{fDate(t.created_at)}</span>
                     </div>
