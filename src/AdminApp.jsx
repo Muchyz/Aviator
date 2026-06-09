@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Users, DollarSign, TrendingUp, Activity,
   Shield, Ban, CheckCircle, Search, RefreshCw, LogOut,
@@ -239,12 +239,11 @@ export default function AdminApp() {
     { id: "comms",        icon: <Users size={15}/>,       label: "Comms"        },
   ];
 
-  const revenueDaysRef = useRef(7);
   const fetchReports = useCallback(async () => {
     setLoading(true);
     const [daily, rev, deps, wins] = await Promise.all([
       authFetch("/admin/reports/daily"),
-      authFetch(`/admin/reports/revenue?days=${revenueDaysRef.current}`),
+      authFetch(`/admin/reports/revenue?days=${revenueDays}`),
       authFetch("/admin/reports/topdepositors"),
       authFetch("/admin/reports/topwinners"),
     ]);
@@ -253,7 +252,7 @@ export default function AdminApp() {
     if (deps) setTopDepositors(deps);
     if (wins) setTopWinners(wins);
     setLoading(false);
-  }, [authFetch]);
+  }, [authFetch, revenueDays]);
 
   const fetchGameConfig = useCallback(async () => {
     const d = await authFetch("/admin/game/config");
@@ -674,7 +673,7 @@ export default function AdminApp() {
                     Revenue Chart
                     <div style={{display:"flex",gap:4}}>
                       {[7,14,30].map(d => (
-                        <button key={d} onClick={() => { setRevenueDays(d); revenueDaysRef.current = d; fetchReports(); }} style={{padding:"2px 8px",borderRadius:4,border:"1px solid rgba(255,255,255,0.08)",background:revenueDays===d?"rgba(79,142,247,0.1)":"transparent",color:revenueDays===d?"#4f8ef7":"#6b7a99",fontSize:10,cursor:"pointer"}}>{d}d</button>
+                        <button key={d} onClick={() => { setRevenueDays(d); fetchReports(); }} style={{padding:"2px 8px",borderRadius:4,border:"1px solid rgba(255,255,255,0.08)",background:revenueDays===d?"rgba(79,142,247,0.1)":"transparent",color:revenueDays===d?"#4f8ef7":"#6b7a99",fontSize:10,cursor:"pointer"}}>{d}d</button>
                       ))}
                     </div>
                   </div>
@@ -824,7 +823,7 @@ export default function AdminApp() {
                 <div style={{fontSize:10,color:"#6b7a99",marginBottom:10}}>Send a private message to a specific user by their ID</div>
                 <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} type="number" placeholder="User ID (find in Users tab)" value={notifyUserId} onChange={e => setNotifyUserId(e.target.value)}/>
                 <textarea style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box",resize:"vertical",minHeight:60}} placeholder="Your message..." value={notifyMsg} onChange={e => setNotifyMsg(e.target.value)}/>
-                <button onClick={sendNotify} style={{padding:"9px 16px",borderRadius:8,border:"1px solid rgba(79,142,247,0.3)",background:"rgba(79,142,247,0.2)",color:"#4f8ef7",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>Send Message</button>
+                <button onClick={sendNotify} style={{padding:"9px 16px",borderRadius:8,border:"none",background:"rgba(79,142,247,0.2)",color:"#4f8ef7",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer",border:"1px solid rgba(79,142,247,0.3)"}}>Send Message</button>
               </div>
             </div>
           )}
