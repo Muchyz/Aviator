@@ -68,6 +68,7 @@ export default function App() {
   const [toastState, setToastState] = useState(null);
   const [socketReady, setSocketReady] = useState(false);
   const [adminBanner, setAdminBanner] = useState("");
+  const [gamePaused, setGamePaused] = useState(false);
 
   const gsRef = useRef("waiting");
   const multRef = useRef(1);
@@ -240,6 +241,9 @@ export default function App() {
       if (data.bannerMsg !== undefined) {
         setAdminBanner(data.bannerMsg || "");
       }
+      if (data.paused !== undefined) {
+        setGamePaused(data.paused);
+      }
     });
 
     socket.on("bet:result", result => {
@@ -302,6 +306,7 @@ export default function App() {
   const handleBet = useCallback(() => {
     const u = userRef.current;
     if (!u) { setModal("login"); return; }
+    if (gamePaused) { toast_("Game is currently paused", "err"); return; }
     const a = parseFloat(betAmtRef.current);
     if (isNaN(a) || a < 10) { toast_("Minimum bet is KES 10", "err"); return; }
     if (a > balanceRef.current) { toast_("Insufficient balance", "err"); return; }
@@ -315,6 +320,7 @@ export default function App() {
   const handleBet2 = useCallback(() => {
     const u = userRef.current;
     if (!u) { setModal("login"); return; }
+    if (gamePaused) { toast_("Game is currently paused", "err"); return; }
     const a = parseFloat(betAmt2StrRef.current);
     if (isNaN(a) || a < 10) { toast_("Minimum bet is KES 10", "err"); return; }
     if (a > balanceRef.current) { toast_("Insufficient balance", "err"); return; }
@@ -548,6 +554,9 @@ export default function App() {
         </div>
       </nav>
 
+      {gamePaused && (
+        <div style={{background:"rgba(255,77,109,0.12)",borderBottom:"1px solid rgba(255,77,109,0.3)",padding:"8px 14px",textAlign:"center",fontSize:12,fontWeight:600,color:"#ff4d6d"}}>⏸ Game is currently paused by admin</div>
+      )}
       {adminBanner && (
         <div style={{background:"rgba(255,183,3,0.12)",borderBottom:"1px solid rgba(255,183,3,0.3)",padding:"8px 14px",textAlign:"center",fontSize:12,fontWeight:600,color:"#ffb703"}}>
           📢 {adminBanner}
