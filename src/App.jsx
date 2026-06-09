@@ -129,7 +129,7 @@ export default function App() {
   // Fetch initial game config (pause state, banner)
   const fetchGameConfig = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/admin/game/config`);
+      const res = await fetch(`${API}/game/config`);
       const data = await res.json();
       if (data.paused !== undefined) setGamePaused(data.paused);
       if (data.bannerMsg !== undefined) setAdminBanner(data.bannerMsg || "");
@@ -567,9 +567,6 @@ export default function App() {
         </div>
       </nav>
 
-      {gamePaused && (
-        <div style={{background:"rgba(255,77,109,0.12)",borderBottom:"1px solid rgba(255,77,109,0.3)",padding:"8px 14px",textAlign:"center",fontSize:12,fontWeight:600,color:"#ff4d6d"}}>⏸ Game is currently paused by admin</div>
-      )}
       {gamePaused && (
         <div style={{background:"rgba(255,77,109,0.12)",borderBottom:"1px solid rgba(255,77,109,0.3)",padding:"8px 14px",textAlign:"center",fontSize:12,fontWeight:600,color:"#ff4d6d"}}>⏸ Game is currently paused by admin</div>
       )}
