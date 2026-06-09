@@ -432,6 +432,26 @@ export default function AdminApp() {
 
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:10,marginBottom:14}}>
                 <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
+                  <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:10}}>Account Info</div>
+                  {[
+                    ["Name",    `${selectedUser.user.first_name} ${selectedUser.user.last_name}`],
+                    ["Phone",   selectedUser.user.phone],
+                    ["Balance", fKES(selectedUser.user.balance)],
+                    ["Status",  selectedUser.user.banned?"BANNED":"Active"],
+                    ["Joined",  fDate(selectedUser.user.created_at)],
+                  ].map(([k,v]) => (
+                    <div key={k} style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                      <span style={{color:"#6b7a99"}}>{k}</span>
+                      <span style={{fontWeight:600,color:k==="Balance"?"#00e676":k==="Status"&&selectedUser.user.banned?"#ff4d6d":"inherit"}}>{v}</span>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => banUser(selectedUser.user.id, !selectedUser.user.banned)}
+                    style={{display:"flex",alignItems:"center",gap:5,padding:"8px 14px",borderRadius:8,fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer",marginTop:12,background:selectedUser.user.banned?"rgba(0,230,118,0.1)":"rgba(255,77,109,0.1)",color:selectedUser.user.banned?"#00e676":"#ff4d6d",border:`1px solid ${selectedUser.user.banned?"rgba(0,230,118,0.3)":"rgba(255,77,109,0.3)"}`}}>
+                    {selectedUser.user.banned ? <><CheckCircle size={12}/> Unban User</> : <><Ban size={12}/> Ban User</>}
+                  </button>
+                </div>
+                <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
                   <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:10}}>Adjust Balance</div>
                   <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} type="number" min="0" placeholder="Amount (positive number)" value={adjustAmt} onChange={e => setAdjustAmt(e.target.value)}/>
                   <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} placeholder="Note (optional)" value={adjustNote} onChange={e => setAdjustNote(e.target.value)}/>
