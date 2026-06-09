@@ -336,3 +336,152 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
   animation: spin 0.9s linear infinite;
   display: inline-block;
 }
+/* ── DUAL BET PANELS: stack vertically on mobile ── */
+.dual-panels {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  border-top: 1px solid var(--border);
+}
+
+.dual-panel-wrap {
+  border-right: none !important;
+  border-bottom: 1px solid var(--border);
+}
+
+.dual-panel-wrap:last-child {
+  border-bottom: none;
+}
+
+.dual-panel-label {
+  font-size: 10px !important;
+  padding: 8px 12px 0 !important;
+}
+
+/* ── VISUAL POLISH ── */
+
+/* Game card glow */
+.gcard {
+  border-color: rgba(79,142,247,0.15) !important;
+  box-shadow: 0 0 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(79,142,247,0.08) !important;
+}
+
+/* Crash history badges */
+.cbadge {
+  font-size: 11px !important;
+  padding: 3px 9px !important;
+  border-radius: 6px !important;
+  font-weight: 800 !important;
+}
+
+/* Bet CTA buttons */
+.bet-cta {
+  border-radius: 11px !important;
+  font-size: 16px !important;
+  padding: 14px !important;
+  letter-spacing: 0.3px !important;
+}
+
+.bet-cta.place {
+  box-shadow: 0 4px 20px rgba(0,230,118,0.25) !important;
+}
+
+.bet-cta.cashout {
+  font-size: 17px !important;
+  box-shadow: 0 4px 24px rgba(255,183,3,0.3) !important;
+}
+
+/* Stepper */
+.step-btn {
+  border-radius: 10px !important;
+  width: 44px !important;
+  height: 44px !important;
+}
+
+.step-val {
+  font-size: 18px !important;
+  border-radius: 10px !important;
+}
+
+/* Quick bet grid */
+.qgbtn {
+  padding: 9px 4px !important;
+  font-size: 12px !important;
+  border-radius: 8px !important;
+}
+
+/* Nav balance chip */
+.bal-chip {
+  border-radius: 9px !important;
+  padding: 5px 11px !important;
+}
+
+.bal-val {
+  font-size: 13px !important;
+}
+
+/* Active players card */
+.mob-players {
+  border-color: rgba(255,255,255,0.07) !important;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.4) !important;
+}
+
+.prow {
+  border-radius: 7px !important;
+  padding: 7px 10px !important;
+}
+
+.prow.cashed {
+  background: rgba(0,230,118,0.05) !important;
+  border-left: 2px solid rgba(0,230,118,0.4) !important;
+}
+
+.pmult.cashed {
+  font-size: 12px !important;
+  background: rgba(0,230,118,0.08) !important;
+  padding: 2px 7px !important;
+  border-radius: 5px !important;
+}
+
+/* Bottom tabs */
+.mob-tabs {
+  background: rgba(6,8,14,0.98) !important;
+  backdrop-filter: blur(20px) !important;
+  border-top: 1px solid rgba(255,255,255,0.07) !important;
+}
+
+.mtab.on {
+  background: rgba(79,142,247,0.06) !important;
+}
+
+/* Toast */
+.toast {
+  border-radius: 12px !important;
+  font-size: 13px !important;
+  padding: 11px 16px !important;
+}
+
+/* Provably fair bar */
+.pf-bar {
+  background: rgba(255,255,255,0.01) !important;
+}
+
+/* Canvas area */
+.canvas {
+  border-radius: 0 !important;
+  background: linear-gradient(180deg, #040711 0%, #060a14 100%) !important;
+}
+
+/* Auto cash out row */
+.auto-row {
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  margin-top: 4px !important;
+}
+
+/* Repeat btn */
+.repeat-btn {
+  border-radius: 7px !important;
+  font-size: 11px !important;
+}
