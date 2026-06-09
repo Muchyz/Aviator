@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  Users, DollarSign, TrendingUp, TrendingDown, Activity,
+  Users, DollarSign, TrendingUp, Activity,
   Shield, Ban, CheckCircle, Search, RefreshCw, LogOut,
   BarChart2, Eye, ChevronLeft, ChevronRight, Zap,
-  ArrowDownCircle, ArrowUpCircle, Award, AlertTriangle
+  ArrowDownCircle, ArrowUpCircle, Award, Menu, X
 } from "lucide-react";
 
 const API = "https://aviator-backend-production-1de1.up.railway.app/api";
@@ -20,8 +20,8 @@ export default function AdminApp() {
   const [loginErr, setLoginErr] = useState("");
   const [tab, setTab] = useState("overview");
   const [loading, setLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Data states
   const [overview, setOverview] = useState(null);
   const [users, setUsers] = useState([]);
   const [userTotal, setUserTotal] = useState(0);
@@ -58,7 +58,6 @@ export default function AdminApp() {
     return res.json();
   }, [token]);
 
-  // Try token on load
   useEffect(() => {
     if (!token) return;
     authFetch("/admin/overview").then(d => {
@@ -87,7 +86,6 @@ export default function AdminApp() {
     setToken(""); setAuthed(false);
   };
 
-  // Fetch overview
   const fetchOverview = useCallback(async () => {
     setLoading(true);
     const d = await authFetch("/admin/overview");
@@ -95,7 +93,6 @@ export default function AdminApp() {
     setLoading(false);
   }, [authFetch]);
 
-  // Fetch users
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     const d = await authFetch(`/admin/users?search=${userSearch}&page=${userPage}&limit=20`);
@@ -103,7 +100,6 @@ export default function AdminApp() {
     setLoading(false);
   }, [authFetch, userSearch, userPage]);
 
-  // Fetch transactions
   const fetchTxns = useCallback(async () => {
     setLoading(true);
     const d = await authFetch(`/admin/transactions?type=${txnType}&page=${txnPage}&limit=30`);
@@ -111,7 +107,6 @@ export default function AdminApp() {
     setLoading(false);
   }, [authFetch, txnType, txnPage]);
 
-  // Fetch rounds
   const fetchRounds = useCallback(async () => {
     setLoading(true);
     const d = await authFetch(`/admin/rounds?page=${roundPage}&limit=30`);
@@ -119,19 +114,16 @@ export default function AdminApp() {
     setLoading(false);
   }, [authFetch, roundPage]);
 
-  // Fetch live
   const fetchLive = useCallback(async () => {
     const d = await authFetch("/admin/live");
     if (d) setLiveData(d);
   }, [authFetch]);
 
-  // Fetch game stats
   const fetchGameStats = useCallback(async () => {
     const d = await authFetch("/admin/gamestats");
     if (d) setGameStats(d);
   }, [authFetch]);
 
-  // Fetch user detail
   const fetchUserDetail = useCallback(async (id) => {
     const d = await authFetch(`/admin/users/${id}`);
     if (d) setSelectedUser(d);
@@ -143,14 +135,13 @@ export default function AdminApp() {
     if (tab === "users") fetchUsers();
     if (tab === "transactions") fetchTxns();
     if (tab === "rounds") fetchRounds();
-    if (tab === "live") { fetchLive(); }
+    if (tab === "live") fetchLive();
   }, [authed, tab]);
 
   useEffect(() => { if (authed && tab === "users") fetchUsers(); }, [userPage, userSearch]);
   useEffect(() => { if (authed && tab === "transactions") fetchTxns(); }, [txnPage, txnType]);
   useEffect(() => { if (authed && tab === "rounds") fetchRounds(); }, [roundPage]);
 
-  // Live auto-refresh
   useEffect(() => {
     if (!authed || tab !== "live") return;
     const t = setInterval(fetchLive, 3000);
@@ -184,122 +175,156 @@ export default function AdminApp() {
     }
   };
 
-  // ── LOGIN SCREEN ────────────────────────────────────────────────────────────
+  const switchTab = (t) => {
+    setTab(t);
+    setSelectedUser(null);
+    setSidebarOpen(false);
+  };
+
   if (!authed) {
     return (
-      <div style={S.loginWrap}>
-        <div style={S.loginBox}>
-          <div style={S.loginLogo}>
-            <Shield size={28} color="#4f8ef7" />
-            <span>AviPesa <b style={{color:"#4f8ef7"}}>Admin</b></span>
+      <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#06080e",padding:"16px"}}>
+        <div style={{width:"100%",maxWidth:360,background:"#111827",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"28px 20px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,fontSize:20,fontWeight:800,marginBottom:6,fontFamily:"'Space Grotesk',sans-serif",color:"#f0f4ff"}}>
+            <Shield size={26} color="#4f8ef7" />
+            AviPesa <span style={{color:"#4f8ef7"}}>Admin</span>
           </div>
-          <div style={S.loginSub}>Restricted access — authorised personnel only</div>
-          {loginErr && <div style={S.errBox}>{loginErr}</div>}
+          <div style={{fontSize:12,color:"#6b7a99",marginBottom:20,fontFamily:"'Space Grotesk',sans-serif"}}>Restricted access — authorised personnel only</div>
+          {loginErr && <div style={{background:"rgba(255,77,109,0.1)",border:"1px solid rgba(255,77,109,0.3)",borderRadius:8,padding:"8px 12px",fontSize:12,color:"#ff4d6d",marginBottom:12,fontFamily:"'Space Grotesk',sans-serif"}}>{loginErr}</div>}
           <input
-            style={S.input}
+            style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:14,outline:"none",marginBottom:10,boxSizing:"border-box"}}
             type="password"
             placeholder="Admin secret key"
             value={secret}
             onChange={e => setSecret(e.target.value)}
             onKeyDown={e => e.key === "Enter" && login()}
           />
-          <button style={S.loginBtn} onClick={login}>Enter Dashboard</button>
+          <button style={{width:"100%",padding:13,borderRadius:9,border:"none",background:"#4f8ef7",color:"#fff",fontFamily:"'Space Grotesk',sans-serif",fontSize:15,fontWeight:700,cursor:"pointer"}} onClick={login}>
+            Enter Dashboard
+          </button>
         </div>
       </div>
     );
   }
 
   const TABS = [
-    { id: "overview",     icon: <BarChart2 size={13}/>,      label: "Overview"     },
-    { id: "live",         icon: <Activity size={13}/>,       label: "Live"         },
-    { id: "users",        icon: <Users size={13}/>,          label: "Users"        },
-    { id: "transactions", icon: <DollarSign size={13}/>,     label: "Transactions" },
-    { id: "rounds",       icon: <Zap size={13}/>,            label: "Rounds"       },
+    { id: "overview",     icon: <BarChart2 size={15}/>,   label: "Overview"     },
+    { id: "live",         icon: <Activity size={15}/>,    label: "Live"         },
+    { id: "users",        icon: <Users size={15}/>,       label: "Users"        },
+    { id: "transactions", icon: <DollarSign size={15}/>,  label: "Transactions" },
+    { id: "rounds",       icon: <Zap size={15}/>,         label: "Rounds"       },
   ];
 
-  // ── MAIN DASHBOARD ──────────────────────────────────────────────────────────
+  const refreshCurrent = () => {
+    if (tab==="overview") { fetchOverview(); fetchGameStats(); }
+    if (tab==="users") fetchUsers();
+    if (tab==="transactions") fetchTxns();
+    if (tab==="rounds") fetchRounds();
+    if (tab==="live") fetchLive();
+  };
+
   return (
-    <div style={S.root}>
+    <div style={{display:"flex",minHeight:"100vh",background:"#06080e",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif"}}>
+
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:40}} />
+      )}
+
       {/* Sidebar */}
-      <aside style={S.sidebar}>
-        <div style={S.sideTop}>
-          <div style={S.sideLogoRow}>
-            <Shield size={18} color="#4f8ef7"/>
-            <span style={S.sideLogo}>Admin</span>
+      <aside style={{
+        width:200,background:"#0c0f1a",borderRight:"1px solid rgba(255,255,255,0.06)",
+        display:"flex",flexDirection:"column",justifyContent:"space-between",padding:"16px 10px",
+        flexShrink:0,
+        position: window.innerWidth < 768 ? "fixed" : "relative",
+        top:0,left:0,height:"100%",zIndex:50,
+        transform: window.innerWidth < 768 ? (sidebarOpen ? "translateX(0)" : "translateX(-100%)") : "none",
+        transition:"transform 0.25s ease",
+      }}>
+        <div style={{display:"flex",flexDirection:"column",gap:20}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 4px"}}>
+            <div style={{display:"flex",alignItems:"center",gap:7}}>
+              <Shield size={16} color="#4f8ef7"/>
+              <span style={{fontSize:14,fontWeight:800}}>Admin</span>
+            </div>
+            <button onClick={() => setSidebarOpen(false)} style={{background:"none",border:"none",color:"#6b7a99",cursor:"pointer",display: window.innerWidth < 768 ? "flex" : "none",alignItems:"center"}}>
+              <X size={16}/>
+            </button>
           </div>
-          <nav style={S.nav}>
+          <nav style={{display:"flex",flexDirection:"column",gap:3}}>
             {TABS.map(t => (
-              <button
-                key={t.id}
-                style={{...S.navBtn, ...(tab===t.id ? S.navBtnOn : {})}}
-                onClick={() => { setTab(t.id); setSelectedUser(null); }}
-              >
+              <button key={t.id}
+                style={{display:"flex",alignItems:"center",gap:9,padding:"10px 10px",borderRadius:8,border:"none",background:tab===t.id?"rgba(79,142,247,0.1)":"transparent",color:tab===t.id?"#4f8ef7":"#6b7a99",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:600,cursor:"pointer",textAlign:"left"}}
+                onClick={() => switchTab(t.id)}>
                 {t.icon} {t.label}
               </button>
             ))}
           </nav>
         </div>
-        <button style={S.logoutBtn} onClick={logout}><LogOut size={13}/> Sign Out</button>
+        <button onClick={logout} style={{display:"flex",alignItems:"center",gap:6,padding:"9px 10px",borderRadius:8,border:"1px solid rgba(255,77,109,0.2)",background:"transparent",color:"#ff4d6d",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer"}}>
+          <LogOut size={13}/> Sign Out
+        </button>
       </aside>
 
       {/* Main */}
-      <main style={S.main}>
-        <div style={S.topbar}>
-          <div style={S.topTitle}>{TABS.find(t=>t.id===tab)?.label}</div>
-          <div style={S.topRight}>
-            {loading && <RefreshCw size={13} style={{animation:"spin 1s linear infinite", color:"#4f8ef7"}}/>}
-            <button style={S.refreshBtn} onClick={() => {
-              if (tab==="overview") { fetchOverview(); fetchGameStats(); }
-              if (tab==="users") fetchUsers();
-              if (tab==="transactions") fetchTxns();
-              if (tab==="rounds") fetchRounds();
-              if (tab==="live") fetchLive();
-            }}><RefreshCw size={13}/> Refresh</button>
+      <main style={{flex:1,display:"flex",flexDirection:"column",minWidth:0,overflow:"hidden"}}>
+
+        {/* Topbar */}
+        <div style={{height:50,borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 14px",background:"rgba(12,15,26,0.95)",flexShrink:0,gap:10}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <button onClick={() => setSidebarOpen(true)} style={{background:"none",border:"none",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center",padding:4}}>
+              <Menu size={18}/>
+            </button>
+            <span style={{fontSize:13,fontWeight:700}}>{TABS.find(t=>t.id===tab)?.label}</span>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            {loading && <RefreshCw size={13} style={{animation:"spin 1s linear infinite",color:"#4f8ef7"}}/>}
+            <button onClick={refreshCurrent} style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",fontFamily:"'Space Grotesk',sans-serif",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+              <RefreshCw size={12}/> Refresh
+            </button>
           </div>
         </div>
 
-        <div style={S.content}>
+        {/* Content */}
+        <div style={{flex:1,padding:"14px",overflowY:"auto",overflowX:"hidden"}}>
 
-          {/* ── OVERVIEW ── */}
+          {/* OVERVIEW */}
           {tab === "overview" && overview && (
             <div>
-              <div style={S.statGrid}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:8,marginBottom:14}}>
                 {[
-                  { label:"Total Deposits",    val:fKES(overview.totalDeposits),    icon:<ArrowDownCircle size={16}/>, color:"#00e676" },
-                  { label:"Total Withdrawals", val:fKES(overview.totalWithdrawals), icon:<ArrowUpCircle size={16}/>,   color:"#ff4d6d" },
-                  { label:"Total Bets",        val:fKES(overview.totalBetsPlaced),  icon:<Activity size={16}/>,        color:"#ffb703" },
-                  { label:"Total Wins Paid",   val:fKES(overview.totalWinsPaid),    icon:<Award size={16}/>,           color:"#c77dff" },
-                  { label:"House Profit",      val:fKES(overview.houseProfit),      icon:<TrendingUp size={16}/>,      color: overview.houseProfit >= 0 ? "#00e676" : "#ff4d6d" },
-                  { label:"Total Users",       val:fNum(overview.totalUsers),       icon:<Users size={16}/>,           color:"#4f8ef7" },
-                  { label:"Total Rounds",      val:fNum(overview.totalRounds),      icon:<Zap size={16}/>,             color:"#ffb703" },
-                  { label:"Deposits Today",    val:fKES(overview.depositsToday),    icon:<DollarSign size={16}/>,      color:"#00e676" },
-                  { label:"New Users Today",   val:fNum(overview.newUsersToday),    icon:<Users size={16}/>,           color:"#4f8ef7" },
+                  {label:"Deposits",      val:fKES(overview.totalDeposits),    color:"#00e676", icon:<ArrowDownCircle size={14}/>},
+                  {label:"Withdrawals",   val:fKES(overview.totalWithdrawals), color:"#ff4d6d", icon:<ArrowUpCircle size={14}/>},
+                  {label:"Total Bets",    val:fKES(overview.totalBetsPlaced),  color:"#ffb703", icon:<Activity size={14}/>},
+                  {label:"Wins Paid",     val:fKES(overview.totalWinsPaid),    color:"#c77dff", icon:<Award size={14}/>},
+                  {label:"House Profit",  val:fKES(overview.houseProfit),      color:overview.houseProfit>=0?"#00e676":"#ff4d6d", icon:<TrendingUp size={14}/>},
+                  {label:"Total Users",   val:fNum(overview.totalUsers),       color:"#4f8ef7", icon:<Users size={14}/>},
+                  {label:"Total Rounds",  val:fNum(overview.totalRounds),      color:"#ffb703", icon:<Zap size={14}/>},
+                  {label:"Today Deposits",val:fKES(overview.depositsToday),    color:"#00e676", icon:<DollarSign size={14}/>},
+                  {label:"New Users Today",val:fNum(overview.newUsersToday),   color:"#4f8ef7", icon:<Users size={14}/>},
                 ].map((s,i) => (
-                  <div key={i} style={S.statCard}>
-                    <div style={{...S.statIcon, color:s.color}}>{s.icon}</div>
-                    <div style={{...S.statVal, color:s.color}}>{s.val}</div>
-                    <div style={S.statLbl}>{s.label}</div>
+                  <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"12px 12px 10px"}}>
+                    <div style={{color:s.color,marginBottom:6}}>{s.icon}</div>
+                    <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:13,fontWeight:700,color:s.color,marginBottom:3,wordBreak:"break-all"}}>{s.val}</div>
+                    <div style={{fontSize:9,color:"#6b7a99",fontWeight:500}}>{s.label}</div>
                   </div>
                 ))}
               </div>
-
               {gameStats && (
-                <div style={S.section}>
-                  <div style={S.sectionTitle}>Game Statistics</div>
-                  <div style={S.statGrid}>
+                <div>
+                  <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:8}}>Game Statistics</div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:8}}>
                     {[
-                      { label:"Total Rounds",  val:fNum(gameStats.total_rounds) },
-                      { label:"Avg Crash",     val:`${Number(gameStats.avg_crash||0).toFixed(2)}×` },
-                      { label:"Max Crash",     val:`${Number(gameStats.max_crash||0).toFixed(2)}×` },
-                      { label:"Min Crash",     val:`${Number(gameStats.min_crash||0).toFixed(2)}×` },
-                      { label:"Under 2×",      val:fNum(gameStats.under_2x) },
-                      { label:"2× – 5×",       val:fNum(gameStats.btw_2_5x) },
-                      { label:"5× – 10×",      val:fNum(gameStats.btw_5_10x) },
-                      { label:"Over 10×",      val:fNum(gameStats.over_10x) },
+                      {label:"Total Rounds", val:fNum(gameStats.total_rounds)},
+                      {label:"Avg Crash",    val:`${Number(gameStats.avg_crash||0).toFixed(2)}×`},
+                      {label:"Max Crash",    val:`${Number(gameStats.max_crash||0).toFixed(2)}×`},
+                      {label:"Under 2×",     val:fNum(gameStats.under_2x)},
+                      {label:"2× – 5×",      val:fNum(gameStats.btw_2_5x)},
+                      {label:"Over 10×",     val:fNum(gameStats.over_10x)},
                     ].map((s,i) => (
-                      <div key={i} style={S.statCard}>
-                        <div style={{...S.statVal, fontSize:18}}>{s.val}</div>
-                        <div style={S.statLbl}>{s.label}</div>
+                      <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"10px 12px"}}>
+                        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14,fontWeight:700,marginBottom:3}}>{s.val}</div>
+                        <div style={{fontSize:9,color:"#6b7a99"}}>{s.label}</div>
                       </div>
                     ))}
                   </div>
@@ -308,324 +333,226 @@ export default function AdminApp() {
             </div>
           )}
 
-          {/* ── LIVE ── */}
+          {/* LIVE */}
           {tab === "live" && liveData && (
             <div>
-              <div style={S.liveHeader}>
-                <div style={S.liveBadge}>● LIVE</div>
-                <div style={S.liveState}>{liveData.state?.toUpperCase()}</div>
-                <div style={S.liveMult}>{Number(liveData.multiplier||1).toFixed(2)}×</div>
-                <div style={S.liveInfo}>Round #{liveData.roundId} · Crash @ {Number(liveData.crashPoint||0).toFixed(2)}×</div>
+              <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"14px",marginBottom:14,display:"flex",flexWrap:"wrap",alignItems:"center",gap:12}}>
+                <span style={{fontSize:10,fontWeight:700,color:"#00e676"}}>● LIVE</span>
+                <span style={{fontSize:12,fontWeight:700,color:"#6b7a99"}}>{liveData.state?.toUpperCase()}</span>
+                <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:26,fontWeight:700}}>{Number(liveData.multiplier||1).toFixed(2)}×</span>
+                <span style={{fontSize:10,color:"#6b7a99",marginLeft:"auto"}}>Round #{liveData.roundId} · Crash@{Number(liveData.crashPoint||0).toFixed(2)}×</span>
               </div>
-              <div style={S.sectionTitle}>Active Bets ({liveData.activeBets?.length || 0})</div>
-              <div style={S.table}>
-                <div style={S.thead}>
-                  <div style={S.th}>Player</div>
-                  <div style={S.th}>Bet</div>
-                  <div style={S.th}>Status</div>
-                  <div style={S.th}>Cash Mult</div>
-                  <div style={S.th}>Type</div>
-                </div>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:8}}>Active Bets ({liveData.activeBets?.length||0})</div>
+              <div style={{overflowX:"auto"}}>
                 {(liveData.activeBets||[]).map((b,i) => (
-                  <div key={i} style={S.trow}>
-                    <div style={S.td}>{b.name}</div>
-                    <div style={S.td}>{fKES(b.amount)}</div>
-                    <div style={S.td}>
-                      <span style={{...S.badge, ...(b.cashedOut ? S.badgeGreen : S.badgeAmber)}}>
-                        {b.cashedOut ? "Cashed" : "Active"}
-                      </span>
-                    </div>
-                    <div style={S.td}>{b.cashMult ? `${b.cashMult}×` : "—"}</div>
-                    <div style={S.td}>
-                      <span style={{...S.badge, ...(b.isBot ? S.badgeBlue : S.badgePurple)}}>
-                        {b.isBot ? "Bot" : "Real"}
-                      </span>
-                    </div>
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#111827",borderRadius:8,marginBottom:6,flexWrap:"wrap"}}>
+                    <span style={{fontSize:12,fontWeight:600,flex:1,minWidth:80}}>{b.name}</span>
+                    <span style={{fontSize:11,color:"#ffb703",fontFamily:"monospace"}}>{fKES(b.amount)}</span>
+                    <span style={{fontSize:10,padding:"2px 7px",borderRadius:4,fontWeight:700,background:b.cashedOut?"rgba(0,230,118,0.1)":"rgba(255,183,3,0.1)",color:b.cashedOut?"#00e676":"#ffb703"}}>{b.cashedOut?"Cashed":"Active"}</span>
+                    <span style={{fontSize:10,padding:"2px 7px",borderRadius:4,fontWeight:700,background:b.isBot?"rgba(79,142,247,0.1)":"rgba(199,125,255,0.1)",color:b.isBot?"#4f8ef7":"#c77dff"}}>{b.isBot?"Bot":"Real"}</span>
                   </div>
                 ))}
-                {(!liveData.activeBets || liveData.activeBets.length === 0) && (
-                  <div style={S.noData}>No active bets this round</div>
-                )}
+                {(!liveData.activeBets||liveData.activeBets.length===0) && <div style={{textAlign:"center",padding:24,color:"#6b7a99",fontSize:12}}>No active bets</div>}
               </div>
-              <div style={S.sectionTitle}>Recent History</div>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:8}}>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",margin:"14px 0 8px"}}>History</div>
+              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                 {(liveData.history||[]).map((v,i) => (
-                  <span key={i} style={{
-                    padding:"3px 10px",borderRadius:5,
-                    fontFamily:"monospace",fontSize:12,fontWeight:700,
-                    background: v < 2 ? "rgba(79,142,247,0.15)" : v >= 10 ? "rgba(199,125,255,0.15)" : "rgba(107,122,153,0.15)",
-                    color: v < 2 ? "#6fa6f8" : v >= 10 ? "#c77dff" : "#8a9ab8",
-                  }}>{Number(v).toFixed(2)}×</span>
+                  <span key={i} style={{padding:"3px 8px",borderRadius:4,fontFamily:"monospace",fontSize:11,fontWeight:700,background:v<2?"rgba(79,142,247,0.15)":v>=10?"rgba(199,125,255,0.15)":"rgba(107,122,153,0.15)",color:v<2?"#6fa6f8":v>=10?"#c77dff":"#8a9ab8"}}>{Number(v).toFixed(2)}×</span>
                 ))}
               </div>
             </div>
           )}
 
-          {/* ── USERS ── */}
+          {/* USERS LIST */}
           {tab === "users" && !selectedUser && (
             <div>
-              <div style={S.filterRow}>
-                <div style={S.searchWrap}>
-                  <Search size={13} style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#6b7a99"}}/>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+                <div style={{position:"relative",flex:1,minWidth:160}}>
+                  <Search size={12} style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#6b7a99"}}/>
                   <input
-                    style={S.searchInput}
-                    placeholder="Search by name or phone..."
+                    style={{width:"100%",background:"#111827",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,padding:"8px 10px 8px 28px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,outline:"none",boxSizing:"border-box"}}
+                    placeholder="Search name or phone..."
                     value={userSearch}
                     onChange={e => { setUserSearch(e.target.value); setUserPage(1); }}
                   />
                 </div>
-                <div style={S.pageInfo}>{userTotal} users</div>
+                <span style={{fontSize:10,color:"#6b7a99",whiteSpace:"nowrap"}}>{userTotal} users</span>
               </div>
-              <div style={S.table}>
-                <div style={S.thead}>
-                  <div style={S.th}>Name</div>
-                  <div style={S.th}>Phone</div>
-                  <div style={S.th}>Balance</div>
-                  <div style={S.th}>Bets</div>
-                  <div style={S.th}>Won</div>
-                  <div style={S.th}>Status</div>
-                  <div style={S.th}>Joined</div>
-                  <div style={S.th}>Action</div>
-                </div>
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
                 {users.map((u,i) => (
-                  <div key={u.id} style={{...S.trow, ...(i%2===0?{}:{background:"rgba(255,255,255,0.01)"})}}>
-                    <div style={S.td}>{u.first_name} {u.last_name}</div>
-                    <div style={{...S.td, fontFamily:"monospace",fontSize:11}}>{u.phone}</div>
-                    <div style={{...S.td, color:"#00e676",fontWeight:700}}>{fKES(u.balance)}</div>
-                    <div style={S.td}>{fNum(u.total_bets)}</div>
-                    <div style={{...S.td, color:"#ffb703"}}>{fKES(u.total_won)}</div>
-                    <div style={S.td}>
-                      <span style={{...S.badge, ...(u.banned ? S.badgeRed : S.badgeGreen)}}>
-                        {u.banned ? "Banned" : "Active"}
-                      </span>
+                  <div key={u.id} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"12px"}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                      <span style={{fontSize:13,fontWeight:700}}>{u.first_name} {u.last_name}</span>
+                      <div style={{display:"flex",alignItems:"center",gap:6}}>
+                        <span style={{fontSize:10,padding:"2px 7px",borderRadius:4,fontWeight:700,background:u.banned?"rgba(255,77,109,0.1)":"rgba(0,230,118,0.1)",color:u.banned?"#ff4d6d":"#00e676"}}>{u.banned?"Banned":"Active"}</span>
+                        <button onClick={() => fetchUserDetail(u.id)} style={{padding:"4px 8px",borderRadius:6,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center"}}>
+                          <Eye size={12}/>
+                        </button>
+                      </div>
                     </div>
-                    <div style={{...S.td, fontSize:10, color:"#6b7a99"}}>{fDate(u.created_at)}</div>
-                    <div style={S.td}>
-                      <button style={S.iconBtn} onClick={() => fetchUserDetail(u.id)}>
-                        <Eye size={12}/>
-                      </button>
+                    <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+                      <div>
+                        <div style={{fontSize:9,color:"#6b7a99",marginBottom:2}}>Phone</div>
+                        <div style={{fontSize:11,fontFamily:"monospace"}}>{u.phone}</div>
+                      </div>
+                      <div>
+                        <div style={{fontSize:9,color:"#6b7a99",marginBottom:2}}>Balance</div>
+                        <div style={{fontSize:12,fontWeight:700,color:"#00e676"}}>{fKES(u.balance)}</div>
+                      </div>
+                      <div>
+                        <div style={{fontSize:9,color:"#6b7a99",marginBottom:2}}>Bets</div>
+                        <div style={{fontSize:11}}>{fNum(u.total_bets)}</div>
+                      </div>
+                      <div>
+                        <div style={{fontSize:9,color:"#6b7a99",marginBottom:2}}>Joined</div>
+                        <div style={{fontSize:10,color:"#6b7a99"}}>{fDate(u.created_at)}</div>
+                      </div>
                     </div>
                   </div>
                 ))}
-                {users.length === 0 && <div style={S.noData}>No users found</div>}
+                {users.length===0 && <div style={{textAlign:"center",padding:24,color:"#6b7a99",fontSize:12}}>No users found</div>}
               </div>
-              <div style={S.pagination}>
-                <button style={S.pageBtn} disabled={userPage===1} onClick={() => setUserPage(p=>p-1)}>
-                  <ChevronLeft size={13}/>
-                </button>
-                <span style={S.pageNum}>Page {userPage} of {Math.ceil(userTotal/20)||1}</span>
-                <button style={S.pageBtn} disabled={userPage*20>=userTotal} onClick={() => setUserPage(p=>p+1)}>
-                  <ChevronRight size={13}/>
-                </button>
+              <div style={{display:"flex",alignItems:"center",gap:10,justifyContent:"center",marginTop:14}}>
+                <button style={{padding:"6px 12px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center"}} disabled={userPage===1} onClick={() => setUserPage(p=>p-1)}><ChevronLeft size={13}/></button>
+                <span style={{fontSize:12,color:"#6b7a99"}}>Page {userPage} of {Math.ceil(userTotal/20)||1}</span>
+                <button style={{padding:"6px 12px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center"}} disabled={userPage*20>=userTotal} onClick={() => setUserPage(p=>p+1)}><ChevronRight size={13}/></button>
               </div>
             </div>
           )}
 
-          {/* ── USER DETAIL ── */}
+          {/* USER DETAIL */}
           {tab === "users" && selectedUser && (
             <div>
-              <button style={S.backBtn} onClick={() => setSelectedUser(null)}>
-                <ChevronLeft size={13}/> Back to Users
+              <button onClick={() => setSelectedUser(null)} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,cursor:"pointer",marginBottom:14}}>
+                <ChevronLeft size={13}/> Back
               </button>
-              {actionMsg && <div style={S.okBox}>{actionMsg}</div>}
-              <div style={S.detailGrid}>
-                {/* Info card */}
-                <div style={S.detailCard}>
-                  <div style={S.detailTitle}>Account Info</div>
+              {actionMsg && <div style={{background:"rgba(0,230,118,0.1)",border:"1px solid rgba(0,230,118,0.3)",borderRadius:8,padding:"8px 12px",fontSize:12,color:"#00e676",marginBottom:12}}>{actionMsg}</div>}
+
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:10,marginBottom:14}}>
+                <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
+                  <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:10}}>Account Info</div>
                   {[
-                    ["Name", `${selectedUser.user.first_name} ${selectedUser.user.last_name}`],
-                    ["Phone", selectedUser.user.phone],
+                    ["Name",    `${selectedUser.user.first_name} ${selectedUser.user.last_name}`],
+                    ["Phone",   selectedUser.user.phone],
                     ["Balance", fKES(selectedUser.user.balance)],
-                    ["Status", selectedUser.user.banned ? "BANNED" : "Active"],
-                    ["Joined", fDate(selectedUser.user.created_at)],
+                    ["Status",  selectedUser.user.banned?"BANNED":"Active"],
+                    ["Joined",  fDate(selectedUser.user.created_at)],
                   ].map(([k,v]) => (
-                    <div key={k} style={S.detailRow}>
-                      <span style={S.detailKey}>{k}</span>
-                      <span style={{...S.detailVal, color: k==="Balance"?"#00e676": k==="Status" && selectedUser.user.banned?"#ff4d6d":"inherit"}}>{v}</span>
+                    <div key={k} style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                      <span style={{color:"#6b7a99"}}>{k}</span>
+                      <span style={{fontWeight:600,color:k==="Balance"?"#00e676":k==="Status"&&selectedUser.user.banned?"#ff4d6d":"inherit"}}>{v}</span>
                     </div>
                   ))}
-                  <div style={{marginTop:14,display:"flex",gap:8}}>
-                    <button
-                      style={{...S.actionBtn, background: selectedUser.user.banned ? "rgba(0,230,118,0.1)" : "rgba(255,77,109,0.1)", color: selectedUser.user.banned ? "#00e676" : "#ff4d6d", border: `1px solid ${selectedUser.user.banned ? "#00e676" : "#ff4d6d"}33`}}
-                      onClick={() => banUser(selectedUser.user.id, !selectedUser.user.banned)}
-                    >
-                      {selectedUser.user.banned ? <CheckCircle size={12}/> : <Ban size={12}/>}
-                      {selectedUser.user.banned ? " Unban User" : " Ban User"}
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => banUser(selectedUser.user.id, !selectedUser.user.banned)}
+                    style={{display:"flex",alignItems:"center",gap:5,padding:"8px 14px",borderRadius:8,fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer",marginTop:12,background:selectedUser.user.banned?"rgba(0,230,118,0.1)":"rgba(255,77,109,0.1)",color:selectedUser.user.banned?"#00e676":"#ff4d6d",border:`1px solid ${selectedUser.user.banned?"rgba(0,230,118,0.3)":"rgba(255,77,109,0.3)"}`}}>
+                    {selectedUser.user.banned ? <><CheckCircle size={12}/> Unban User</> : <><Ban size={12}/> Ban User</>}
+                  </button>
                 </div>
 
-                {/* Adjust balance card */}
-                <div style={S.detailCard}>
-                  <div style={S.detailTitle}>Adjust Balance</div>
-                  <input
-                    style={{...S.input, marginBottom:8}}
-                    type="number"
-                    placeholder="Amount (negative to deduct)"
-                    value={adjustAmt}
-                    onChange={e => setAdjustAmt(e.target.value)}
-                  />
-                  <input
-                    style={{...S.input, marginBottom:8}}
-                    placeholder="Note (optional)"
-                    value={adjustNote}
-                    onChange={e => setAdjustNote(e.target.value)}
-                  />
-                  <button
-                    style={{...S.actionBtn, background:"rgba(79,142,247,0.1)",color:"#4f8ef7",border:"1px solid rgba(79,142,247,0.3)"}}
-                    onClick={() => adjustBalance(selectedUser.user.id)}
-                  >
+                <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
+                  <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:10}}>Adjust Balance</div>
+                  <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} type="number" placeholder="Amount (negative to deduct)" value={adjustAmt} onChange={e => setAdjustAmt(e.target.value)}/>
+                  <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} placeholder="Note (optional)" value={adjustNote} onChange={e => setAdjustNote(e.target.value)}/>
+                  <button onClick={() => adjustBalance(selectedUser.user.id)} style={{display:"flex",alignItems:"center",gap:5,padding:"9px 14px",borderRadius:8,fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer",background:"rgba(79,142,247,0.1)",color:"#4f8ef7",border:"1px solid rgba(79,142,247,0.3)"}}>
                     <DollarSign size={12}/> Apply Adjustment
                   </button>
                 </div>
               </div>
 
-              {/* Recent transactions */}
-              <div style={S.section}>
-                <div style={S.sectionTitle}>Recent Transactions</div>
-                <div style={S.table}>
-                  <div style={S.thead}>
-                    <div style={S.th}>Type</div>
-                    <div style={S.th}>Label</div>
-                    <div style={S.th}>Amount</div>
-                    <div style={S.th}>Status</div>
-                    <div style={S.th}>Date</div>
-                  </div>
-                  {(selectedUser.transactions||[]).slice(0,20).map((t,i) => (
-                    <div key={i} style={S.trow}>
-                      <div style={S.td}>
-                        <span style={{...S.badge, ...(t.type==="dep"?S.badgeGreen:t.type==="win"?S.badgeAmber:t.type==="wd"?S.badgeBlue:S.badgeRed)}}>
-                          {t.type}
-                        </span>
-                      </div>
-                      <div style={S.td}>{t.label}</div>
-                      <div style={{...S.td, color:parseFloat(t.amount)>=0?"#00e676":"#ff4d6d",fontWeight:700}}>
-                        {parseFloat(t.amount)>=0?"+":""}{fKES(Math.abs(t.amount))}
-                      </div>
-                      <div style={S.td}>{t.status||"success"}</div>
-                      <div style={{...S.td,fontSize:10,color:"#6b7a99"}}>{fDate(t.created_at)} {fTime(t.created_at)}</div>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:8}}>Recent Transactions</div>
+              <div style={{display:"flex",flexDirection:"column",gap:5,marginBottom:16}}>
+                {(selectedUser.transactions||[]).slice(0,15).map((t,i) => (
+                  <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.05)",borderRadius:8,padding:"10px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
+                    <div>
+                      <div style={{fontSize:11,fontWeight:600}}>{t.label}</div>
+                      <div style={{fontSize:9,color:"#6b7a99",marginTop:2}}>{fDate(t.created_at)} {fTime(t.created_at)}</div>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recent bets */}
-              <div style={S.section}>
-                <div style={S.sectionTitle}>Recent Bets</div>
-                <div style={S.table}>
-                  <div style={S.thead}>
-                    <div style={S.th}>Round</div>
-                    <div style={S.th}>Amount</div>
-                    <div style={S.th}>Cashed Out</div>
-                    <div style={S.th}>Mult</div>
-                    <div style={S.th}>Payout</div>
-                    <div style={S.th}>Crash @</div>
-                  </div>
-                  {(selectedUser.bets||[]).slice(0,20).map((b,i) => (
-                    <div key={i} style={S.trow}>
-                      <div style={{...S.td,fontFamily:"monospace",fontSize:11}}>#{b.round_id}</div>
-                      <div style={S.td}>{fKES(b.amount)}</div>
-                      <div style={S.td}>
-                        <span style={{...S.badge,...(b.cashed_out?S.badgeGreen:S.badgeRed)}}>
-                          {b.cashed_out?"Yes":"No"}
-                        </span>
-                      </div>
-                      <div style={S.td}>{b.cashout_mult ? `${b.cashout_mult}×` : "—"}</div>
-                      <div style={{...S.td,color:"#00e676"}}>{b.payout > 0 ? fKES(b.payout) : "—"}</div>
-                      <div style={{...S.td,color:"#ff4d6d"}}>{b.crash_point ? `${b.crash_point}×` : "—"}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── TRANSACTIONS ── */}
-          {tab === "transactions" && (
-            <div>
-              <div style={S.filterRow}>
-                <div style={{display:"flex",gap:5}}>
-                  {[["","All"],["dep","Deposits"],["win","Wins"],["wd","Withdrawals"],["bet","Bets"]].map(([k,l]) => (
-                    <button key={k} style={{...S.pill,...(txnType===k?S.pillOn:{})}} onClick={() => { setTxnType(k); setTxnPage(1); }}>{l}</button>
-                  ))}
-                </div>
-                <div style={S.pageInfo}>{txnTotal} records</div>
-              </div>
-              <div style={S.table}>
-                <div style={S.thead}>
-                  <div style={S.th}>User</div>
-                  <div style={S.th}>Phone</div>
-                  <div style={S.th}>Type</div>
-                  <div style={S.th}>Label</div>
-                  <div style={S.th}>Amount</div>
-                  <div style={S.th}>Status</div>
-                  <div style={S.th}>Date</div>
-                </div>
-                {txns.map((t,i) => (
-                  <div key={i} style={S.trow}>
-                    <div style={S.td}>{t.first_name} {t.last_name}</div>
-                    <div style={{...S.td,fontFamily:"monospace",fontSize:10}}>{t.phone}</div>
-                    <div style={S.td}>
-                      <span style={{...S.badge,...(t.type==="dep"?S.badgeGreen:t.type==="win"?S.badgeAmber:t.type==="wd"?S.badgeBlue:S.badgeRed)}}>
-                        {t.type}
-                      </span>
-                    </div>
-                    <div style={{...S.td,fontSize:11}}>{t.label}</div>
-                    <div style={{...S.td,color:parseFloat(t.amount)>=0?"#00e676":"#ff4d6d",fontWeight:700}}>
-                      {parseFloat(t.amount)>=0?"+":""}{fKES(Math.abs(t.amount))}
-                    </div>
-                    <div style={S.td}>{t.status||"success"}</div>
-                    <div style={{...S.td,fontSize:10,color:"#6b7a99"}}>{fDate(t.created_at)}</div>
+                    <span style={{fontSize:12,fontWeight:700,color:parseFloat(t.amount)>=0?"#00e676":"#ff4d6d"}}>{parseFloat(t.amount)>=0?"+":""}{fKES(Math.abs(t.amount))}</span>
                   </div>
                 ))}
-                {txns.length===0 && <div style={S.noData}>No transactions</div>}
               </div>
-              <div style={S.pagination}>
-                <button style={S.pageBtn} disabled={txnPage===1} onClick={() => setTxnPage(p=>p-1)}><ChevronLeft size={13}/></button>
-                <span style={S.pageNum}>Page {txnPage} of {Math.ceil(txnTotal/30)||1}</span>
-                <button style={S.pageBtn} disabled={txnPage*30>=txnTotal} onClick={() => setTxnPage(p=>p+1)}><ChevronRight size={13}/></button>
+
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:8}}>Recent Bets</div>
+              <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                {(selectedUser.bets||[]).slice(0,15).map((b,i) => (
+                  <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.05)",borderRadius:8,padding:"10px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
+                    <div>
+                      <div style={{fontSize:11,fontWeight:600}}>Round #{b.round_id}</div>
+                      <div style={{fontSize:10,color:"#6b7a99",marginTop:2}}>Bet: {fKES(b.amount)} · Crash@{b.crash_point}×</div>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      <span style={{fontSize:10,padding:"2px 7px",borderRadius:4,fontWeight:700,background:b.cashed_out?"rgba(0,230,118,0.1)":"rgba(255,77,109,0.1)",color:b.cashed_out?"#00e676":"#ff4d6d"}}>{b.cashed_out?"Won":"Lost"}</span>
+                      {b.payout>0 && <div style={{fontSize:11,color:"#00e676",marginTop:3}}>{fKES(b.payout)}</div>}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* ── ROUNDS ── */}
+          {/* TRANSACTIONS */}
+          {tab === "transactions" && (
+            <div>
+              <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:12}}>
+                {[["","All"],["dep","Deposits"],["win","Wins"],["wd","Withdrawals"],["bet","Bets"]].map(([k,l]) => (
+                  <button key={k} onClick={() => { setTxnType(k); setTxnPage(1); }} style={{padding:"5px 11px",borderRadius:16,border:"1px solid rgba(255,255,255,0.08)",background:txnType===k?"rgba(79,142,247,0.1)":"transparent",color:txnType===k?"#4f8ef7":"#6b7a99",fontFamily:"'Space Grotesk',sans-serif",fontSize:11,fontWeight:600,cursor:"pointer",borderColor:txnType===k?"rgba(79,142,247,0.3)":"rgba(255,255,255,0.08)"}}>{l}</button>
+                ))}
+                <span style={{fontSize:10,color:"#6b7a99",alignSelf:"center",marginLeft:"auto"}}>{txnTotal} records</span>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                {txns.map((t,i) => (
+                  <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.05)",borderRadius:8,padding:"11px 12px"}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5}}>
+                      <span style={{fontSize:12,fontWeight:600}}>{t.first_name} {t.last_name}</span>
+                      <span style={{fontSize:12,fontWeight:700,color:parseFloat(t.amount)>=0?"#00e676":"#ff4d6d"}}>{parseFloat(t.amount)>=0?"+":""}{fKES(Math.abs(t.amount))}</span>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                      <span style={{fontSize:10,padding:"2px 6px",borderRadius:4,fontWeight:700,background:t.type==="dep"?"rgba(0,230,118,0.1)":t.type==="win"?"rgba(255,183,3,0.1)":t.type==="wd"?"rgba(79,142,247,0.1)":"rgba(255,77,109,0.1)",color:t.type==="dep"?"#00e676":t.type==="win"?"#ffb703":t.type==="wd"?"#4f8ef7":"#ff4d6d"}}>{t.type}</span>
+                      <span style={{fontSize:10,color:"#6b7a99",flex:1}}>{t.label}</span>
+                      <span style={{fontSize:9,color:"#6b7a99",fontFamily:"monospace"}}>{fDate(t.created_at)}</span>
+                    </div>
+                  </div>
+                ))}
+                {txns.length===0 && <div style={{textAlign:"center",padding:24,color:"#6b7a99",fontSize:12}}>No transactions</div>}
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:10,justifyContent:"center",marginTop:14}}>
+                <button style={{padding:"6px 12px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center"}} disabled={txnPage===1} onClick={() => setTxnPage(p=>p-1)}><ChevronLeft size={13}/></button>
+                <span style={{fontSize:12,color:"#6b7a99"}}>Page {txnPage} of {Math.ceil(txnTotal/30)||1}</span>
+                <button style={{padding:"6px 12px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center"}} disabled={txnPage*30>=txnTotal} onClick={() => setTxnPage(p=>p+1)}><ChevronRight size={13}/></button>
+              </div>
+            </div>
+          )}
+
+          {/* ROUNDS */}
           {tab === "rounds" && (
             <div>
-              <div style={S.filterRow}>
-                <div style={S.pageInfo}>{roundTotal} rounds played</div>
-              </div>
-              <div style={S.table}>
-                <div style={S.thead}>
-                  <div style={S.th}>Round ID</div>
-                  <div style={S.th}>Crash Point</div>
-                  <div style={S.th}>Bets</div>
-                  <div style={S.th}>Wagered</div>
-                  <div style={S.th}>Paid Out</div>
-                  <div style={S.th}>House Edge</div>
-                  <div style={S.th}>Date</div>
-                </div>
+              <div style={{fontSize:10,color:"#6b7a99",marginBottom:10}}>{roundTotal} rounds played</div>
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
                 {rounds.map((r,i) => {
                   const edge = parseFloat(r.total_wagered||0) - parseFloat(r.total_paid||0);
                   return (
-                    <div key={i} style={S.trow}>
-                      <div style={{...S.td,fontFamily:"monospace",fontSize:11}}>#{r.id}</div>
-                      <div style={{...S.td,fontWeight:700,color: r.crash_point<2?"#6fa6f8":r.crash_point>=10?"#c77dff":"#8a9ab8"}}>
-                        {Number(r.crash_point).toFixed(2)}×
+                    <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.05)",borderRadius:8,padding:"11px 12px"}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                        <span style={{fontSize:11,fontFamily:"monospace",color:"#6b7a99"}}>#{r.id}</span>
+                        <span style={{fontSize:16,fontWeight:700,fontFamily:"monospace",color:r.crash_point<2?"#6fa6f8":r.crash_point>=10?"#c77dff":"#8a9ab8"}}>{Number(r.crash_point).toFixed(2)}×</span>
+                        <span style={{fontSize:12,fontWeight:700,color:edge>=0?"#00e676":"#ff4d6d"}}>{fKES(edge)}</span>
                       </div>
-                      <div style={S.td}>{r.bet_count}</div>
-                      <div style={S.td}>{fKES(r.total_wagered)}</div>
-                      <div style={{...S.td,color:"#ff4d6d"}}>{fKES(r.total_paid)}</div>
-                      <div style={{...S.td,color:edge>=0?"#00e676":"#ff4d6d",fontWeight:700}}>{fKES(edge)}</div>
-                      <div style={{...S.td,fontSize:10,color:"#6b7a99"}}>{fDate(r.created_at)}</div>
+                      <div style={{display:"flex",gap:14,flexWrap:"wrap"}}>
+                        <div><span style={{fontSize:9,color:"#6b7a99"}}>Bets </span><span style={{fontSize:11}}>{r.bet_count}</span></div>
+                        <div><span style={{fontSize:9,color:"#6b7a99"}}>Wagered </span><span style={{fontSize:11}}>{fKES(r.total_wagered)}</span></div>
+                        <div><span style={{fontSize:9,color:"#6b7a99"}}>Paid </span><span style={{fontSize:11,color:"#ff4d6d"}}>{fKES(r.total_paid)}</span></div>
+                        <div><span style={{fontSize:9,color:"#6b7a99"}}>{fDate(r.created_at)}</span></div>
+                      </div>
                     </div>
                   );
                 })}
-                {rounds.length===0 && <div style={S.noData}>No rounds yet</div>}
+                {rounds.length===0 && <div style={{textAlign:"center",padding:24,color:"#6b7a99",fontSize:12}}>No rounds yet</div>}
               </div>
-              <div style={S.pagination}>
-                <button style={S.pageBtn} disabled={roundPage===1} onClick={() => setRoundPage(p=>p-1)}><ChevronLeft size={13}/></button>
-                <span style={S.pageNum}>Page {roundPage} of {Math.ceil(roundTotal/30)||1}</span>
-                <button style={S.pageBtn} disabled={roundPage*30>=roundTotal} onClick={() => setRoundPage(p=>p+1)}><ChevronRight size={13}/></button>
+              <div style={{display:"flex",alignItems:"center",gap:10,justifyContent:"center",marginTop:14}}>
+                <button style={{padding:"6px 12px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center"}} disabled={roundPage===1} onClick={() => setRoundPage(p=>p-1)}><ChevronLeft size={13}/></button>
+                <span style={{fontSize:12,color:"#6b7a99"}}>Page {roundPage} of {Math.ceil(roundTotal/30)||1}</span>
+                <button style={{padding:"6px 12px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center"}} disabled={roundPage*30>=roundTotal} onClick={() => setRoundPage(p=>p+1)}><ChevronRight size={13}/></button>
               </div>
             </div>
           )}
@@ -634,81 +561,13 @@ export default function AdminApp() {
       </main>
 
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #06080e; }
-        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );
 }
-
-// ── Styles ──────────────────────────────────────────────────────────────────
-const S = {
-  root:        { display:"flex", minHeight:"100vh", background:"#06080e", color:"#f0f4ff", fontFamily:"'Space Grotesk',sans-serif" },
-  sidebar:     { width:190, background:"#0c0f1a", borderRight:"1px solid rgba(255,255,255,0.06)", display:"flex", flexDirection:"column", justifyContent:"space-between", padding:"16px 10px", flexShrink:0 },
-  sideTop:     { display:"flex", flexDirection:"column", gap:24 },
-  sideLogoRow: { display:"flex", alignItems:"center", gap:8, padding:"0 6px" },
-  sideLogo:    { fontSize:15, fontWeight:800, letterSpacing:"-0.3px" },
-  nav:         { display:"flex", flexDirection:"column", gap:3 },
-  navBtn:      { display:"flex", alignItems:"center", gap:8, padding:"9px 10px", borderRadius:8, border:"none", background:"transparent", color:"#6b7a99", fontFamily:"'Space Grotesk',sans-serif", fontSize:13, fontWeight:600, cursor:"pointer", textAlign:"left", transition:"all 0.12s" },
-  navBtnOn:    { background:"rgba(79,142,247,0.1)", color:"#4f8ef7" },
-  logoutBtn:   { display:"flex", alignItems:"center", gap:6, padding:"8px 10px", borderRadius:8, border:"1px solid rgba(255,77,109,0.2)", background:"transparent", color:"#ff4d6d", fontFamily:"'Space Grotesk',sans-serif", fontSize:12, fontWeight:600, cursor:"pointer" },
-  main:        { flex:1, display:"flex", flexDirection:"column", minWidth:0 },
-  topbar:      { height:48, borderBottom:"1px solid rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 20px", background:"rgba(12,15,26,0.8)", flexShrink:0 },
-  topTitle:    { fontSize:14, fontWeight:700, letterSpacing:"-0.2px" },
-  topRight:    { display:"flex", alignItems:"center", gap:10 },
-  refreshBtn:  { display:"flex", alignItems:"center", gap:5, padding:"5px 11px", borderRadius:7, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.03)", color:"#6b7a99", fontFamily:"'Space Grotesk',sans-serif", fontSize:11, fontWeight:600, cursor:"pointer" },
-  content:     { flex:1, padding:"16px 20px", overflowY:"auto" },
-  statGrid:    { display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:10, marginBottom:16 },
-  statCard:    { background:"#111827", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, padding:"14px 14px 12px" },
-  statIcon:    { marginBottom:8 },
-  statVal:     { fontFamily:"'JetBrains Mono',monospace", fontSize:16, fontWeight:700, marginBottom:4 },
-  statLbl:     { fontSize:10, color:"#6b7a99", fontWeight:500 },
-  section:     { marginTop:20 },
-  sectionTitle:{ fontSize:11, fontWeight:700, letterSpacing:"0.8px", textTransform:"uppercase", color:"#6b7a99", marginBottom:10 },
-  table:       { background:"#111827", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, overflow:"hidden" },
-  thead:       { display:"flex", background:"rgba(255,255,255,0.03)", borderBottom:"1px solid rgba(255,255,255,0.06)", padding:"8px 12px" },
-  th:          { flex:1, fontSize:9, fontWeight:700, letterSpacing:"0.8px", textTransform:"uppercase", color:"#6b7a99", minWidth:0 },
-  trow:        { display:"flex", padding:"9px 12px", borderBottom:"1px solid rgba(255,255,255,0.03)", alignItems:"center" },
-  td:          { flex:1, fontSize:12, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" },
-  noData:      { padding:"24px", textAlign:"center", color:"#6b7a99", fontSize:12 },
-  badge:       { display:"inline-block", padding:"2px 7px", borderRadius:4, fontSize:10, fontWeight:700, letterSpacing:"0.3px" },
-  badgeGreen:  { background:"rgba(0,230,118,0.1)", color:"#00e676" },
-  badgeRed:    { background:"rgba(255,77,109,0.1)", color:"#ff4d6d" },
-  badgeAmber:  { background:"rgba(255,183,3,0.1)", color:"#ffb703" },
-  badgeBlue:   { background:"rgba(79,142,247,0.1)", color:"#4f8ef7" },
-  badgePurple: { background:"rgba(199,125,255,0.1)", color:"#c77dff" },
-  filterRow:   { display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12, gap:10, flexWrap:"wrap" },
-  searchWrap:  { position:"relative", flex:1, maxWidth:320 },
-  searchInput: { width:"100%", background:"#111827", border:"1px solid rgba(255,255,255,0.08)", borderRadius:8, padding:"8px 12px 8px 32px", color:"#f0f4ff", fontFamily:"'Space Grotesk',sans-serif", fontSize:13, outline:"none" },
-  pageInfo:    { fontSize:11, color:"#6b7a99", fontWeight:600, flexShrink:0 },
-  pagination:  { display:"flex", alignItems:"center", gap:10, justifyContent:"center", marginTop:14 },
-  pageBtn:     { padding:"6px 11px", borderRadius:7, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.03)", color:"#6b7a99", cursor:"pointer", display:"flex", alignItems:"center" },
-  pageNum:     { fontSize:12, color:"#6b7a99" },
-  pill:        { padding:"5px 12px", borderRadius:16, border:"1px solid rgba(255,255,255,0.08)", background:"transparent", color:"#6b7a99", fontFamily:"'Space Grotesk',sans-serif", fontSize:11, fontWeight:600, cursor:"pointer" },
-  pillOn:      { background:"rgba(79,142,247,0.1)", borderColor:"rgba(79,142,247,0.3)", color:"#4f8ef7" },
-  loginWrap:   { minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:"#06080e" },
-  loginBox:    { width:340, background:"#111827", border:"1px solid rgba(255,255,255,0.08)", borderRadius:14, padding:"32px 28px" },
-  loginLogo:   { display:"flex", alignItems:"center", gap:10, fontSize:22, fontWeight:800, marginBottom:6 },
-  loginSub:    { fontSize:12, color:"#6b7a99", marginBottom:20 },
-  loginBtn:    { width:"100%", padding:12, borderRadius:9, border:"none", background:"#4f8ef7", color:"#fff", fontFamily:"'Space Grotesk',sans-serif", fontSize:14, fontWeight:700, cursor:"pointer", marginTop:4 },
-  input:       { width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:8, padding:"10px 12px", color:"#f0f4ff", fontFamily:"'Space Grotesk',sans-serif", fontSize:13, outline:"none" },
-  errBox:      { background:"rgba(255,77,109,0.1)", border:"1px solid rgba(255,77,109,0.3)", borderRadius:8, padding:"8px 12px", fontSize:12, color:"#ff4d6d", marginBottom:12 },
-  okBox:       { background:"rgba(0,230,118,0.1)", border:"1px solid rgba(0,230,118,0.3)", borderRadius:8, padding:"8px 12px", fontSize:12, color:"#00e676", marginBottom:12 },
-  backBtn:     { display:"flex", alignItems:"center", gap:5, padding:"6px 11px", borderRadius:7, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.03)", color:"#6b7a99", fontFamily:"'Space Grotesk',sans-serif", fontSize:12, cursor:"pointer", marginBottom:16 },
-  detailGrid:  { display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 },
-  detailCard:  { background:"#111827", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, padding:16 },
-  detailTitle: { fontSize:11, fontWeight:700, letterSpacing:"0.8px", textTransform:"uppercase", color:"#6b7a99", marginBottom:12 },
-  detailRow:   { display:"flex", justifyContent:"space-between", fontSize:13, padding:"6px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" },
-  detailKey:   { color:"#6b7a99" },
-  detailVal:   { fontWeight:600 },
-  actionBtn:   { display:"flex", alignItems:"center", gap:5, padding:"8px 14px", borderRadius:8, fontFamily:"'Space Grotesk',sans-serif", fontSize:12, fontWeight:600, cursor:"pointer" },
-  iconBtn:     { padding:"5px 8px", borderRadius:6, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.03)", color:"#6b7a99", cursor:"pointer", display:"flex", alignItems:"center" },
-  liveHeader:  { background:"#111827", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, padding:"16px 20px", display:"flex", alignItems:"center", gap:16, marginBottom:16 },
-  liveBadge:   { fontSize:11, fontWeight:700, color:"#00e676", animation:"pulse 1.4s infinite" },
-  liveState:   { fontSize:13, fontWeight:700, color:"#6b7a99" },
-  liveMult:    { fontFamily:"'JetBrains Mono',monospace", fontSize:28, fontWeight:700, color:"#ffffff" },
-  liveInfo:    { fontSize:11, color:"#6b7a99", marginLeft:"auto" },
-};
