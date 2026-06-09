@@ -160,15 +160,17 @@ export default function AdminApp() {
     }
   };
 
-  const adjustBalance = async (id) => {
+  const adjustBalance = async (id, action) => {
     const amt = parseFloat(adjustAmt);
-    if (isNaN(amt)) return;
+    if (isNaN(amt) || amt <= 0) return;
+    const finalAmt = action === "deduct" ? -amt : amt;
+    const defaultNote = action === "deduct" ? "Admin debit" : "Admin credit";
     const d = await authFetch(`/admin/users/${id}/balance`, {
       method: "POST",
-      body: JSON.stringify({ amount: amt, note: adjustNote || "Admin adjustment" }),
+      body: JSON.stringify({ amount: finalAmt, note: adjustNote || defaultNote }),
     });
     if (d?.ok) {
-      setActionMsg(`Balance adjusted by ${fKES(amt)}`);
+      setActionMsg(action === "deduct" ? `Deducted ${fKES(amt)}` : `Added ${fKES(amt)}`);
       setAdjustAmt(""); setAdjustNote("");
       fetchUserDetail(id);
       setTimeout(() => setActionMsg(""), 2500);
@@ -430,33 +432,17 @@ export default function AdminApp() {
 
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:10,marginBottom:14}}>
                 <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
-                  <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:10}}>Account Info</div>
-                  {[
-                    ["Name",    `${selectedUser.user.first_name} ${selectedUser.user.last_name}`],
-                    ["Phone",   selectedUser.user.phone],
-                    ["Balance", fKES(selectedUser.user.balance)],
-                    ["Status",  selectedUser.user.banned?"BANNED":"Active"],
-                    ["Joined",  fDate(selectedUser.user.created_at)],
-                  ].map(([k,v]) => (
-                    <div key={k} style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
-                      <span style={{color:"#6b7a99"}}>{k}</span>
-                      <span style={{fontWeight:600,color:k==="Balance"?"#00e676":k==="Status"&&selectedUser.user.banned?"#ff4d6d":"inherit"}}>{v}</span>
-                    </div>
-                  ))}
-                  <button
-                    onClick={() => banUser(selectedUser.user.id, !selectedUser.user.banned)}
-                    style={{display:"flex",alignItems:"center",gap:5,padding:"8px 14px",borderRadius:8,fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer",marginTop:12,background:selectedUser.user.banned?"rgba(0,230,118,0.1)":"rgba(255,77,109,0.1)",color:selectedUser.user.banned?"#00e676":"#ff4d6d",border:`1px solid ${selectedUser.user.banned?"rgba(0,230,118,0.3)":"rgba(255,77,109,0.3)"}`}}>
-                    {selectedUser.user.banned ? <><CheckCircle size={12}/> Unban User</> : <><Ban size={12}/> Ban User</>}
-                  </button>
-                </div>
-
-                <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
                   <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:10}}>Adjust Balance</div>
-                  <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} type="number" placeholder="Amount (negative to deduct)" value={adjustAmt} onChange={e => setAdjustAmt(e.target.value)}/>
+                  <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} type="number" min="0" placeholder="Amount (positive number)" value={adjustAmt} onChange={e => setAdjustAmt(e.target.value)}/>
                   <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} placeholder="Note (optional)" value={adjustNote} onChange={e => setAdjustNote(e.target.value)}/>
-                  <button onClick={() => adjustBalance(selectedUser.user.id)} style={{display:"flex",alignItems:"center",gap:5,padding:"9px 14px",borderRadius:8,fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer",background:"rgba(79,142,247,0.1)",color:"#4f8ef7",border:"1px solid rgba(79,142,247,0.3)"}}>
-                    <DollarSign size={12}/> Apply Adjustment
-                  </button>
+                  <div style={{display:"flex",gap:8}}>
+                    <button onClick={() => adjustBalance(selectedUser.user.id, "add")} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"9px 14px",borderRadius:8,fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer",background:"rgba(0,230,118,0.1)",color:"#00e676",border:"1px solid rgba(0,230,118,0.3)"}}>
+                      + Add
+                    </button>
+                    <button onClick={() => adjustBalance(selectedUser.user.id, "deduct")} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"9px 14px",borderRadius:8,fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer",background:"rgba(255,77,109,0.1)",color:"#ff4d6d",border:"1px solid rgba(255,77,109,0.3)"}}>
+                      - Deduct
+                    </button>
+                  </div>
                 </div>
               </div>
 
