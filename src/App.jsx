@@ -67,6 +67,7 @@ export default function App() {
   const [bigWin, setBigWin] = useState(null);
   const [toastState, setToastState] = useState(null);
   const [socketReady, setSocketReady] = useState(false);
+  const [adminBanner, setAdminBanner] = useState("");
 
   const gsRef = useRef("waiting");
   const multRef = useRef(1);
@@ -226,6 +227,20 @@ export default function App() {
     });
 
     socket.on("game:bets", bets => setPlayers(bets || []));
+
+    socket.on("admin:notify", data => {
+      toast_(data.message, "ok");
+    });
+
+    socket.on("admin:broadcast", data => {
+      toast_(data.message, "ok");
+    });
+
+    socket.on("game:config", data => {
+      if (data.bannerMsg !== undefined) {
+        setAdminBanner(data.bannerMsg || "");
+      }
+    });
 
     socket.on("bet:result", result => {
       if (result.panelId === 2) {
@@ -533,6 +548,11 @@ export default function App() {
         </div>
       </nav>
 
+      {adminBanner && (
+        <div style={{background:"rgba(255,183,3,0.12)",borderBottom:"1px solid rgba(255,183,3,0.3)",padding:"8px 14px",textAlign:"center",fontSize:12,fontWeight:600,color:"#ffb703"}}>
+          📢 {adminBanner}
+        </div>
+      )}
       <div className="mob-tabs">
         {NAV_TABS.map(t => (
           <button key={t.id} className={`mtab ${tab === t.id ? "on" : ""}`} onClick={() => setTab(t.id)}>

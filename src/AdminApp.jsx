@@ -40,6 +40,21 @@ export default function AdminApp() {
   const [adjustAmt, setAdjustAmt] = useState("");
   const [adjustNote, setAdjustNote] = useState("");
   const [actionMsg, setActionMsg] = useState("");
+  const [dailyReport, setDailyReport] = useState(null);
+  const [revenueData, setRevenueData] = useState([]);
+  const [revenueDays, setRevenueDays] = useState(7);
+  const [topDepositors, setTopDepositors] = useState([]);
+  const [topWinners, setTopWinners] = useState([]);
+  const [gameConfig, setGameConfig] = useState({ paused: false, minBet: 10, maxBet: 50000, bannerMsg: "" });
+  const [suspicious, setSuspicious] = useState([]);
+  const [largeWds, setLargeWds] = useState([]);
+  const [broadcastMsg, setBroadcastMsg] = useState("");
+  const [notifyMsg, setNotifyMsg] = useState("");
+  const [notifyUserId, setNotifyUserId] = useState("");
+  const [commsResult, setCommsResult] = useState("");
+  const [minBetInput, setMinBetInput] = useState("10");
+  const [maxBetInput, setMaxBetInput] = useState("50000");
+  const [bannerInput, setBannerInput] = useState("");
 
   const authFetch = useCallback(async (path, opts = {}) => {
     const res = await fetch(`${API}${path}`, {
@@ -136,6 +151,9 @@ export default function AdminApp() {
     if (tab === "transactions") fetchTxns();
     if (tab === "rounds") fetchRounds();
     if (tab === "live") fetchLive();
+    if (tab === "reports") fetchReports();
+    if (tab === "gamecontrol") fetchGameConfig();
+    if (tab === "risk") fetchRisk();
   }, [authed, tab]);
 
   useEffect(() => { if (authed && tab === "users") fetchUsers(); }, [userPage, userSearch]);
@@ -215,7 +233,66 @@ export default function AdminApp() {
     { id: "users",        icon: <Users size={15}/>,       label: "Users"        },
     { id: "transactions", icon: <DollarSign size={15}/>,  label: "Transactions" },
     { id: "rounds",       icon: <Zap size={15}/>,         label: "Rounds"       },
+    { id: "reports",      icon: <TrendingUp size={15}/>,  label: "Reports"      },
+    { id: "gamecontrol",  icon: <Shield size={15}/>,      label: "Game"         },
+    { id: "risk",         icon: <Activity size={15}/>,    label: "Risk"         },
+    { id: "comms",        icon: <Users size={15}/>,       label: "Comms"        },
   ];
+
+  const fetchReports = useCallback(async () => {
+    setLoading(true);
+    const [daily, rev, deps, wins] = await Promise.all([
+      authFetch("/admin/reports/daily"),
+      authFetch(`/admin/reports/revenue?days=${revenueDays}`),
+      authFetch("/admin/reports/topdepositors"),
+      authFetch("/admin/reports/topwinners"),
+    ]);
+    if (daily) setDailyReport(daily);
+    if (rev) setRevenueData(rev);
+    if (deps) setTopDepositors(deps);
+    if (wins) setTopWinners(wins);
+    setLoading(false);
+  }, [authFetch, revenueDays]);
+
+  const fetchGameConfig = useCallback(async () => {
+    const d = await authFetch("/admin/game/config");
+    if (d) { setGameConfig(d); setMinBetInput(String(d.minBet)); setMaxBetInput(String(d.maxBet)); setBannerInput(d.bannerMsg||""); }
+  }, [authFetch]);
+
+  const fetchRisk = useCallback(async () => {
+    setLoading(true);
+    const [sus, lwd] = await Promise.all([authFetch("/admin/risk/suspicious"), authFetch("/admin/risk/largewithdrawals")]);
+    if (sus) setSuspicious(sus);
+    if (lwd) setLargeWds(lwd);
+    setLoading(false);
+  }, [authFetch]);
+
+  const togglePause = async () => {
+    const d = await authFetch("/admin/game/pause", { method: "POST", body: JSON.stringify({ paused: !gameConfig.paused }) });
+    if (d?.ok) setGameConfig(p => ({ ...p, paused: d.paused }));
+  };
+
+  const saveLimits = async () => {
+    const d = await authFetch("/admin/game/limits", { method: "POST", body: JSON.stringify({ minBet: minBetInput, maxBet: maxBetInput }) });
+    if (d?.ok) { setGameConfig(d.config); setActionMsg("Bet limits updated"); setTimeout(() => setActionMsg(""), 2000); }
+  };
+
+  const saveBanner = async () => {
+    const d = await authFetch("/admin/game/banner", { method: "POST", body: JSON.stringify({ message: bannerInput }) });
+    if (d?.ok) { setActionMsg("Banner updated"); setTimeout(() => setActionMsg(""), 2000); }
+  };
+
+  const sendBroadcast = async () => {
+    if (!broadcastMsg.trim()) return;
+    const d = await authFetch("/admin/broadcast", { method: "POST", body: JSON.stringify({ message: broadcastMsg }) });
+    if (d?.ok) { setCommsResult("Broadcast sent to all users"); setBroadcastMsg(""); setTimeout(() => setCommsResult(""), 3000); }
+  };
+
+  const sendNotify = async () => {
+    if (!notifyMsg.trim() || !notifyUserId.trim()) return;
+    const d = await authFetch(`/admin/notify/${notifyUserId}`, { method: "POST", body: JSON.stringify({ message: notifyMsg }) });
+    if (d?.ok) { setCommsResult(d.delivered ? "Message delivered (user online)" : "Saved (user offline)"); setNotifyMsg(""); setTimeout(() => setCommsResult(""), 3000); }
+  };
 
   const refreshCurrent = () => {
     if (tab==="overview") { fetchOverview(); fetchGameStats(); }
@@ -223,6 +300,9 @@ export default function AdminApp() {
     if (tab==="transactions") fetchTxns();
     if (tab==="rounds") fetchRounds();
     if (tab==="live") fetchLive();
+    if (tab==="reports") fetchReports();
+    if (tab==="gamecontrol") fetchGameConfig();
+    if (tab==="risk") fetchRisk();
   };
 
   return (
@@ -561,6 +641,189 @@ export default function AdminApp() {
                 <button style={{padding:"6px 12px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center"}} disabled={roundPage===1} onClick={() => setRoundPage(p=>p-1)}><ChevronLeft size={13}/></button>
                 <span style={{fontSize:12,color:"#6b7a99"}}>Page {roundPage} of {Math.ceil(roundTotal/30)||1}</span>
                 <button style={{padding:"6px 12px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center"}} disabled={roundPage*30>=roundTotal} onClick={() => setRoundPage(p=>p+1)}><ChevronRight size={13}/></button>
+              </div>
+            </div>
+          )}
+
+
+          {/* REPORTS */}
+          {tab === "reports" && (
+            <div>
+              {dailyReport && (
+                <div>
+                  <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:8}}>Today vs Yesterday</div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:8,marginBottom:14}}>
+                    {[
+                      {label:"Deposits Today", val:fKES(dailyReport.today.deposits), sub:`vs ${fKES(dailyReport.yesterday.deposits)}`, color:"#00e676"},
+                      {label:"Profit Today", val:fKES(dailyReport.today.profit), sub:`vs ${fKES(dailyReport.yesterday.profit)}`, color:dailyReport.today.profit>=0?"#00e676":"#ff4d6d"},
+                      {label:"Bets Today", val:fKES(dailyReport.today.bets), sub:`${fNum(dailyReport.today.betCount)} bets`, color:"#ffb703"},
+                      {label:"New Users", val:fNum(dailyReport.today.newUsers), sub:"today", color:"#4f8ef7"},
+                      {label:"Active Players", val:fNum(dailyReport.today.activeUsers), sub:"today", color:"#c77dff"},
+                      {label:"Rounds Today", val:fNum(dailyReport.today.rounds), sub:"played", color:"#ffb703"},
+                    ].map((s,i) => (
+                      <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"12px"}}>
+                        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14,fontWeight:700,color:s.color,marginBottom:3}}>{s.val}</div>
+                        <div style={{fontSize:9,color:"#6b7a99",marginBottom:2}}>{s.label}</div>
+                        <div style={{fontSize:9,color:"#4f4f6f"}}>{s.sub}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:8,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    Revenue Chart
+                    <div style={{display:"flex",gap:4}}>
+                      {[7,14,30].map(d => (
+                        <button key={d} onClick={() => { setRevenueDays(d); fetchReports(); }} style={{padding:"2px 8px",borderRadius:4,border:"1px solid rgba(255,255,255,0.08)",background:revenueDays===d?"rgba(79,142,247,0.1)":"transparent",color:revenueDays===d?"#4f8ef7":"#6b7a99",fontSize:10,cursor:"pointer"}}>{d}d</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14,marginBottom:14,overflowX:"auto"}}>
+                    <div style={{display:"flex",alignItems:"flex-end",gap:4,height:100,minWidth:revenueData.length*36}}>
+                      {revenueData.map((d,i) => {
+                        const maxVal = Math.max(...revenueData.map(r => Math.max(r.profit, r.deposits)), 1);
+                        return (
+                          <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,minWidth:32}}>
+                            <div style={{width:"100%",display:"flex",gap:2,alignItems:"flex-end",height:80}}>
+                              <div style={{flex:1,background:"rgba(79,142,247,0.6)",borderRadius:"3px 3px 0 0",height:`${(d.deposits/maxVal)*100}%`,minHeight:2}} title={`Deposits: ${fKES(d.deposits)}`}/>
+                              <div style={{flex:1,background:d.profit>=0?"rgba(0,230,118,0.6)":"rgba(255,77,109,0.6)",borderRadius:"3px 3px 0 0",height:`${(Math.abs(d.profit)/maxVal)*100}%`,minHeight:2}} title={`Profit: ${fKES(d.profit)}`}/>
+                            </div>
+                            <div style={{fontSize:8,color:"#6b7a99",textAlign:"center"}}>{d.date.slice(5)}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div style={{display:"flex",gap:12,marginTop:8}}>
+                      <div style={{display:"flex",alignItems:"center",gap:4,fontSize:9,color:"#6b7a99"}}><div style={{width:8,height:8,background:"rgba(79,142,247,0.6)",borderRadius:2}}/> Deposits</div>
+                      <div style={{display:"flex",alignItems:"center",gap:4,fontSize:9,color:"#6b7a99"}}><div style={{width:8,height:8,background:"rgba(0,230,118,0.6)",borderRadius:2}}/> Profit</div>
+                    </div>
+                  </div>
+
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                    <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#6b7a99",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.8px"}}>Top Depositors</div>
+                      {topDepositors.map((u,i) => (
+                        <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:11,padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
+                          <span style={{color:"#f0f4ff"}}>{u.first_name} {u.last_name?.[0]}***</span>
+                          <span style={{color:"#00e676",fontFamily:"monospace"}}>{fKES(u.total_deposited)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#6b7a99",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.8px"}}>Top Winners</div>
+                      {topWinners.map((u,i) => (
+                        <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:11,padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
+                          <span style={{color:"#f0f4ff"}}>{u.first_name} {u.last_name?.[0]}***</span>
+                          <span style={{color:"#ffb703",fontFamily:"monospace"}}>{fKES(u.total_profit)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!dailyReport && <div style={{textAlign:"center",padding:24,color:"#6b7a99",fontSize:12}}>Loading reports...</div>}
+            </div>
+          )}
+
+          {/* GAME CONTROLS */}
+          {tab === "gamecontrol" && (
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {actionMsg && <div style={{background:"rgba(0,230,118,0.1)",border:"1px solid rgba(0,230,118,0.3)",borderRadius:8,padding:"8px 12px",fontSize:12,color:"#00e676"}}>{actionMsg}</div>}
+              <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
+                <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:12}}>Game Status</div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:700,color:gameConfig.paused?"#ff4d6d":"#00e676"}}>{gameConfig.paused ? "⏸ PAUSED" : "▶ RUNNING"}</div>
+                    <div style={{fontSize:10,color:"#6b7a99",marginTop:2}}>Game is currently {gameConfig.paused?"paused — no new rounds":"active"}</div>
+                  </div>
+                  <button onClick={togglePause} style={{padding:"9px 18px",borderRadius:8,border:"none",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer",background:gameConfig.paused?"rgba(0,230,118,0.15)":"rgba(255,77,109,0.15)",color:gameConfig.paused?"#00e676":"#ff4d6d"}}>
+                    {gameConfig.paused ? "Resume Game" : "Pause Game"}
+                  </button>
+                </div>
+              </div>
+
+              <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
+                <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:12}}>Bet Limits</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+                  <div>
+                    <div style={{fontSize:10,color:"#6b7a99",marginBottom:4}}>Min Bet (KES)</div>
+                    <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",boxSizing:"border-box"}} type="number" value={minBetInput} onChange={e => setMinBetInput(e.target.value)}/>
+                  </div>
+                  <div>
+                    <div style={{fontSize:10,color:"#6b7a99",marginBottom:4}}>Max Bet (KES)</div>
+                    <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",boxSizing:"border-box"}} type="number" value={maxBetInput} onChange={e => setMaxBetInput(e.target.value)}/>
+                  </div>
+                </div>
+                <button onClick={saveLimits} style={{padding:"9px 16px",borderRadius:8,border:"1px solid rgba(79,142,247,0.3)",background:"rgba(79,142,247,0.1)",color:"#4f8ef7",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer"}}>Save Limits</button>
+              </div>
+
+              <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
+                <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:12}}>Game Banner</div>
+                <div style={{fontSize:10,color:"#6b7a99",marginBottom:6}}>Shows a banner message to all players on the game page</div>
+                <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} placeholder="e.g. Maintenance at 10pm tonight..." value={bannerInput} onChange={e => setBannerInput(e.target.value)}/>
+                <div style={{display:"flex",gap:6}}>
+                  <button onClick={saveBanner} style={{padding:"9px 16px",borderRadius:8,border:"1px solid rgba(79,142,247,0.3)",background:"rgba(79,142,247,0.1)",color:"#4f8ef7",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer"}}>Set Banner</button>
+                  <button onClick={() => { setBannerInput(""); saveBanner(); }} style={{padding:"9px 16px",borderRadius:8,border:"1px solid rgba(255,77,109,0.3)",background:"rgba(255,77,109,0.1)",color:"#ff4d6d",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer"}}>Clear</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* RISK */}
+          {tab === "risk" && (
+            <div>
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:8}}>Suspicious Activity (High Win Rate)</div>
+              <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:16}}>
+                {suspicious.map((u,i) => (
+                  <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.05)",borderRadius:8,padding:"11px 12px"}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:5}}>
+                      <span style={{fontSize:12,fontWeight:700}}>{u.first_name} {u.last_name}</span>
+                      <span style={{fontSize:12,fontWeight:700,color:parseFloat(u.win_rate)>70?"#ff4d6d":parseFloat(u.win_rate)>50?"#ffb703":"#00e676"}}>{u.win_rate}% wins</span>
+                    </div>
+                    <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
+                      <div><span style={{fontSize:9,color:"#6b7a99"}}>Bets </span><span style={{fontSize:11}}>{u.total_bets}</span></div>
+                      <div><span style={{fontSize:9,color:"#6b7a99"}}>Avg cashout </span><span style={{fontSize:11}}>{Number(u.avg_cashout).toFixed(2)}×</span></div>
+                      <div><span style={{fontSize:9,color:"#6b7a99"}}>Best </span><span style={{fontSize:11}}>{Number(u.max_cashout).toFixed(2)}×</span></div>
+                      <div><span style={{fontSize:9,color:"#6b7a99"}}>Profit </span><span style={{fontSize:11,color:"#00e676"}}>{fKES(u.total_profit)}</span></div>
+                      <div><span style={{fontSize:9,color:"#6b7a99"}}>Phone </span><span style={{fontSize:10,fontFamily:"monospace"}}>{u.phone}</span></div>
+                    </div>
+                  </div>
+                ))}
+                {suspicious.length===0 && <div style={{textAlign:"center",padding:24,color:"#6b7a99",fontSize:12}}>No suspicious activity detected</div>}
+              </div>
+
+              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:8}}>Large Withdrawals (KES 1,000+)</div>
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                {largeWds.map((t,i) => (
+                  <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.05)",borderRadius:8,padding:"10px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
+                    <div>
+                      <div style={{fontSize:12,fontWeight:600}}>{t.first_name} {t.last_name}</div>
+                      <div style={{fontSize:9,color:"#6b7a99",marginTop:2}}>{fDate(t.created_at)} · {t.phone}</div>
+                    </div>
+                    <span style={{fontSize:13,fontWeight:700,color:"#ff4d6d"}}>{fKES(Math.abs(t.amount))}</span>
+                  </div>
+                ))}
+                {largeWds.length===0 && <div style={{textAlign:"center",padding:24,color:"#6b7a99",fontSize:12}}>No large withdrawals</div>}
+              </div>
+            </div>
+          )}
+
+          {/* COMMS */}
+          {tab === "comms" && (
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {commsResult && <div style={{background:"rgba(0,230,118,0.1)",border:"1px solid rgba(0,230,118,0.3)",borderRadius:8,padding:"8px 12px",fontSize:12,color:"#00e676"}}>{commsResult}</div>}
+              <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
+                <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:4}}>Broadcast to All Users</div>
+                <div style={{fontSize:10,color:"#6b7a99",marginBottom:10}}>Sends a popup notification to every connected player instantly</div>
+                <textarea style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box",resize:"vertical",minHeight:80}} placeholder="e.g. Double winnings event starts in 1 hour!" value={broadcastMsg} onChange={e => setBroadcastMsg(e.target.value)}/>
+                <button onClick={sendBroadcast} style={{padding:"9px 16px",borderRadius:8,border:"none",background:"#4f8ef7",color:"#fff",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>Send Broadcast</button>
+              </div>
+
+              <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
+                <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:4}}>Notify Specific User</div>
+                <div style={{fontSize:10,color:"#6b7a99",marginBottom:10}}>Send a private message to a specific user by their ID</div>
+                <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} type="number" placeholder="User ID (find in Users tab)" value={notifyUserId} onChange={e => setNotifyUserId(e.target.value)}/>
+                <textarea style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box",resize:"vertical",minHeight:60}} placeholder="Your message..." value={notifyMsg} onChange={e => setNotifyMsg(e.target.value)}/>
+                <button onClick={sendNotify} style={{padding:"9px 16px",borderRadius:8,border:"none",background:"rgba(79,142,247,0.2)",color:"#4f8ef7",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer",border:"1px solid rgba(79,142,247,0.3)"}}>Send Message</button>
               </div>
             </div>
           )}
