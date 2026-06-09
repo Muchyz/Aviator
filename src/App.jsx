@@ -307,6 +307,7 @@ export default function App() {
     const u = userRef.current;
     if (!u) { setModal("login"); return; }
     if (gamePaused) { toast_("Game is currently paused", "err"); return; }
+    if (gamePaused) { toast_("Game is currently paused", "err"); return; }
     const a = parseFloat(betAmtRef.current);
     if (isNaN(a) || a < 10) { toast_("Minimum bet is KES 10", "err"); return; }
     if (a > balanceRef.current) { toast_("Insufficient balance", "err"); return; }
@@ -320,6 +321,7 @@ export default function App() {
   const handleBet2 = useCallback(() => {
     const u = userRef.current;
     if (!u) { setModal("login"); return; }
+    if (gamePaused) { toast_("Game is currently paused", "err"); return; }
     if (gamePaused) { toast_("Game is currently paused", "err"); return; }
     const a = parseFloat(betAmt2StrRef.current);
     if (isNaN(a) || a < 10) { toast_("Minimum bet is KES 10", "err"); return; }
@@ -554,6 +556,9 @@ export default function App() {
         </div>
       </nav>
 
+      {gamePaused && (
+        <div style={{background:"rgba(255,77,109,0.12)",borderBottom:"1px solid rgba(255,77,109,0.3)",padding:"8px 14px",textAlign:"center",fontSize:12,fontWeight:600,color:"#ff4d6d"}}>⏸ Game is currently paused by admin</div>
+      )}
       {gamePaused && (
         <div style={{background:"rgba(255,77,109,0.12)",borderBottom:"1px solid rgba(255,77,109,0.3)",padding:"8px 14px",textAlign:"center",fontSize:12,fontWeight:600,color:"#ff4d6d"}}>⏸ Game is currently paused by admin</div>
       )}
