@@ -270,9 +270,10 @@ export default function AdminApp() {
   };
 
   const saveBanner = async () => {
+    const msg = bannerRef.current ? bannerRef.current.value : bannerInput;
     const d = await authFetch("/admin/game/banner", {
       method: "POST",
-      body: JSON.stringify({ message: bannerInput }),
+      body: JSON.stringify({ message: msg }),
     });
     if (d?.ok) {
       setGameConfig(p => ({ ...p, bannerMsg: d.banner }));
@@ -841,7 +842,7 @@ export default function AdminApp() {
                 <Card>
                   <SectionLabel>Announcement Banner</SectionLabel>
                   <div style={{fontSize:10,color:"#6b7a99",marginBottom:6}}>Shows a banner to all players on the game page</div>
-                  <textarea ref={bannerRef} defaultValue={bannerInput} onChange={e => setBannerInput(e.target.value)} placeholder="Enter announcement message... (leave empty to clear)" rows={3} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",resize:"none",boxSizing:"border-box",marginBottom:8}}/>
+                  <textarea ref={bannerRef} defaultValue={bannerInput} onBlur={e => setBannerInput(e.target.value)} placeholder="Enter announcement message... (leave empty to clear)" rows={3} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",resize:"none",boxSizing:"border-box",marginBottom:8}}/>
                   <div style={{display:"flex",gap:8}}>
                     <button onClick={saveBanner} style={{flex:1,padding:"9px",borderRadius:8,border:"none",background:"rgba(255,183,3,0.1)",color:"#ffb703",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer"}}>
                       <Megaphone size={13} style={{marginRight:5,verticalAlign:"middle"}}/> Set Banner
