@@ -551,6 +551,7 @@ export default function App() {
                       <div className="dd-top">
                         <div className="dd-name">{user.name}</div>
                         <div className="dd-phone">+{user.phone}</div>
+                        {user.aviId && <div style={{fontSize:10,fontWeight:700,color:"var(--blue)",marginTop:3,fontFamily:"monospace"}}>{user.aviId}</div>}
                       </div>
                       {NAV_TABS.map(t => (
                         <button key={t.id} className="dd-item" onClick={() => { setTab(t.id); setDdOpen(false); }}>
@@ -953,6 +954,7 @@ export default function App() {
                   <div className="acct-info">
                     <div className="acct-section-lbl">Account Details</div>
                     {[
+                      { k: "Player ID", v: user.aviId || "—",          cls: "mono"  },
                       { k: "Name",    v: user.name,                   cls: ""      },
                       { k: "Phone",   v: `+${user.phone}`,            cls: "mono"  },
                       { k: "Balance", v: <AnimatedBalance value={balance} />, cls: "green" },
