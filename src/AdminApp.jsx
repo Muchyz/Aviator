@@ -823,7 +823,7 @@ export default function AdminApp() {
                 <div style={{fontSize:10,color:"#6b7a99",marginBottom:10}}>Send a private message to a specific user by their ID</div>
                 <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} type="number" placeholder="User ID (find in Users tab)" value={notifyUserId} onChange={e => setNotifyUserId(e.target.value)}/>
                 <textarea style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box",resize:"vertical",minHeight:60}} placeholder="Your message..." value={notifyMsg} onChange={e => setNotifyMsg(e.target.value)}/>
-                <button onClick={sendNotify} style={{padding:"9px 16px",borderRadius:8,border:"none",background:"rgba(79,142,247,0.2)",color:"#4f8ef7",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer",border:"1px solid rgba(79,142,247,0.3)"}}>Send Message</button>
+                <button onClick={sendNotify} style={{padding:"9px 16px",borderRadius:8,border:"1px solid rgba(79,142,247,0.3)",background:"rgba(79,142,247,0.2)",color:"#4f8ef7",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"}}>Send Message</button>
               </div>
             </div>
           )}
