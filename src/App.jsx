@@ -67,6 +67,7 @@ export default function App() {
   const [bigWin, setBigWin] = useState(null);
   const [toastState, setToastState] = useState(null);
   const [socketReady, setSocketReady] = useState(false);
+  const [onlineCount, setOnlineCount] = useState(() => Math.floor(Math.random() * 1583) + 3000);
   const [adminBanner, setAdminBanner] = useState("");
   const [gamePaused, setGamePaused] = useState(false);
 
@@ -300,6 +301,16 @@ export default function App() {
     });
 
     return () => { socket.disconnect(); };
+  }, []);
+
+  useEffect(() => {
+    const fluc = setInterval(() => {
+      setOnlineCount(prev => {
+        const delta = Math.floor(Math.random() * 40) - 18;
+        return Math.min(4583, Math.max(3000, prev + delta));
+      });
+    }, 8000);
+    return () => clearInterval(fluc);
   }, []);
 
   useEffect(() => {
@@ -656,23 +667,57 @@ export default function App() {
 
           <div className="rcol">
             <div className="rcard">
-              <div className="rhead">
-                <span className="rtitle">Active Players</span>
-                <span className="rcnt">{players.length}</span>
+              <div className="rhead" style={{flexDirection:"column",alignItems:"flex-start",gap:4,padding:"10px 12px"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%"}}>
+                  <span className="rtitle">Active Players</span>
+                  <span className="rcnt">{players.length} in round</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:5}}>
+                  <div style={{width:6,height:6,borderRadius:"50%",background:"#00e676",boxShadow:"0 0 6px #00e676",animation:"blk 1.4s infinite"}}/>
+                  <span style={{fontSize:10,fontWeight:700,color:"#00e676"}}>{onlineCount.toLocaleString()} online now</span>
+                </div>
               </div>
               <div className="plist">
-                {players.map((p, i) => (
-                  <div key={p.id || i} className={`prow ${p.cashed ? "cashed" : ""}`}>
-                    <div>
-                      <div className="pname">{p.name}</div>
-                      <div className="pbet">KES {p.bet}</div>
+                {[...players].sort((a,b) => Number(b.bet) - Number(a.bet)).slice(0, 150).map((p, i) => {
+                  const initials = p.name ? p.name.slice(0,2).toUpperCase() : "??";
+                  const avatarSeeds = ["felix","mimi","misty","smokey","tiger","cleo","luna","max","simba","nala","oreo","shadow","whiskers","mittens","boots"];
+                  const avatarSeed = avatarSeeds[(p.name?.charCodeAt(0) || i + p.name?.charCodeAt(1) || 0) % avatarSeeds.length];
+                  const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${avatarSeed}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
+                  return (
+                  <div key={p.id || i} className={`prow ${p.cashed ? "cashed" : ""}`} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                    <div style={{width:42,height:42,borderRadius:12,overflow:"hidden",flexShrink:0,boxShadow:"0 2px 10px rgba(0,0,0,0.4)",background:"#1a2035",border:"1px solid rgba(255,255,255,0.08)"}}>
+                      <img src={avatarUrl} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} />
                     </div>
-                    {gs === "flying" && !p.cashed && <div className="pmult">{md}×</div>}
-                    {p.cashed && <div className="pmult cashed">✓ {p.cashMult}×</div>}
+                    <div style={{flex:1,minWidth:0}}>
+                      <div className="pname" style={{fontSize:11,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</div>
+                      <div className="pbet" style={{fontSize:9,color:"var(--text2)",marginTop:1}}>KES {Number(p.bet).toLocaleString()}</div>
+                    </div>
+                    <div style={{flexShrink:0,textAlign:"right"}}>
+                      {gs === "flying" && !p.cashed && (
+                        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
+                          <div style={{width:6,height:6,borderRadius:"50%",background:"#ffb703",boxShadow:"0 0 5px #ffb703",animation:"blk 1s infinite"}}/>
+                          <div className="pmult" style={{fontSize:10,color:"#ffb703"}}>{md}×</div>
+                        </div>
+                      )}
+                      {p.cashed && (
+                        <div style={{background:"rgba(0,230,118,0.12)",border:"1px solid rgba(0,230,118,0.3)",borderRadius:5,padding:"2px 6px",fontSize:9,fontWeight:800,color:"#00e676",whiteSpace:"nowrap"}}>
+                          ✓ {p.cashMult}×
+                        </div>
+                      )}
+                      {gs === "waiting" && !p.cashed && (
+                        <div style={{background:"rgba(79,142,247,0.1)",border:"1px solid rgba(79,142,247,0.2)",borderRadius:5,padding:"2px 6px",fontSize:9,fontWeight:700,color:"#4f8ef7"}}>
+                          ready
+                        </div>
+                      )}
+                    </div>
                   </div>
-                ))}
+                  );
+                })}
                 {players.length === 0 && (
-                  <div style={{ padding: "10px 9px", fontSize: 11, color: "var(--text2)" }}>No active bets</div>
+                  <div style={{padding:"18px 9px",fontSize:11,color:"var(--text2)",textAlign:"center"}}>
+                    <div style={{fontSize:20,marginBottom:5}}>✈️</div>
+                    Waiting for bets...
+                  </div>
                 )}
               </div>
             </div>
@@ -709,21 +754,52 @@ export default function App() {
           </div>
 
           <div className="mob-players">
-            <div className="rhead">
-              <span className="rtitle">Active Players</span>
-              <span className="rcnt">{players.length}</span>
+            <div className="rhead" style={{flexDirection:"column",alignItems:"flex-start",gap:3,padding:"9px 12px"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%"}}>
+                <span className="rtitle">Active Players</span>
+                <span className="rcnt">{players.length} in round</span>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}>
+                <div style={{width:6,height:6,borderRadius:"50%",background:"#00e676",boxShadow:"0 0 6px #00e676",animation:"blk 1.4s infinite"}}/>
+                <span style={{fontSize:10,fontWeight:700,color:"#00e676"}}>{onlineCount.toLocaleString()} online now</span>
+              </div>
             </div>
             <div className="plist">
-              {players.slice(0, 6).map((p, i) => (
-                <div key={p.id || i} className={`prow ${p.cashed ? "cashed" : ""}`}>
-                  <div>
-                    <div className="pname">{p.name}</div>
-                    <div className="pbet">KES {p.bet}</div>
+              {[...players].sort((a,b) => Number(b.bet) - Number(a.bet)).slice(0, 150).map((p, i) => {
+                const initials = p.name ? p.name.slice(0,2).toUpperCase() : "??";
+                const avatarSeeds = ["felix","mimi","misty","smokey","tiger","cleo","luna","max","simba","nala","oreo","shadow","whiskers","mittens","boots"];
+                const avatarSeed = avatarSeeds[(p.name?.charCodeAt(0) || i + p.name?.charCodeAt(1) || 0) % avatarSeeds.length];
+                const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${avatarSeed}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
+                return (
+                <div key={p.id || i} className={`prow ${p.cashed ? "cashed" : ""}`} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                  <div style={{width:42,height:42,borderRadius:12,overflow:"hidden",flexShrink:0,boxShadow:"0 2px 10px rgba(0,0,0,0.4)",background:"#1a2035",border:"1px solid rgba(255,255,255,0.08)"}}>
+                    <img src={avatarUrl} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} />
                   </div>
-                  {gs === "flying" && !p.cashed && <div className="pmult">{md}×</div>}
-                  {p.cashed && <div className="pmult cashed">✓ {p.cashMult}×</div>}
+                  <div style={{flex:1,minWidth:0}}>
+                    <div className="pname" style={{fontSize:11,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</div>
+                    <div className="pbet" style={{fontSize:9,color:"var(--text2)",marginTop:1}}>KES {Number(p.bet).toLocaleString()}</div>
+                  </div>
+                  <div style={{flexShrink:0,textAlign:"right"}}>
+                    {gs === "flying" && !p.cashed && (
+                      <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
+                        <div style={{width:6,height:6,borderRadius:"50%",background:"#ffb703",boxShadow:"0 0 5px #ffb703",animation:"blk 1s infinite"}}/>
+                        <div className="pmult" style={{fontSize:10,color:"#ffb703"}}>{md}×</div>
+                      </div>
+                    )}
+                    {p.cashed && (
+                      <div style={{background:"rgba(0,230,118,0.12)",border:"1px solid rgba(0,230,118,0.3)",borderRadius:5,padding:"2px 6px",fontSize:9,fontWeight:800,color:"#00e676",whiteSpace:"nowrap"}}>
+                        ✓ {p.cashMult}×
+                      </div>
+                    )}
+                    {gs === "waiting" && !p.cashed && (
+                      <div style={{background:"rgba(79,142,247,0.1)",border:"1px solid rgba(79,142,247,0.2)",borderRadius:5,padding:"2px 6px",fontSize:9,fontWeight:700,color:"#4f8ef7"}}>
+                        ready
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

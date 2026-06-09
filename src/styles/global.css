@@ -201,7 +201,7 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
 .rhead{padding:9px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .rtitle{font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--text)}
 .rcnt{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:10px;color:var(--text2);font-family:'JetBrains Mono',monospace}
-.plist{padding:3px;max-height:240px;overflow-y:auto;}
+.plist{padding:3px;max-height:600px;overflow-y:auto;}
 .plist::-webkit-scrollbar{width:3px}
 .plist::-webkit-scrollbar-thumb{background:var(--border-md)}
 .prow{display:flex;align-items:center;justify-content:space-between;padding:6px 9px;border-radius:6px;transition:background 0.1s;}
