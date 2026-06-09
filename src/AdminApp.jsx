@@ -3,7 +3,9 @@ import {
   Users, DollarSign, TrendingUp, Activity,
   Shield, Ban, CheckCircle, Search, RefreshCw, LogOut,
   BarChart2, Eye, ChevronLeft, ChevronRight, Zap,
-  ArrowDownCircle, ArrowUpCircle, Award, Menu, X
+  ArrowDownCircle, ArrowUpCircle, Award, Menu, X,
+  Pause, Play, Settings, AlertTriangle, Bell, Megaphone,
+  Calendar, FileText
 } from "lucide-react";
 
 const API = "https://aviator-backend-production-1de1.up.railway.app/api";
@@ -12,6 +14,7 @@ const fKES = n => `KES ${Number(n||0).toLocaleString("en-KE",{minimumFractionDig
 const fDate = d => new Date(d).toLocaleDateString("en-KE",{day:"numeric",month:"short",year:"numeric"});
 const fTime = d => new Date(d).toLocaleTimeString("en-KE",{hour:"2-digit",minute:"2-digit"});
 const fNum = n => Number(n||0).toLocaleString();
+const pctChange = (a,b) => b===0 ? 0 : (((a-b)/b)*100).toFixed(1);
 
 export default function AdminApp() {
   const [token, setToken] = useState(() => localStorage.getItem("avipesa_admin_token") || "");
@@ -40,6 +43,30 @@ export default function AdminApp() {
   const [adjustAmt, setAdjustAmt] = useState("");
   const [adjustNote, setAdjustNote] = useState("");
   const [actionMsg, setActionMsg] = useState("");
+
+  // Reports
+  const [dailyReport, setDailyReport] = useState(null);
+  const [revenueData, setRevenueData] = useState([]);
+  const [topDepositors, setTopDepositors] = useState([]);
+  const [topWinners, setTopWinners] = useState([]);
+  const [revDays, setRevDays] = useState(7);
+
+  // Game Controls
+  const [gameConfig, setGameConfig] = useState({ paused: false, minBet: 10, maxBet: 50000, bannerMsg: "" });
+  const [minBetInput, setMinBetInput] = useState("10");
+  const [maxBetInput, setMaxBetInput] = useState("50000");
+  const [bannerInput, setBannerInput] = useState("");
+  const [configMsg, setConfigMsg] = useState("");
+
+  // Risk
+  const [suspicious, setSuspicious] = useState([]);
+  const [largeWds, setLargeWds] = useState([]);
+
+  // Comms
+  const [broadcastMsg, setBroadcastMsg] = useState("");
+  const [notifyUserId, setNotifyUserId] = useState("");
+  const [notifyMsg, setNotifyMsg] = useState("");
+  const [commsMsg, setCommsMsg] = useState("");
 
   const authFetch = useCallback(async (path, opts = {}) => {
     const res = await fetch(`${API}${path}`, {
@@ -129,6 +156,42 @@ export default function AdminApp() {
     if (d) setSelectedUser(d);
   }, [authFetch]);
 
+  const fetchReports = useCallback(async () => {
+    setLoading(true);
+    const [daily, revenue, depositors, winners] = await Promise.all([
+      authFetch("/admin/reports/daily"),
+      authFetch(`/admin/reports/revenue?days=${revDays}`),
+      authFetch("/admin/reports/topdepositors"),
+      authFetch("/admin/reports/topwinners"),
+    ]);
+    if (daily) setDailyReport(daily);
+    if (revenue) setRevenueData(revenue);
+    if (depositors) setTopDepositors(depositors);
+    if (winners) setTopWinners(winners);
+    setLoading(false);
+  }, [authFetch, revDays]);
+
+  const fetchGameConfig = useCallback(async () => {
+    const d = await authFetch("/admin/game/config");
+    if (d) {
+      setGameConfig(d);
+      setMinBetInput(String(d.minBet));
+      setMaxBetInput(String(d.maxBet));
+      setBannerInput(d.bannerMsg || "");
+    }
+  }, [authFetch]);
+
+  const fetchRisk = useCallback(async () => {
+    setLoading(true);
+    const [susp, lwd] = await Promise.all([
+      authFetch("/admin/risk/suspicious"),
+      authFetch("/admin/risk/largewithdrawals"),
+    ]);
+    if (susp) setSuspicious(susp);
+    if (lwd) setLargeWds(lwd);
+    setLoading(false);
+  }, [authFetch]);
+
   useEffect(() => {
     if (!authed) return;
     if (tab === "overview") { fetchOverview(); fetchGameStats(); }
@@ -136,11 +199,15 @@ export default function AdminApp() {
     if (tab === "transactions") fetchTxns();
     if (tab === "rounds") fetchRounds();
     if (tab === "live") fetchLive();
+    if (tab === "reports") fetchReports();
+    if (tab === "controls") fetchGameConfig();
+    if (tab === "risk") fetchRisk();
   }, [authed, tab]);
 
   useEffect(() => { if (authed && tab === "users") fetchUsers(); }, [userPage, userSearch]);
   useEffect(() => { if (authed && tab === "transactions") fetchTxns(); }, [txnPage, txnType]);
   useEffect(() => { if (authed && tab === "rounds") fetchRounds(); }, [roundPage]);
+  useEffect(() => { if (authed && tab === "reports") fetchReports(); }, [revDays]);
 
   useEffect(() => {
     if (!authed || tab !== "live") return;
@@ -177,6 +244,68 @@ export default function AdminApp() {
     }
   };
 
+  const togglePause = async () => {
+    const d = await authFetch("/admin/game/pause", {
+      method: "POST",
+      body: JSON.stringify({ paused: !gameConfig.paused }),
+    });
+    if (d?.ok) {
+      setGameConfig(p => ({ ...p, paused: d.paused }));
+      setConfigMsg(d.paused ? "Game paused" : "Game resumed");
+      setTimeout(() => setConfigMsg(""), 2500);
+    }
+  };
+
+  const saveLimits = async () => {
+    const d = await authFetch("/admin/game/limits", {
+      method: "POST",
+      body: JSON.stringify({ minBet: minBetInput, maxBet: maxBetInput }),
+    });
+    if (d?.ok) {
+      setGameConfig(p => ({ ...p, minBet: d.config.minBet, maxBet: d.config.maxBet }));
+      setConfigMsg("Bet limits updated");
+      setTimeout(() => setConfigMsg(""), 2500);
+    }
+  };
+
+  const saveBanner = async () => {
+    const d = await authFetch("/admin/game/banner", {
+      method: "POST",
+      body: JSON.stringify({ message: bannerInput }),
+    });
+    if (d?.ok) {
+      setGameConfig(p => ({ ...p, bannerMsg: d.banner }));
+      setConfigMsg(d.banner ? "Banner set" : "Banner cleared");
+      setTimeout(() => setConfigMsg(""), 2500);
+    }
+  };
+
+  const sendBroadcast = async () => {
+    if (!broadcastMsg.trim()) return;
+    const d = await authFetch("/admin/broadcast", {
+      method: "POST",
+      body: JSON.stringify({ message: broadcastMsg }),
+    });
+    if (d?.ok) {
+      setCommsMsg("Broadcast sent to all online users");
+      setBroadcastMsg("");
+      setTimeout(() => setCommsMsg(""), 3000);
+    }
+  };
+
+  const sendNotify = async () => {
+    if (!notifyUserId || !notifyMsg.trim()) return;
+    const d = await authFetch(`/admin/notify/${notifyUserId}`, {
+      method: "POST",
+      body: JSON.stringify({ message: notifyMsg }),
+    });
+    if (d?.ok) {
+      setCommsMsg(d.delivered ? "Message delivered" : "User offline — not delivered");
+      setNotifyMsg("");
+      setTimeout(() => setCommsMsg(""), 3000);
+    }
+  };
+
   const switchTab = (t) => {
     setTab(t);
     setSelectedUser(null);
@@ -210,11 +339,15 @@ export default function AdminApp() {
   }
 
   const TABS = [
-    { id: "overview",     icon: <BarChart2 size={15}/>,   label: "Overview"     },
-    { id: "live",         icon: <Activity size={15}/>,    label: "Live"         },
-    { id: "users",        icon: <Users size={15}/>,       label: "Users"        },
-    { id: "transactions", icon: <DollarSign size={15}/>,  label: "Transactions" },
-    { id: "rounds",       icon: <Zap size={15}/>,         label: "Rounds"       },
+    { id: "overview",     icon: <BarChart2 size={15}/>,      label: "Overview"     },
+    { id: "live",         icon: <Activity size={15}/>,       label: "Live"         },
+    { id: "users",        icon: <Users size={15}/>,          label: "Users"        },
+    { id: "transactions", icon: <DollarSign size={15}/>,     label: "Transactions" },
+    { id: "rounds",       icon: <Zap size={15}/>,            label: "Rounds"       },
+    { id: "reports",      icon: <FileText size={15}/>,       label: "Reports"      },
+    { id: "controls",     icon: <Settings size={15}/>,       label: "Controls"     },
+    { id: "risk",         icon: <AlertTriangle size={15}/>,  label: "Risk"         },
+    { id: "comms",        icon: <Bell size={15}/>,           label: "Comms"        },
   ];
 
   const refreshCurrent = () => {
@@ -223,24 +356,44 @@ export default function AdminApp() {
     if (tab==="transactions") fetchTxns();
     if (tab==="rounds") fetchRounds();
     if (tab==="live") fetchLive();
+    if (tab==="reports") fetchReports();
+    if (tab==="controls") fetchGameConfig();
+    if (tab==="risk") fetchRisk();
   };
+
+  const Card = ({children, style={}}) => (
+    <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14,...style}}>
+      {children}
+    </div>
+  );
+
+  const SectionLabel = ({children}) => (
+    <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:8}}>
+      {children}
+    </div>
+  );
+
+  const InfoMsg = ({msg, color="#00e676", bg="rgba(0,230,118,0.1)", border="rgba(0,230,118,0.3)"}) => msg ? (
+    <div style={{background:bg,border:`1px solid ${border}`,borderRadius:8,padding:"8px 12px",fontSize:12,color,marginBottom:12}}>
+      {msg}
+    </div>
+  ) : null;
+
+  const maxRev = Math.max(...revenueData.map(r => Math.max(r.profit, r.deposits, 1)));
 
   return (
     <div style={{display:"flex",minHeight:"100vh",background:"#06080e",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif"}}>
 
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div onClick={() => setSidebarOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:40}} />
       )}
 
-      {/* Sidebar */}
       <aside style={{
         width:200,background:"#0c0f1a",borderRight:"1px solid rgba(255,255,255,0.06)",
         display:"flex",flexDirection:"column",justifyContent:"space-between",padding:"16px 10px",
         flexShrink:0,
-        position: window.innerWidth < 768 ? "fixed" : "relative",
-        top:0,left:0,height:"100%",zIndex:50,
-        transform: window.innerWidth < 768 ? (sidebarOpen ? "translateX(0)" : "translateX(-100%)") : "none",
+        position:"fixed",top:0,left:0,height:"100%",zIndex:50,
+        transform:sidebarOpen?"translateX(0)":"translateX(-100%)",
         transition:"transform 0.25s ease",
       }}>
         <div style={{display:"flex",flexDirection:"column",gap:20}}>
@@ -249,11 +402,11 @@ export default function AdminApp() {
               <Shield size={16} color="#4f8ef7"/>
               <span style={{fontSize:14,fontWeight:800}}>Admin</span>
             </div>
-            <button onClick={() => setSidebarOpen(false)} style={{background:"none",border:"none",color:"#6b7a99",cursor:"pointer",display: window.innerWidth < 768 ? "flex" : "none",alignItems:"center"}}>
+            <button onClick={() => setSidebarOpen(false)} style={{background:"none",border:"none",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center"}}>
               <X size={16}/>
             </button>
           </div>
-          <nav style={{display:"flex",flexDirection:"column",gap:3}}>
+          <nav style={{display:"flex",flexDirection:"column",gap:3,overflowY:"auto"}}>
             {TABS.map(t => (
               <button key={t.id}
                 style={{display:"flex",alignItems:"center",gap:9,padding:"10px 10px",borderRadius:8,border:"none",background:tab===t.id?"rgba(79,142,247,0.1)":"transparent",color:tab===t.id?"#4f8ef7":"#6b7a99",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:600,cursor:"pointer",textAlign:"left"}}
@@ -268,16 +421,19 @@ export default function AdminApp() {
         </button>
       </aside>
 
-      {/* Main */}
       <main style={{flex:1,display:"flex",flexDirection:"column",minWidth:0,overflow:"hidden"}}>
 
-        {/* Topbar */}
         <div style={{height:50,borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 14px",background:"rgba(12,15,26,0.95)",flexShrink:0,gap:10}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <button onClick={() => setSidebarOpen(true)} style={{background:"none",border:"none",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center",padding:4}}>
               <Menu size={18}/>
             </button>
             <span style={{fontSize:13,fontWeight:700}}>{TABS.find(t=>t.id===tab)?.label}</span>
+            {tab==="controls" && (
+              <span style={{fontSize:10,padding:"2px 8px",borderRadius:10,fontWeight:700,background:gameConfig.paused?"rgba(255,77,109,0.1)":"rgba(0,230,118,0.1)",color:gameConfig.paused?"#ff4d6d":"#00e676",border:`1px solid ${gameConfig.paused?"rgba(255,77,109,0.3)":"rgba(0,230,118,0.3)"}`}}>
+                {gameConfig.paused ? "PAUSED" : "RUNNING"}
+              </span>
+            )}
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             {loading && <RefreshCw size={13} style={{animation:"spin 1s linear infinite",color:"#4f8ef7"}}/>}
@@ -287,7 +443,6 @@ export default function AdminApp() {
           </div>
         </div>
 
-        {/* Content */}
         <div style={{flex:1,padding:"14px",overflowY:"auto",overflowX:"hidden"}}>
 
           {/* OVERVIEW */}
@@ -314,7 +469,7 @@ export default function AdminApp() {
               </div>
               {gameStats && (
                 <div>
-                  <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:8}}>Game Statistics</div>
+                  <SectionLabel>Game Statistics</SectionLabel>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:8}}>
                     {[
                       {label:"Total Rounds", val:fNum(gameStats.total_rounds)},
@@ -344,7 +499,7 @@ export default function AdminApp() {
                 <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:26,fontWeight:700}}>{Number(liveData.multiplier||1).toFixed(2)}×</span>
                 <span style={{fontSize:10,color:"#6b7a99",marginLeft:"auto"}}>Round #{liveData.roundId} · Crash@{Number(liveData.crashPoint||0).toFixed(2)}×</span>
               </div>
-              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:8}}>Active Bets ({liveData.activeBets?.length||0})</div>
+              <SectionLabel>Active Bets ({liveData.activeBets?.length||0})</SectionLabel>
               <div style={{overflowX:"auto"}}>
                 {(liveData.activeBets||[]).map((b,i) => (
                   <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#111827",borderRadius:8,marginBottom:6,flexWrap:"wrap"}}>
@@ -356,7 +511,7 @@ export default function AdminApp() {
                 ))}
                 {(!liveData.activeBets||liveData.activeBets.length===0) && <div style={{textAlign:"center",padding:24,color:"#6b7a99",fontSize:12}}>No active bets</div>}
               </div>
-              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",margin:"14px 0 8px"}}>History</div>
+              <SectionLabel style={{marginTop:14}}>History</SectionLabel>
               <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                 {(liveData.history||[]).map((v,i) => (
                   <span key={i} style={{padding:"3px 8px",borderRadius:4,fontFamily:"monospace",fontSize:11,fontWeight:700,background:v<2?"rgba(79,142,247,0.15)":v>=10?"rgba(199,125,255,0.15)":"rgba(107,122,153,0.15)",color:v<2?"#6fa6f8":v>=10?"#c77dff":"#8a9ab8"}}>{Number(v).toFixed(2)}×</span>
@@ -381,7 +536,7 @@ export default function AdminApp() {
                 <span style={{fontSize:10,color:"#6b7a99",whiteSpace:"nowrap"}}>{userTotal} users</span>
               </div>
               <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                {users.map((u,i) => (
+                {users.map((u) => (
                   <div key={u.id} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"12px"}}>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
                       <span style={{fontSize:13,fontWeight:700}}>{u.first_name} {u.last_name}</span>
@@ -393,22 +548,10 @@ export default function AdminApp() {
                       </div>
                     </div>
                     <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
-                      <div>
-                        <div style={{fontSize:9,color:"#6b7a99",marginBottom:2}}>Phone</div>
-                        <div style={{fontSize:11,fontFamily:"monospace"}}>{u.phone}</div>
-                      </div>
-                      <div>
-                        <div style={{fontSize:9,color:"#6b7a99",marginBottom:2}}>Balance</div>
-                        <div style={{fontSize:12,fontWeight:700,color:"#00e676"}}>{fKES(u.balance)}</div>
-                      </div>
-                      <div>
-                        <div style={{fontSize:9,color:"#6b7a99",marginBottom:2}}>Bets</div>
-                        <div style={{fontSize:11}}>{fNum(u.total_bets)}</div>
-                      </div>
-                      <div>
-                        <div style={{fontSize:9,color:"#6b7a99",marginBottom:2}}>Joined</div>
-                        <div style={{fontSize:10,color:"#6b7a99"}}>{fDate(u.created_at)}</div>
-                      </div>
+                      <div><div style={{fontSize:9,color:"#6b7a99",marginBottom:2}}>Phone</div><div style={{fontSize:11,fontFamily:"monospace"}}>{u.phone}</div></div>
+                      <div><div style={{fontSize:9,color:"#6b7a99",marginBottom:2}}>Balance</div><div style={{fontSize:12,fontWeight:700,color:"#00e676"}}>{fKES(u.balance)}</div></div>
+                      <div><div style={{fontSize:9,color:"#6b7a99",marginBottom:2}}>Bets</div><div style={{fontSize:11}}>{fNum(u.total_bets)}</div></div>
+                      <div><div style={{fontSize:9,color:"#6b7a99",marginBottom:2}}>Joined</div><div style={{fontSize:10,color:"#6b7a99"}}>{fDate(u.created_at)}</div></div>
                     </div>
                   </div>
                 ))}
@@ -428,11 +571,10 @@ export default function AdminApp() {
               <button onClick={() => setSelectedUser(null)} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,cursor:"pointer",marginBottom:14}}>
                 <ChevronLeft size={13}/> Back
               </button>
-              {actionMsg && <div style={{background:"rgba(0,230,118,0.1)",border:"1px solid rgba(0,230,118,0.3)",borderRadius:8,padding:"8px 12px",fontSize:12,color:"#00e676",marginBottom:12}}>{actionMsg}</div>}
-
+              <InfoMsg msg={actionMsg} />
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:10,marginBottom:14}}>
-                <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
-                  <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:10}}>Account Info</div>
+                <Card>
+                  <SectionLabel>Account Info</SectionLabel>
                   {[
                     ["Name",    `${selectedUser.user.first_name} ${selectedUser.user.last_name}`],
                     ["Phone",   selectedUser.user.phone],
@@ -445,28 +587,22 @@ export default function AdminApp() {
                       <span style={{fontWeight:600,color:k==="Balance"?"#00e676":k==="Status"&&selectedUser.user.banned?"#ff4d6d":"inherit"}}>{v}</span>
                     </div>
                   ))}
-                  <button
-                    onClick={() => banUser(selectedUser.user.id, !selectedUser.user.banned)}
+                  <button onClick={() => banUser(selectedUser.user.id, !selectedUser.user.banned)}
                     style={{display:"flex",alignItems:"center",gap:5,padding:"8px 14px",borderRadius:8,fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer",marginTop:12,background:selectedUser.user.banned?"rgba(0,230,118,0.1)":"rgba(255,77,109,0.1)",color:selectedUser.user.banned?"#00e676":"#ff4d6d",border:`1px solid ${selectedUser.user.banned?"rgba(0,230,118,0.3)":"rgba(255,77,109,0.3)"}`}}>
                     {selectedUser.user.banned ? <><CheckCircle size={12}/> Unban User</> : <><Ban size={12}/> Ban User</>}
                   </button>
-                </div>
-                <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:14}}>
-                  <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:10}}>Adjust Balance</div>
-                  <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} type="number" min="0" placeholder="Amount (positive number)" value={adjustAmt} onChange={e => setAdjustAmt(e.target.value)}/>
+                </Card>
+                <Card>
+                  <SectionLabel>Adjust Balance</SectionLabel>
+                  <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} type="number" min="0" placeholder="Amount" value={adjustAmt} onChange={e => setAdjustAmt(e.target.value)}/>
                   <input style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"10px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",marginBottom:8,boxSizing:"border-box"}} placeholder="Note (optional)" value={adjustNote} onChange={e => setAdjustNote(e.target.value)}/>
                   <div style={{display:"flex",gap:8}}>
-                    <button onClick={() => adjustBalance(selectedUser.user.id, "add")} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"9px 14px",borderRadius:8,fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer",background:"rgba(0,230,118,0.1)",color:"#00e676",border:"1px solid rgba(0,230,118,0.3)"}}>
-                      + Add
-                    </button>
-                    <button onClick={() => adjustBalance(selectedUser.user.id, "deduct")} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"9px 14px",borderRadius:8,fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer",background:"rgba(255,77,109,0.1)",color:"#ff4d6d",border:"1px solid rgba(255,77,109,0.3)"}}>
-                      - Deduct
-                    </button>
+                    <button onClick={() => adjustBalance(selectedUser.user.id, "add")} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"9px 14px",borderRadius:8,fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer",background:"rgba(0,230,118,0.1)",color:"#00e676",border:"1px solid rgba(0,230,118,0.3)"}}>+ Add</button>
+                    <button onClick={() => adjustBalance(selectedUser.user.id, "deduct")} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"9px 14px",borderRadius:8,fontFamily:"'Space Grotesk',sans-serif",fontSize:12,fontWeight:600,cursor:"pointer",background:"rgba(255,77,109,0.1)",color:"#ff4d6d",border:"1px solid rgba(255,77,109,0.3)"}}>- Deduct</button>
                   </div>
-                </div>
+                </Card>
               </div>
-
-              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:8}}>Recent Transactions</div>
+              <SectionLabel>Recent Transactions</SectionLabel>
               <div style={{display:"flex",flexDirection:"column",gap:5,marginBottom:16}}>
                 {(selectedUser.transactions||[]).slice(0,15).map((t,i) => (
                   <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.05)",borderRadius:8,padding:"10px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
@@ -478,8 +614,7 @@ export default function AdminApp() {
                   </div>
                 ))}
               </div>
-
-              <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:8}}>Recent Bets</div>
+              <SectionLabel>Recent Bets</SectionLabel>
               <div style={{display:"flex",flexDirection:"column",gap:5}}>
                 {(selectedUser.bets||[]).slice(0,15).map((b,i) => (
                   <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.05)",borderRadius:8,padding:"10px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
@@ -515,7 +650,7 @@ export default function AdminApp() {
                     </div>
                     <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                       <span style={{fontSize:10,padding:"2px 6px",borderRadius:4,fontWeight:700,background:t.type==="dep"?"rgba(0,230,118,0.1)":t.type==="win"?"rgba(255,183,3,0.1)":t.type==="wd"?"rgba(79,142,247,0.1)":"rgba(255,77,109,0.1)",color:t.type==="dep"?"#00e676":t.type==="win"?"#ffb703":t.type==="wd"?"#4f8ef7":"#ff4d6d"}}>{t.type}</span>
-                      {t.type==="dep"&&<span style={{fontSize:10,padding:"2px 7px",borderRadius:4,fontWeight:700,background:t.status==="success"?"rgba(0,230,118,0.1)":t.status==="failed"?"rgba(255,77,109,0.1)":"rgba(255,183,3,0.1)",color:t.status==="success"?"#00e676":t.status==="failed"?"#ff4d6d":"#ffb703"}}>{t.status==="success"?"✓ Success":t.status==="failed"?"✗ Failed":"⏳ Pending"}</span>}
+                      {t.type==="dep"&&<span style={{fontSize:10,padding:"2px 7px",borderRadius:4,fontWeight:700,background:t.status==="success"?"rgba(0,230,118,0.1)":t.status==="failed"?"rgba(255,77,109,0.1)":"rgba(255,183,3,0.1)",color:t.status==="success"?"#00e676":t.status==="failed"?"#ff4d6d":"#ffb703"}}>{t.status==="success"?"✓":t.status==="failed"?"✗":"⏳"} {t.status}</span>}
                       <span style={{fontSize:10,color:"#6b7a99",flex:1}}>{t.label}</span>
                       <span style={{fontSize:9,color:"#6b7a99",fontFamily:"monospace"}}>{fDate(t.created_at)}</span>
                     </div>
@@ -560,6 +695,242 @@ export default function AdminApp() {
                 <button style={{padding:"6px 12px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center"}} disabled={roundPage===1} onClick={() => setRoundPage(p=>p-1)}><ChevronLeft size={13}/></button>
                 <span style={{fontSize:12,color:"#6b7a99"}}>Page {roundPage} of {Math.ceil(roundTotal/30)||1}</span>
                 <button style={{padding:"6px 12px",borderRadius:7,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.03)",color:"#6b7a99",cursor:"pointer",display:"flex",alignItems:"center"}} disabled={roundPage*30>=roundTotal} onClick={() => setRoundPage(p=>p+1)}><ChevronRight size={13}/></button>
+              </div>
+            </div>
+          )}
+
+          {/* REPORTS */}
+          {tab === "reports" && (
+            <div>
+              {dailyReport && (
+                <div style={{marginBottom:16}}>
+                  <SectionLabel>Today vs Yesterday</SectionLabel>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:8,marginBottom:14}}>
+                    {[
+                      {label:"Deposits Today",   val:fKES(dailyReport.today.deposits),   sub:`${pctChange(dailyReport.today.deposits,dailyReport.yesterday.deposits)}% vs yday`, color:"#00e676"},
+                      {label:"Withdrawals Today", val:fKES(dailyReport.today.withdrawals),sub:`${pctChange(dailyReport.today.withdrawals,dailyReport.yesterday.withdrawals)}% vs yday`, color:"#ff4d6d"},
+                      {label:"Profit Today",      val:fKES(dailyReport.today.profit),     sub:`${pctChange(dailyReport.today.profit,dailyReport.yesterday.profit)}% vs yday`, color:dailyReport.today.profit>=0?"#00e676":"#ff4d6d"},
+                      {label:"Bets Today",        val:fKES(dailyReport.today.bets),       sub:`${dailyReport.today.betCount} bets`, color:"#ffb703"},
+                      {label:"New Users",         val:fNum(dailyReport.today.newUsers),   sub:"registered today", color:"#4f8ef7"},
+                      {label:"Active Users",      val:fNum(dailyReport.today.activeUsers),sub:"placed bets today", color:"#c77dff"},
+                      {label:"Rounds Today",      val:fNum(dailyReport.today.rounds),     sub:"game rounds", color:"#ffb703"},
+                      {label:"Deposits Count",    val:fNum(dailyReport.today.depositCount),sub:"transactions", color:"#00e676"},
+                    ].map((s,i) => (
+                      <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"12px"}}>
+                        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14,fontWeight:700,color:s.color,marginBottom:3}}>{s.val}</div>
+                        <div style={{fontSize:9,color:"#6b7a99",marginBottom:3}}>{s.label}</div>
+                        <div style={{fontSize:9,color:"#2a3350"}}>{s.sub}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div style={{marginBottom:16}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                  <SectionLabel>Revenue Chart</SectionLabel>
+                  <div style={{display:"flex",gap:5}}>
+                    {[7,14,30].map(d => (
+                      <button key={d} onClick={() => setRevDays(d)} style={{padding:"3px 9px",borderRadius:6,border:"1px solid rgba(255,255,255,0.08)",background:revDays===d?"rgba(79,142,247,0.1)":"transparent",color:revDays===d?"#4f8ef7":"#6b7a99",fontFamily:"'Space Grotesk',sans-serif",fontSize:11,fontWeight:600,cursor:"pointer"}}>{d}d</button>
+                    ))}
+                  </div>
+                </div>
+                <Card>
+                  {revenueData.length === 0 && <div style={{textAlign:"center",padding:24,color:"#6b7a99",fontSize:12}}>No data</div>}
+                  {revenueData.length > 0 && (
+                    <div style={{overflowX:"auto"}}>
+                      <div style={{minWidth:400}}>
+                        <div style={{display:"flex",alignItems:"flex-end",gap:4,height:120,padding:"0 4px"}}>
+                          {revenueData.map((r,i) => (
+                            <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,height:"100%",justifyContent:"flex-end"}}>
+                              <div style={{width:"100%",display:"flex",flexDirection:"column",gap:1,justifyContent:"flex-end",alignItems:"center",height:"100%"}}>
+                                <div title={`Profit: ${fKES(r.profit)}`} style={{width:"60%",height:`${Math.max(4,(r.profit/maxRev)*100)}%`,background:"#00e676",borderRadius:"2px 2px 0 0",opacity:0.8,minHeight:4}} />
+                                <div title={`Deposits: ${fKES(r.deposits)}`} style={{width:"100%",height:`${Math.max(4,(r.deposits/maxRev)*100)}%`,background:"rgba(79,142,247,0.4)",borderRadius:"2px 2px 0 0",minHeight:4}} />
+                              </div>
+                              <div style={{fontSize:8,color:"#6b7a99",marginTop:4,whiteSpace:"nowrap"}}>{r.date?.slice(5)}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{display:"flex",gap:12,marginTop:8,fontSize:9,color:"#6b7a99"}}>
+                          <span><span style={{color:"#00e676"}}>■</span> Profit</span>
+                          <span><span style={{color:"#4f8ef7"}}>■</span> Deposits</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:10}}>
+                <Card>
+                  <SectionLabel>Top Depositors</SectionLabel>
+                  {topDepositors.map((u,i) => (
+                    <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <span style={{fontSize:10,fontWeight:700,color:"#6b7a99",width:16}}>{i+1}</span>
+                        <div>
+                          <div style={{fontSize:12,fontWeight:600}}>{u.first_name} {u.last_name}</div>
+                          <div style={{fontSize:9,color:"#6b7a99"}}>{u.deposit_count} deposits</div>
+                        </div>
+                      </div>
+                      <span style={{fontSize:12,fontWeight:700,color:"#00e676"}}>{fKES(u.total_deposited)}</span>
+                    </div>
+                  ))}
+                  {topDepositors.length===0 && <div style={{textAlign:"center",padding:14,color:"#6b7a99",fontSize:12}}>No data</div>}
+                </Card>
+                <Card>
+                  <SectionLabel>Top Winners</SectionLabel>
+                  {topWinners.map((u,i) => (
+                    <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <span style={{fontSize:10,fontWeight:700,color:"#6b7a99",width:16}}>{i+1}</span>
+                        <div>
+                          <div style={{fontSize:12,fontWeight:600}}>{u.first_name} {u.last_name}</div>
+                          <div style={{fontSize:9,color:"#6b7a99"}}>{u.total_bets} bets · best ×{Number(u.best_mult||0).toFixed(2)}</div>
+                        </div>
+                      </div>
+                      <span style={{fontSize:12,fontWeight:700,color:"#ffb703"}}>{fKES(u.total_profit)}</span>
+                    </div>
+                  ))}
+                  {topWinners.length===0 && <div style={{textAlign:"center",padding:14,color:"#6b7a99",fontSize:12}}>No data</div>}
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {/* GAME CONTROLS */}
+          {tab === "controls" && (
+            <div>
+              <InfoMsg msg={configMsg} />
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:10}}>
+                <Card>
+                  <SectionLabel>Game Status</SectionLabel>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                    <div>
+                      <div style={{fontSize:13,fontWeight:700,marginBottom:3}}>
+                        {gameConfig.paused ? "Game is PAUSED" : "Game is RUNNING"}
+                      </div>
+                      <div style={{fontSize:11,color:"#6b7a99"}}>
+                        {gameConfig.paused ? "Players cannot bet until resumed" : "Rounds are running normally"}
+                      </div>
+                    </div>
+                    <div style={{width:10,height:10,borderRadius:"50%",background:gameConfig.paused?"#ff4d6d":"#00e676",boxShadow:`0 0 8px ${gameConfig.paused?"#ff4d6d":"#00e676"}`}} />
+                  </div>
+                  <button onClick={togglePause} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,width:"100%",padding:"10px 14px",borderRadius:8,border:"none",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer",background:gameConfig.paused?"rgba(0,230,118,0.1)":"rgba(255,77,109,0.1)",color:gameConfig.paused?"#00e676":"#ff4d6d"}}>
+                    {gameConfig.paused ? <><Play size={14}/> Resume Game</> : <><Pause size={14}/> Pause Game</>}
+                  </button>
+                </Card>
+
+                <Card>
+                  <SectionLabel>Bet Limits</SectionLabel>
+                  <div style={{marginBottom:8}}>
+                    <div style={{fontSize:10,color:"#6b7a99",marginBottom:4}}>Min Bet (KES)</div>
+                    <input value={minBetInput} onChange={e => setMinBetInput(e.target.value)} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",boxSizing:"border-box"}} type="number"/>
+                  </div>
+                  <div style={{marginBottom:10}}>
+                    <div style={{fontSize:10,color:"#6b7a99",marginBottom:4}}>Max Bet (KES)</div>
+                    <input value={maxBetInput} onChange={e => setMaxBetInput(e.target.value)} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",boxSizing:"border-box"}} type="number"/>
+                  </div>
+                  <button onClick={saveLimits} style={{width:"100%",padding:"9px",borderRadius:8,border:"none",background:"rgba(79,142,247,0.1)",color:"#4f8ef7",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                    Save Limits
+                  </button>
+                  <div style={{fontSize:10,color:"#6b7a99",marginTop:8}}>Current: {fKES(gameConfig.minBet)} – {fKES(gameConfig.maxBet)}</div>
+                </Card>
+
+                <Card>
+                  <SectionLabel>Announcement Banner</SectionLabel>
+                  <div style={{fontSize:10,color:"#6b7a99",marginBottom:6}}>Shows a banner to all players on the game page</div>
+                  <textarea value={bannerInput} onChange={e => setBannerInput(e.target.value)} placeholder="Enter announcement message... (leave empty to clear)" rows={3} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",resize:"none",boxSizing:"border-box",marginBottom:8}}/>
+                  <div style={{display:"flex",gap:8}}>
+                    <button onClick={saveBanner} style={{flex:1,padding:"9px",borderRadius:8,border:"none",background:"rgba(255,183,3,0.1)",color:"#ffb703",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                      <Megaphone size={13} style={{marginRight:5,verticalAlign:"middle"}}/> Set Banner
+                    </button>
+                    <button onClick={() => { setBannerInput(""); }} style={{padding:"9px 12px",borderRadius:8,border:"1px solid rgba(255,255,255,0.08)",background:"transparent",color:"#6b7a99",fontFamily:"'Space Grotesk',sans-serif",fontSize:12,cursor:"pointer"}}>Clear</button>
+                  </div>
+                  {gameConfig.bannerMsg && <div style={{fontSize:10,color:"#ffb703",marginTop:8,fontStyle:"italic"}}>Active: "{gameConfig.bannerMsg}"</div>}
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {/* RISK */}
+          {tab === "risk" && (
+            <div>
+              <div style={{marginBottom:16}}>
+                <SectionLabel>Suspicious Players (High Win Rate · min 10 bets)</SectionLabel>
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {suspicious.map((u,i) => (
+                    <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"12px"}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                        <span style={{fontSize:13,fontWeight:700}}>{u.first_name} {u.last_name}</span>
+                        <span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:4,background:parseFloat(u.win_rate)>60?"rgba(255,77,109,0.1)":"rgba(255,183,3,0.1)",color:parseFloat(u.win_rate)>60?"#ff4d6d":"#ffb703"}}>
+                          {u.win_rate}% win rate
+                        </span>
+                      </div>
+                      <div style={{display:"flex",gap:14,flexWrap:"wrap"}}>
+                        <div><span style={{fontSize:9,color:"#6b7a99"}}>Phone </span><span style={{fontSize:11,fontFamily:"monospace"}}>{u.phone}</span></div>
+                        <div><span style={{fontSize:9,color:"#6b7a99"}}>Bets </span><span style={{fontSize:11}}>{u.total_bets}</span></div>
+                        <div><span style={{fontSize:9,color:"#6b7a99"}}>Wins </span><span style={{fontSize:11,color:"#00e676"}}>{u.wins}</span></div>
+                        <div><span style={{fontSize:9,color:"#6b7a99"}}>Avg Cashout </span><span style={{fontSize:11}}>×{Number(u.avg_cashout).toFixed(2)}</span></div>
+                        <div><span style={{fontSize:9,color:"#6b7a99"}}>Max Cashout </span><span style={{fontSize:11,color:"#c77dff"}}>×{Number(u.max_cashout).toFixed(2)}</span></div>
+                        <div><span style={{fontSize:9,color:"#6b7a99"}}>Total Profit </span><span style={{fontSize:11,fontWeight:700,color:parseFloat(u.total_profit)>=0?"#00e676":"#ff4d6d"}}>{fKES(u.total_profit)}</span></div>
+                      </div>
+                    </div>
+                  ))}
+                  {suspicious.length===0 && <div style={{textAlign:"center",padding:24,color:"#6b7a99",fontSize:12}}>No suspicious activity detected</div>}
+                </div>
+              </div>
+
+              <div>
+                <SectionLabel>Large Withdrawals (KES 1,000+)</SectionLabel>
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {largeWds.map((t,i) => (
+                    <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"11px 12px"}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
+                        <span style={{fontSize:12,fontWeight:600}}>{t.first_name} {t.last_name}</span>
+                        <span style={{fontSize:13,fontWeight:700,color:"#ff4d6d"}}>{fKES(Math.abs(t.amount))}</span>
+                      </div>
+                      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+                        <span style={{fontSize:10,fontFamily:"monospace",color:"#6b7a99"}}>{t.phone}</span>
+                        <span style={{fontSize:9,color:"#6b7a99"}}>{fDate(t.created_at)} {fTime(t.created_at)}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {largeWds.length===0 && <div style={{textAlign:"center",padding:24,color:"#6b7a99",fontSize:12}}>No large withdrawals</div>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* COMMS */}
+          {tab === "comms" && (
+            <div>
+              <InfoMsg msg={commsMsg} />
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:10}}>
+                <Card>
+                  <SectionLabel>Broadcast to All Players</SectionLabel>
+                  <div style={{fontSize:10,color:"#6b7a99",marginBottom:8}}>Sends a toast notification to all online users</div>
+                  <textarea value={broadcastMsg} onChange={e => setBroadcastMsg(e.target.value)} placeholder="e.g. Maintenance in 10 minutes..." rows={3} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",resize:"none",boxSizing:"border-box",marginBottom:8}}/>
+                  <button onClick={sendBroadcast} disabled={!broadcastMsg.trim()} style={{width:"100%",padding:"10px",borderRadius:8,border:"none",background:"rgba(79,142,247,0.1)",color:"#4f8ef7",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer",opacity:broadcastMsg.trim()?1:0.4}}>
+                    <Megaphone size={13} style={{marginRight:6,verticalAlign:"middle"}}/>Broadcast
+                  </button>
+                </Card>
+
+                <Card>
+                  <SectionLabel>Notify Specific User</SectionLabel>
+                  <div style={{fontSize:10,color:"#6b7a99",marginBottom:8}}>User must be online to receive the message</div>
+                  <div style={{marginBottom:8}}>
+                    <div style={{fontSize:10,color:"#6b7a99",marginBottom:4}}>User ID</div>
+                    <input value={notifyUserId} onChange={e => setNotifyUserId(e.target.value)} placeholder="e.g. 42" style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",boxSizing:"border-box"}} type="number"/>
+                  </div>
+                  <div style={{marginBottom:8}}>
+                    <div style={{fontSize:10,color:"#6b7a99",marginBottom:4}}>Message</div>
+                    <textarea value={notifyMsg} onChange={e => setNotifyMsg(e.target.value)} placeholder="Personal message..." rows={2} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,padding:"9px 12px",color:"#f0f4ff",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,outline:"none",resize:"none",boxSizing:"border-box"}}/>
+                  </div>
+                  <button onClick={sendNotify} disabled={!notifyUserId||!notifyMsg.trim()} style={{width:"100%",padding:"10px",borderRadius:8,border:"none",background:"rgba(0,230,118,0.1)",color:"#00e676",fontFamily:"'Space Grotesk',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer",opacity:(notifyUserId&&notifyMsg.trim())?1:0.4}}>
+                    <Bell size={13} style={{marginRight:6,verticalAlign:"middle"}}/>Send Notification
+                  </button>
+                </Card>
               </div>
             </div>
           )}
