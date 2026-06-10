@@ -707,13 +707,14 @@ export default function App() {
                     <div style={{textAlign:"center",fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text2)",whiteSpace:"nowrap"}}>
                       {Number(p.bet).toLocaleString()}
                     </div>
-                    {/* X multiplier / Win */}
-                    <div style={{textAlign:"right"}}>
+                    {/* X multiplier */}
+                    <div style={{textAlign:"center"}}>
                       {p.cashed
-                        ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:800,color:"#c77dff",textAlign:"center"}}>{p.cashMult}×</div>
+                        ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:800,color:"#c77dff"}}>{p.cashMult}×</div>
                         : gs==="flying"
-                          ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#ffb703",textAlign:"center",animation:"blk 1s infinite"}}>{md}×</div>
+                          ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#ffb703",animation:"blk 1s infinite"}}>{md}×</div>
                           : <div/>}
+                    </div>
                     {/* Win KES */}
                     <div style={{textAlign:"right",fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:700,color:"#00e676"}}>
                       {p.cashed ? (p.cashMult*p.bet).toLocaleString("en-KE",{minimumFractionDigits:2,maximumFractionDigits:2}) : ""}
@@ -796,8 +797,9 @@ export default function App() {
                   </div>
                   <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,fontWeight:700,color:"var(--text)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</div>
                   <div style={{textAlign:"center",fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text2)",whiteSpace:"nowrap"}}>{Number(p.bet).toLocaleString()}</div>
-                  <div style={{textAlign:"right"}}>
-                    {p.cashed ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:800,color:"#c77dff",textAlign:"center"}}>{p.cashMult}×</div> : gs==="flying" ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#ffb703",textAlign:"center",animation:"blk 1s infinite"}}>{md}×</div> : <div/>}
+                  <div style={{textAlign:"center"}}>
+                    {p.cashed ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:800,color:"#c77dff"}}>{p.cashMult}×</div> : gs==="flying" ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#ffb703",animation:"blk 1s infinite"}}>{md}×</div> : <div/>}
+                  </div>
                   {/* Win KES */}
                   <div style={{textAlign:"right"}}>
                     {p.cashed ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:700,color:"#00e676"}}>{(p.cashMult*p.bet).toLocaleString("en-KE",{minimumFractionDigits:2,maximumFractionDigits:2})}</div> : <div/>}
