@@ -678,11 +678,12 @@ export default function App() {
                   <span style={{fontSize:10,fontWeight:700,color:"#00e676"}}>{onlineCount.toLocaleString()} online now</span>
                 </div>
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"36px 1fr 52px 70px",gap:8,padding:"5px 12px 4px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+              <div style={{display:"grid",gridTemplateColumns:"36px 1fr 55px 45px 72px",gap:6,padding:"5px 12px 4px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
                 <div/>
                 <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)"}}>Player</div>
-                <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"center"}}>Bet</div>
-                <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Win</div>
+                <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Bet KES</div>
+                <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"center"}}>X</div>
+                <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Win KES</div>
               </div>
               <div className="plist">
                 {[...players].sort((a,b) => Number(b.bet) - Number(a.bet)).slice(0, 150).map((p, i) => {
@@ -691,7 +692,7 @@ export default function App() {
                   const avatarSeed = avatarSeeds[(p.name?.charCodeAt(0) || i + p.name?.charCodeAt(1) || 0) % avatarSeeds.length];
                   const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${avatarSeed}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
                   return (
-                  <div key={p.id || i} className={`prow ${p.cashed ? "cashed" : ""}`} style={{display:"grid",gridTemplateColumns:"36px 1fr 52px 70px",alignItems:"center",gap:8,padding:"7px 12px",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                  <div key={p.id || i} className={`prow ${p.cashed ? "cashed" : ""}`} style={{display:"grid",gridTemplateColumns:"36px 1fr 55px 45px 72px",alignItems:"center",gap:6,padding:"7px 12px",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
                     {/* Avatar */}
                     <div style={{width:34,height:34,borderRadius:8,overflow:"hidden",flexShrink:0,background:"#2a2f3e",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center"}}>
                       <svg viewBox="0 0 36 36" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
@@ -773,11 +774,12 @@ export default function App() {
                 <span style={{fontSize:10,fontWeight:700,color:"#00e676"}}>{onlineCount.toLocaleString()} online now</span>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"36px 1fr 52px 70px",gap:8,padding:"5px 12px 4px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+            <div style={{display:"grid",gridTemplateColumns:"36px 1fr 55px 45px 72px",gap:6,padding:"5px 12px 4px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
               <div/>
               <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)"}}>Player</div>
-              <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"center"}}>Bet</div>
-              <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Win</div>
+              <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Bet KES</div>
+              <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"center"}}>X</div>
+              <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Win KES</div>
             </div>
             <div className="plist">
               {[...players].sort((a,b) => Number(b.bet) - Number(a.bet)).slice(0, 150).map((p, i) => {
@@ -786,7 +788,7 @@ export default function App() {
                 const avatarSeed = avatarSeeds[(p.name?.charCodeAt(0) || i + p.name?.charCodeAt(1) || 0) % avatarSeeds.length];
                 const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${avatarSeed}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
                 return (
-                <div key={p.id || i} className={`prow ${p.cashed ? "cashed" : ""}`} style={{display:"grid",gridTemplateColumns:"36px 1fr 52px 70px",alignItems:"center",gap:8,padding:"7px 12px",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                <div key={p.id || i} className={`prow ${p.cashed ? "cashed" : ""}`} style={{display:"grid",gridTemplateColumns:"36px 1fr 55px 45px 72px",alignItems:"center",gap:6,padding:"7px 12px",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
                   <div style={{width:34,height:34,borderRadius:8,overflow:"hidden",flexShrink:0,background:"#2a2f3e",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <svg viewBox="0 0 36 36" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
                       <rect width="36" height="36" fill="#2a2f3e"/>
@@ -797,16 +799,10 @@ export default function App() {
                   <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,fontWeight:700,color:"var(--text)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</div>
                   <div style={{textAlign:"center",fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text2)",whiteSpace:"nowrap"}}>{Number(p.bet).toLocaleString()}</div>
                   <div style={{textAlign:"right"}}>
-                    {p.cashed ? (
-                      <div>
-                        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:800,color:"#c77dff"}}>{p.cashMult}×</div>
-                        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"#00e676",marginTop:1}}>{(p.cashMult * p.bet).toLocaleString("en-KE",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-                      </div>
-                    ) : gs === "flying" ? (
-                      <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#ffb703",animation:"blk 1s infinite"}}>{md}×</div>
-                    ) : (
-                      <div style={{fontSize:9,fontWeight:700,color:"#4f8ef7"}}>ready</div>
-                    )}
+                    {p.cashed ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:800,color:"#c77dff",textAlign:"center"}}>{p.cashMult}×</div> : gs==="flying" ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#ffb703",textAlign:"center",animation:"blk 1s infinite"}}>{md}×</div> : <div/>}
+                  {/* Win KES */}
+                  <div style={{textAlign:"right"}}>
+                    {p.cashed ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:700,color:"#00e676"}}>{(p.cashMult*p.bet).toLocaleString("en-KE",{minimumFractionDigits:2,maximumFractionDigits:2})}</div> : <div/>}
                   </div>
                 </div>
                 );
