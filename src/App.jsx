@@ -678,10 +678,13 @@ export default function App() {
                   <span style={{fontSize:10,fontWeight:700,color:"#00e676"}}>{onlineCount.toLocaleString()} online now</span>
                 </div>
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"36px 1fr 55px 45px 72px",gap:6,padding:"5px 12px 4px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+              <div style={{display:"grid",gridTemplateColumns:"36px 1fr 55px 45px 72px",gap:6,padding:"5px 12px 4px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
                 <div/>
                 <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)"}}>Player</div>
                 <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Bet KES</div>
+                <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"center"}}>X</div>
+                <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Win KES</div>
+              </div>
                 <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"center"}}>X</div>
                 <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Win KES</div>
               </div>
@@ -772,10 +775,13 @@ export default function App() {
                 <span style={{fontSize:10,fontWeight:700,color:"#00e676"}}>{onlineCount.toLocaleString()} online now</span>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"36px 1fr 55px 45px 72px",gap:6,padding:"5px 12px 4px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
-              <div/>
-              <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)"}}>Player</div>
-              <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Bet KES</div>
+            <div style={{display:"grid",gridTemplateColumns:"36px 1fr 55px 45px 72px",gap:6,padding:"5px 12px 4px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+                <div/>
+                <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)"}}>Player</div>
+                <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Bet KES</div>
+                <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"center"}}>X</div>
+                <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Win KES</div>
+              </div>
               <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"center"}}>X</div>
               <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Win KES</div>
             </div>
