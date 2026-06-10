@@ -685,9 +685,6 @@ export default function App() {
                 <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"center"}}>X</div>
                 <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Win KES</div>
               </div>
-                <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"center"}}>X</div>
-                <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Win KES</div>
-              </div>
               <div className="plist">
                 {[...players].sort((a,b) => Number(b.bet) - Number(a.bet)).slice(0, 150).map((p, i) => {
                   const initials = p.name ? p.name.slice(0,2).toUpperCase() : "??";
@@ -782,9 +779,6 @@ export default function App() {
                 <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"center"}}>X</div>
                 <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Win KES</div>
               </div>
-              <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"center"}}>X</div>
-              <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"var(--text2)",textAlign:"right"}}>Win KES</div>
-            </div>
             <div className="plist">
               {[...players].sort((a,b) => Number(b.bet) - Number(a.bet)).slice(0, 150).map((p, i) => {
                 const initials = p.name ? p.name.slice(0,2).toUpperCase() : "??";
