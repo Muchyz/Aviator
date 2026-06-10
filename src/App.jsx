@@ -709,16 +709,14 @@ export default function App() {
                     </div>
                     {/* X multiplier / Win */}
                     <div style={{textAlign:"right"}}>
-                      {p.cashed ? (
-                        <div>
-                          <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:800,color:"#c77dff"}}>{p.cashMult}×</div>
-                          <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"#00e676",marginTop:1}}>{(p.cashMult * p.bet).toLocaleString("en-KE",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-                        </div>
-                      ) : gs === "flying" ? (
-                        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#ffb703",animation:"blk 1s infinite"}}>{md}×</div>
-                      ) : (
-                        <div style={{fontSize:9,fontWeight:700,color:"#4f8ef7"}}>ready</div>
-                      )}
+                      {p.cashed
+                        ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:800,color:"#c77dff",textAlign:"center"}}>{p.cashMult}×</div>
+                        : gs==="flying"
+                          ? <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#ffb703",textAlign:"center",animation:"blk 1s infinite"}}>{md}×</div>
+                          : <div/>}
+                    {/* Win KES */}
+                    <div style={{textAlign:"right",fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:700,color:"#00e676"}}>
+                      {p.cashed ? (p.cashMult*p.bet).toLocaleString("en-KE",{minimumFractionDigits:2,maximumFractionDigits:2}) : ""}
                     </div>
                   </div>
                   );
