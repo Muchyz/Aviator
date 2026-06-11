@@ -101,7 +101,7 @@ export default function GameGraph({
         ctx.fillText("STARTING IN", W / 2, H * 0.33);
 
         ctx.font        = `900 ${clamp(W * 0.22, 66, 110)}px 'Arial Black',sans-serif`;
-        ctx.fillStyle   = "#ffffff";
+        ctx.fillStyle = mult >= 10 ? "#ec4899" : mult >= 2 ? "#a855f7" : "#3b82f6";
         ctx.shadowColor = "rgba(255,255,255,0.6)";
         ctx.shadowBlur  = 24 + p * 10;
         ctx.fillText(`${countdownRef.current}`, W / 2, H * 0.57);
@@ -137,8 +137,8 @@ export default function GameGraph({
         ctx.shadowBlur  = 36;
         ctx.fillText(`${mult.toFixed(2)}x`, W / 2, H * 0.46);
 
-        ctx.fillStyle   = "#ffffff";
-        ctx.shadowColor = "rgba(255,255,255,0.4)";
+        ctx.fillStyle = mult >= 10 ? "#ec4899" : mult >= 2 ? "#a855f7" : "#3b82f6";
+        ctx.shadowColor = mult >= 10 ? "rgba(236,72,153,0.6)" : mult >= 2 ? "rgba(168,85,247,0.6)" : "rgba(59,130,246,0.6)";
         ctx.shadowBlur  = 8;
         ctx.fillText(`${mult.toFixed(2)}x`, W / 2, H * 0.46);
         ctx.shadowBlur  = 0;

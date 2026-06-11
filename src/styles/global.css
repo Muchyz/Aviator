@@ -115,9 +115,9 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
 .crashes-inline{display:flex;align-items:center;gap:3px;overflow-x:auto;flex:1;min-width:0;}
 .crashes-inline::-webkit-scrollbar{display:none}
 .cbadge{padding:2px 7px;border-radius:4px;flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;border:1px solid transparent;}
-.cbadge.lo{background:rgba(79,142,247,0.08);color:#6fa6f8;border-color:rgba(79,142,247,0.2)}
-.cbadge.mi{background:rgba(107,122,153,0.08);color:#8a9ab8;border-color:rgba(107,122,153,0.15)}
-.cbadge.hi{background:rgba(199,125,255,0.1);color:var(--purple);border-color:rgba(199,125,255,0.25)}
+.cbadge.lo{background:rgba(59,130,246,0.15);color:#3b82f6;border-color:rgba(59,130,246,0.4)}
+.cbadge.mi{background:rgba(168,85,247,0.15);color:#a855f7;border-color:rgba(168,85,247,0.4)}
+.cbadge.hi{background:rgba(236,72,153,0.15);color:#ec4899;border-color:rgba(236,72,153,0.4)}
 .cbadge.new{animation:badgePop 0.35s cubic-bezier(0.175,0.885,0.32,1.275)}
 @keyframes badgePop{from{opacity:0;transform:scale(0.6)}to{opacity:1;transform:scale(1)}}
 .canvas{position:relative;height:220px;background:linear-gradient(180deg,#050810 0%,#070b14 60%,#0a0f1a 100%);overflow:hidden;border-bottom:1px solid var(--border);}
