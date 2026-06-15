@@ -917,23 +917,73 @@ export default function App() {
                   ))}
                 </div>
                 {filteredTxns.length === 0 && <div className="nodata">No transactions found.</div>}
-                {filteredTxns.map(t => (
-                  <div key={t.id} className="hist-row">
-                    <div className="hist-l">
-                      <div className={`hist-ico ${t.type}`}>{histIcon(t.type)}</div>
-                      <div>
-                        <div className="hist-desc">{t.label}</div>
-                        <div className="hist-time">{fDate(t.time)} · {fTime(t.time)}</div>
+                {filteredTxns.map((t, idx) => {
+                  const isWin = t.type === "win";
+                  const isDep = t.type === "dep";
+                  const isWd  = t.type === "wd";
+                  const isBet = t.type === "bet";
+                  const positive = t.amount >= 0;
+                  const accentColor = isWin ? "#00e676" : isDep ? "#00e676" : isWd ? "#4f8ef7" : "#ff4d6d";
+                  const bgColor = isWin ? "rgba(0,230,118,0.04)" : isDep ? "rgba(0,230,118,0.04)" : isWd ? "rgba(79,142,247,0.04)" : "rgba(255,77,109,0.04)";
+                  const borderColor = isWin ? "rgba(0,230,118,0.15)" : isDep ? "rgba(0,230,118,0.15)" : isWd ? "rgba(79,142,247,0.15)" : "rgba(255,77,109,0.10)";
+                  const typeLabel = isWin ? "WIN" : isDep ? "DEPOSIT" : isWd ? "WITHDRAWAL" : "BET";
+                  return (
+                  <div key={t.id} style={{
+                    background: bgColor,
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: 12,
+                    margin: "0 16px 10px",
+                    overflow: "hidden",
+                  }}>
+                    {/* Receipt top stripe */}
+                    <div style={{
+                      background: accentColor,
+                      height: 3,
+                      width: "100%",
+                    }}/>
+                    <div style={{padding: "12px 14px"}}>
+                      {/* Header row */}
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{
+                            width:34,height:34,borderRadius:9,
+                            background:`rgba(${isWin?"0,230,118":isDep?"0,230,118":isWd?"79,142,247":"255,77,109"},0.12)`,
+                            display:"flex",alignItems:"center",justifyContent:"center",
+                            color:accentColor,flexShrink:0,
+                          }}>{histIcon(t.type)}</div>
+                          <div>
+                            <div style={{fontSize:13,fontWeight:700,color:"#f0f4ff"}}>{t.label}</div>
+                            <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",color:accentColor,marginTop:2}}>{typeLabel}</div>
+                          </div>
+                        </div>
+                        <div style={{textAlign:"right"}}>
+                          <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:15,fontWeight:800,color:accentColor}}>
+                            {positive ? "+" : ""}{fKES(Math.abs(t.amount))}
+                          </div>
+                          {t.status === "pending" && (
+                            <div style={{fontSize:9,fontWeight:700,color:"#ffb703",marginTop:2,letterSpacing:"0.5px"}}>⏳ PENDING</div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div style={{textAlign:"right"}}>
-                      <div className={`hist-amt ${t.amount >= 0 ? "pos" : "neg"}`}>
-                        {t.amount >= 0 ? "+" : ""}{fKES(Math.abs(t.amount))}
+                      {/* Divider dashed */}
+                      <div style={{borderTop:"1px dashed rgba(255,255,255,0.08)",margin:"0 0 10px"}}/>
+                      {/* Footer meta */}
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                        <div style={{fontSize:10,color:"#6b7a99",fontFamily:"'JetBrains Mono',monospace"}}>
+                          {fDate(t.time)}
+                        </div>
+                        <div style={{fontSize:10,color:"#6b7a99",fontFamily:"'JetBrains Mono',monospace"}}>
+                          {fTime(t.time)}
+                        </div>
+                        <div style={{fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:4,
+                          background:`rgba(${isWin?"0,230,118":isDep?"0,230,118":isWd?"79,142,247":"255,77,109"},0.1)`,
+                          color:accentColor,letterSpacing:"0.5px",
+                        }}>{t.status === "pending" ? "PENDING" : "SUCCESS"}</div>
                       </div>
-                      {t.status === "pending" && <div style={{fontSize:9,fontWeight:700,color:"#ffb703",marginTop:2}}>pending</div>}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </>
             )}
           </div>
