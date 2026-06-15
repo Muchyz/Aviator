@@ -19,6 +19,7 @@ import BigWinOverlay from "./components/BigWinOverlay";
 import CountdownRing from "./components/CountdownRing";
 import BetPanel from "./components/BetPanel";
 import LiveChat from "./components/LiveChat";
+import Splash from "./components/Splash";
 import Locked from "./components/Locked";
 
 import LoginModal from "./components/modals/LoginModal";
@@ -524,13 +525,7 @@ export default function App() {
   ];
 
   if (!appReady) {
-    return (
-      <div className="splash">
-        <div style={{ color: "var(--blue)" }}><Zap size={36} /></div>
-        <div className="splash-logo">Avi<span>Pesa</span></div>
-        <div className="splash-ring" />
-      </div>
-    );
+    return <Splash />;
   }
 
   return (
@@ -1200,4 +1195,4 @@ export default function App() {
       )}
     </div>
   );
-}
+}// patch handled via Splash component
