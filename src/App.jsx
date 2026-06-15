@@ -955,7 +955,7 @@ export default function App() {
                           background: t.status==="pending" ? "rgba(255,183,3,0.15)" : isWin ? "rgba(0,230,118,0.12)" : isBet ? "rgba(255,77,109,0.12)" : isDep ? "rgba(0,230,118,0.12)" : "rgba(79,142,247,0.12)",
                           color: t.status==="pending" ? "#ffb703" : isWin ? "#00e676" : isBet ? "#ff4d6d" : isDep ? "#00e676" : "#4f8ef7",
                           border: `1px solid ${t.status==="pending" ? "rgba(255,183,3,0.3)" : isWin ? "rgba(0,230,118,0.25)" : isBet ? "rgba(255,77,109,0.25)" : isDep ? "rgba(0,230,118,0.25)" : "rgba(79,142,247,0.25)"}`,
-                        }}>{t.status==="pending" ? "⏳ PENDING" : isWin ? "🏆 WIN" : isBet ? "💸 LOSS" : isDep ? "✓ DEPOSITED" : "✓ WITHDRAWN"}</div>
+                        }}>{t.status==="pending" ? "⏳ PENDING" : isWin ? "🏆 WIN" : isBet ? "❌ LOSS" : isDep ? "✓ DEPOSITED" : "✓ WITHDRAWN"}</div>
                       </div>
                     </div>
 
