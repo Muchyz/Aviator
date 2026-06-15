@@ -133,14 +133,22 @@ export default function App() {
     if (!token) { setAppReady(true); return; }
     const timer = setTimeout(() => setAppReady(true), 2200);
     fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(r => {
+        if (r.ok) return r.json();
+        if (r.status === 401) {
+          // Token is genuinely invalid/expired - clear it
+          localStorage.removeItem("avipesa_token");
+        }
+        return Promise.reject();
+      })
       .then(data => {
         setUser(data.user); setBalance(data.user.balance || 0);
         userRef.current = data.user; balanceRef.current = data.user.balance || 0;
         clearTimeout(timer); setAppReady(true);
       })
       .catch(() => {
-        localStorage.removeItem("avipesa_token");
+        // Network error or non-401 failure - keep the token, user stays
+        // logged out for this session but can retry on next load
         clearTimeout(timer); setAppReady(true);
       });
     fetchGameConfig();
