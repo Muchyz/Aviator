@@ -7,9 +7,8 @@ export default function RoundHistoryModal({ onClose, crashes = [] }) {
       <div className="history-backdrop" onClick={onClose} />
       <div className="history-dropdown" onClick={e => e.stopPropagation()}>
         <div className="history-head">
-          <div>
-            <div className="history-title">Round History</div>
-            <div className="history-sub">Last {crashes.length} rounds</div>
+          <div className="history-title">
+            Round History <span className="history-sub">· {crashes.length} rounds</span>
           </div>
           <button className="mclose" onClick={onClose}><X size={15} /></button>
         </div>

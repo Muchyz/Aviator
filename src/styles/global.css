@@ -533,19 +533,22 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
 }
 .history-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  padding: 12px 14px 8px;
+  padding: 10px 12px 8px;
   border-bottom: 1px solid var(--border);
 }
 .history-title {
   font-size: 14px;
   font-weight: 800;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
 }
 .history-sub {
   font-size: 11px;
   color: var(--text2);
-  margin-top: 2px;
+  font-weight: 600;
 }
 .history-body {
   padding: 12px 14px 14px;
