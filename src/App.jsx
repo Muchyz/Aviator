@@ -4,7 +4,7 @@ import {
   Zap, Wallet, History, Trophy, BarChart2, LogOut,
   ArrowDownCircle, ArrowUpCircle, Volume2, VolumeX,
   Check, Activity, TrendingUp, DollarSign, Award, Target, Percent,
-  ShieldCheck
+  ShieldCheck, MoreHorizontal
 } from "lucide-react";
 
 import "./styles/global.css";
@@ -26,6 +26,7 @@ import RegisterModal from "./components/modals/RegisterModal";
 import DepositModal from "./components/modals/DepositModal";
 import WithdrawModal from "./components/modals/WithdrawModal";
 import ProvablyFairModal from "./components/modals/ProvablyFairModal";
+import RoundHistoryModal from "./components/modals/RoundHistoryModal";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -514,6 +515,7 @@ export default function App() {
       {modal === "deposit"  && <DepositModal  onClose={() => setModal(null)} onDeposit={handleDeposit} />}
       {modal === "withdraw" && <WithdrawModal onClose={() => setModal(null)} balance={balance} onWithdraw={handleWithdraw} />}
       {modal === "pf"       && <ProvablyFairModal onClose={() => setModal(null)} hash={pfHash} roundId={roundId} />}
+      {modal === "history"  && <RoundHistoryModal onClose={() => setModal(null)} crashes={crashes} />}
 
       <nav className="nav">
         <div className="nav-i">
@@ -613,6 +615,9 @@ export default function App() {
                     </span>
                   ))}
                 </div>
+                <button className="history-btn" onClick={() => setModal("history")}>
+                  <MoreHorizontal size={14} />
+                </button>
               </div>
 
               <div className="canvas">
