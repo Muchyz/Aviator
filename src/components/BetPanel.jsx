@@ -15,7 +15,7 @@ export default function BetPanel({
       <div className="bpanel-header">
         <span className="bpanel-title">BET CONTROLS</span>
         <div className="dual-toggle-row">
-          <span className="dual-lbl">1 Bet</span>
+          <span className="dual-lbl">{dualMode ? "2 Bets" : "1 Bet"}</span>
           <label className="toggle">
             <input type="checkbox" checked={dualMode} onChange={e => setDualMode(e.target.checked)} />
             <div className="toggle-track" /><div className="toggle-thumb" />
