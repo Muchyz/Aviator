@@ -924,61 +924,64 @@ export default function App() {
                   const isBet = t.type === "bet";
                   const positive = t.amount >= 0;
                   const accentColor = isWin ? "#00e676" : isDep ? "#00e676" : isWd ? "#4f8ef7" : "#ff4d6d";
-                  const bgColor = isWin ? "rgba(0,230,118,0.04)" : isDep ? "rgba(0,230,118,0.04)" : isWd ? "rgba(79,142,247,0.04)" : "rgba(255,77,109,0.04)";
-                  const borderColor = isWin ? "rgba(0,230,118,0.15)" : isDep ? "rgba(0,230,118,0.15)" : isWd ? "rgba(79,142,247,0.15)" : "rgba(255,77,109,0.10)";
-                  const typeLabel = isWin ? "WIN" : isDep ? "DEPOSIT" : isWd ? "WITHDRAWAL" : "BET";
+                  const emoji = isWin ? "🏆" : isDep ? "💰" : isWd ? "📤" : "🎯";
+                  const typeLabel = isWin ? "WIN" : isDep ? "DEPOSIT" : isWd ? "WITHDRAWAL" : "BET PLACED";
+                  const refNum = t.reference || `TXN${String(t.id).padStart(8,"0")}`;
                   return (
                   <div key={t.id} style={{
-                    background: bgColor,
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: 12,
-                    margin: "0 16px 10px",
-                    overflow: "hidden",
+                    background:"#0e1117",
+                    border:"1px solid rgba(255,255,255,0.07)",
+                    borderRadius:14,
+                    margin:"0 16px 12px",
+                    overflow:"hidden",
+                    boxShadow:"0 2px 12px rgba(0,0,0,0.4)",
                   }}>
-                    {/* Receipt top stripe */}
-                    <div style={{
-                      background: accentColor,
-                      height: 3,
-                      width: "100%",
-                    }}/>
-                    <div style={{padding: "12px 14px"}}>
-                      {/* Header row */}
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-                        <div style={{display:"flex",alignItems:"center",gap:8}}>
-                          <div style={{
-                            width:34,height:34,borderRadius:9,
-                            background:`rgba(${isWin?"0,230,118":isDep?"0,230,118":isWd?"79,142,247":"255,77,109"},0.12)`,
-                            display:"flex",alignItems:"center",justifyContent:"center",
-                            color:accentColor,flexShrink:0,
-                          }}>{histIcon(t.type)}</div>
-                          <div>
-                            <div style={{fontSize:13,fontWeight:700,color:"#f0f4ff"}}>{t.label}</div>
-                            <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",color:accentColor,marginTop:2}}>{typeLabel}</div>
-                          </div>
-                        </div>
-                        <div style={{textAlign:"right"}}>
-                          <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:15,fontWeight:800,color:accentColor}}>
-                            {positive ? "+" : ""}{fKES(Math.abs(t.amount))}
-                          </div>
-                          {t.status === "pending" && (
-                            <div style={{fontSize:9,fontWeight:700,color:"#ffb703",marginTop:2,letterSpacing:"0.5px"}}>⏳ PENDING</div>
-                          )}
+                    {/* TOP SECTION */}
+                    <div style={{padding:"14px 16px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <div style={{fontSize:26,lineHeight:1}}>{emoji}</div>
+                        <div>
+                          <div style={{fontSize:11,fontWeight:700,letterSpacing:"1px",textTransform:"uppercase",color:accentColor}}>{typeLabel}</div>
+                          <div style={{fontSize:13,fontWeight:600,color:"#c8d0e0",marginTop:2}}>{t.label}</div>
                         </div>
                       </div>
-                      {/* Divider dashed */}
-                      <div style={{borderTop:"1px dashed rgba(255,255,255,0.08)",margin:"0 0 10px"}}/>
-                      {/* Footer meta */}
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                        <div style={{fontSize:10,color:"#6b7a99",fontFamily:"'JetBrains Mono',monospace"}}>
-                          {fDate(t.time)}
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:18,fontWeight:800,color:accentColor,letterSpacing:"-0.5px"}}>
+                          {positive ? "+" : "-"}KES {Number(Math.abs(t.amount)).toLocaleString("en-KE",{minimumFractionDigits:2})}
                         </div>
-                        <div style={{fontSize:10,color:"#6b7a99",fontFamily:"'JetBrains Mono',monospace"}}>
-                          {fTime(t.time)}
-                        </div>
-                        <div style={{fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:4,
-                          background:`rgba(${isWin?"0,230,118":isDep?"0,230,118":isWd?"79,142,247":"255,77,109"},0.1)`,
-                          color:accentColor,letterSpacing:"0.5px",
-                        }}>{t.status === "pending" ? "PENDING" : "SUCCESS"}</div>
+                        <div style={{
+                          display:"inline-block",marginTop:4,fontSize:9,fontWeight:700,
+                          padding:"2px 8px",borderRadius:20,letterSpacing:"0.8px",
+                          background: t.status==="pending" ? "rgba(255,183,3,0.15)" : "rgba(0,230,118,0.12)",
+                          color: t.status==="pending" ? "#ffb703" : "#00e676",
+                          border: `1px solid ${t.status==="pending" ? "rgba(255,183,3,0.3)" : "rgba(0,230,118,0.25)"}`,
+                        }}>{t.status==="pending" ? "⏳ PENDING" : "✓ SUCCESS"}</div>
+                      </div>
+                    </div>
+
+                    {/* TEAR LINE */}
+                    <div style={{position:"relative",height:12,overflow:"hidden",margin:"0 -1px"}}>
+                      <div style={{position:"absolute",top:0,left:0,right:0,borderTop:"1px dashed rgba(255,255,255,0.1)"}}/>
+                      {Array.from({length:18}).map((_,i) => (
+                        <div key={i} style={{
+                          position:"absolute",top:-6,
+                          left:`${(i/18)*100}%`,
+                          width:12,height:12,borderRadius:"50%",
+                          background:"#06080e",
+                          transform:"translateX(-50%)",
+                        }}/>
+                      ))}
+                    </div>
+
+                    {/* BOTTOM SECTION */}
+                    <div style={{padding:"10px 16px 14px",background:"rgba(0,0,0,0.2)"}}>
+                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                        <span style={{fontSize:10,color:"#4a5568",fontWeight:600,letterSpacing:"0.5px"}}>DATE & TIME</span>
+                        <span style={{fontSize:10,color:"#718096",fontFamily:"'JetBrains Mono',monospace"}}>{fDate(t.time)} · {fTime(t.time)}</span>
+                      </div>
+                      <div style={{display:"flex",justifyContent:"space-between"}}>
+                        <span style={{fontSize:10,color:"#4a5568",fontWeight:600,letterSpacing:"0.5px"}}>REF</span>
+                        <span style={{fontSize:10,color:"#718096",fontFamily:"'JetBrains Mono',monospace",letterSpacing:"0.3px"}}>{refNum}</span>
                       </div>
                     </div>
                   </div>
