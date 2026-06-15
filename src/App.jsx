@@ -33,7 +33,8 @@ export default function App() {
   const [appReady, setAppReady] = useState(false);
   const [soundOn, setSoundOnState] = useState(true);
   const [modal, setModal] = useState(null);
-  const [tab, setTab] = useState("game");
+  const [tab, setTabState] = useState(() => localStorage.getItem("avipesa_tab") || "game");
+  const setTab = (t) => { setTabState(t); localStorage.setItem("avipesa_tab", t); };
   const [ddOpen, setDdOpen] = useState(false);
   const [balance, setBalance] = useState(0);
   const [txns, setTxns] = useState([]);
