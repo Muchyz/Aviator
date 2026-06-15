@@ -100,6 +100,25 @@ export default function App() {
 
   const sound = useSoundEngine();
 
+  // Preload audio assets and unlock AudioContext on first user interaction,
+  // so sounds are ready immediately when the first round starts.
+  useEffect(() => {
+    const unlock = () => {
+      sound.preload();
+      window.removeEventListener("click", unlock);
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+    window.addEventListener("click", unlock, { once: true });
+    window.addEventListener("touchstart", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      window.removeEventListener("click", unlock);
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, [sound]);
+
   const toast_ = useCallback((msg, type = "ok") => {
     setToastState({ msg, type });
     setTimeout(() => setToastState(null), 3200);
