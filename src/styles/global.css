@@ -510,3 +510,43 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
   flex-wrap: wrap;
   gap: 6px;
 }
+
+.history-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 410;
+  background: transparent;
+}
+.history-dropdown {
+  position: absolute;
+  top: 44px;
+  left: 8px;
+  right: 8px;
+  z-index: 420;
+  background: var(--card2);
+  border: 1px solid var(--border-md);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  animation: fdDown 0.14s ease;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.history-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.history-title {
+  font-size: 14px;
+  font-weight: 800;
+}
+.history-sub {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+.history-body {
+  padding: 12px 14px 14px;
+}

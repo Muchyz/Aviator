@@ -3,17 +3,17 @@ import { cbCls } from "../../utils/format";
 
 export default function RoundHistoryModal({ onClose, crashes = [] }) {
   return (
-    <div className="overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-drag" />
-        <div className="mhead">
+    <>
+      <div className="history-backdrop" onClick={onClose} />
+      <div className="history-dropdown" onClick={e => e.stopPropagation()}>
+        <div className="history-head">
           <div>
-            <div className="mtitle">Round History</div>
-            <div className="msub">Last {crashes.length} rounds</div>
+            <div className="history-title">Round History</div>
+            <div className="history-sub">Last {crashes.length} rounds</div>
           </div>
           <button className="mclose" onClick={onClose}><X size={15} /></button>
         </div>
-        <div className="mbody">
+        <div className="history-body">
           {crashes.length === 0 ? (
             <div className="nodata">No rounds played yet.</div>
           ) : (
@@ -27,6 +27,6 @@ export default function RoundHistoryModal({ onClose, crashes = [] }) {
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
