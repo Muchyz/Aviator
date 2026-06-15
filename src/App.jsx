@@ -1002,12 +1002,16 @@ export default function App() {
                       {isWin && (() => {
                         const multMatch = t.label.match(/x([\d.]+)/i);
                         const mult = multMatch ? parseFloat(multMatch[1]) : null;
-                        const betAmt = mult ? Math.abs(t.amount) / mult : null;
-                        const cashout = Math.abs(t.amount);
-                        return mult ? (
+                        // amount in win tx is PROFIT only, so cashout = profit + bet
+                        // bet = cashout / mult, cashout = bet * mult
+                        // We need: profit = cashout - bet => cashout = profit * mult/(mult-1)
+                        const profit = Math.abs(t.amount);
+                        const cashout = mult && mult > 1 ? parseFloat((profit * mult / (mult - 1)).toFixed(2)) : null;
+                        const betAmt = cashout ? parseFloat((cashout / mult).toFixed(2)) : null;
+                        return mult && cashout ? (
                           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,background:"rgba(0,230,118,0.04)",border:"1px solid rgba(0,230,118,0.1)",borderRadius:8,padding:"8px 10px"}}>
                             <div style={{textAlign:"center"}}>
-                              <div style={{fontSize:9,color:"#6b7a99",fontWeight:600,letterSpacing:"0.5px",marginBottom:3}}>BET</div>
+                              <div style={{fontSize:9,color:"#6b7a99",fontWeight:600,letterSpacing:"0.5px",marginBottom:3}}>STAKED</div>
                               <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,fontWeight:700,color:"#f0f4ff"}}>KES {betAmt.toLocaleString("en-KE",{minimumFractionDigits:2})}</div>
                             </div>
                             <div style={{textAlign:"center",borderLeft:"1px solid rgba(255,255,255,0.06)",borderRight:"1px solid rgba(255,255,255,0.06)"}}>
