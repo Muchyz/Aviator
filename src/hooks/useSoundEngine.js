@@ -57,13 +57,9 @@ export function useSoundEngine() {
   }, [preload, getCtx]);
 
   const updateHum = useCallback((mult) => {
-    if (!humRef.current || !soundOnRef.current) return;
-    const ctx = getCtx(); if (!ctx) return;
-    try {
-      const rate = Math.min(1 + (mult - 1) * 0.02, 1.8);
-      humRef.current.src.playbackRate.setTargetAtTime(rate, ctx.currentTime, 0.4);
-    } catch {}
-  }, [getCtx]);
+    // Intentionally a no-op: keep the hum at constant playback speed
+    // regardless of multiplier, matching standard Aviator behavior.
+  }, []);
 
   const stopHum = useCallback(() => {
     if (!humRef.current) return;
