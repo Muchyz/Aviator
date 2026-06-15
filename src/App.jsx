@@ -976,26 +976,58 @@ export default function App() {
                     boxShadow:"0 2px 12px rgba(0,0,0,0.4)",
                   }}>
                     {/* TOP SECTION */}
-                    <div style={{padding:"14px 16px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                      <div style={{display:"flex",alignItems:"center",gap:10}}>
-                        <div style={{fontSize:26,lineHeight:1}}>{emoji}</div>
-                        <div>
-                          <div style={{fontSize:11,fontWeight:700,letterSpacing:"1px",textTransform:"uppercase",color:accentColor}}>{typeLabel}</div>
-                          <div style={{fontSize:13,fontWeight:600,color:"#c8d0e0",marginTop:2}}>{t.label}</div>
+                    <div style={{padding:"14px 16px 12px"}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom: (isWin||isBet) ? 10 : 0}}>
+                        <div style={{display:"flex",alignItems:"center",gap:10}}>
+                          <div style={{fontSize:26,lineHeight:1}}>{emoji}</div>
+                          <div>
+                            <div style={{fontSize:11,fontWeight:700,letterSpacing:"1px",textTransform:"uppercase",color:accentColor}}>{typeLabel}</div>
+                            <div style={{fontSize:13,fontWeight:600,color:"#c8d0e0",marginTop:2}}>{t.label}</div>
+                          </div>
+                        </div>
+                        <div style={{textAlign:"right"}}>
+                          <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:18,fontWeight:800,color:accentColor,letterSpacing:"-0.5px"}}>
+                            {positive ? "+" : "-"}KES {Number(Math.abs(t.amount)).toLocaleString("en-KE",{minimumFractionDigits:2})}
+                          </div>
+                          <div style={{
+                            display:"inline-block",marginTop:4,fontSize:9,fontWeight:700,
+                            padding:"2px 8px",borderRadius:20,letterSpacing:"0.8px",
+                            background: t.status==="pending" ? "rgba(255,183,3,0.15)" : isWin ? "rgba(0,230,118,0.12)" : isBet ? "rgba(255,77,109,0.12)" : isDep ? "rgba(0,230,118,0.12)" : "rgba(79,142,247,0.12)",
+                            color: t.status==="pending" ? "#ffb703" : isWin ? "#00e676" : isBet ? "#ff4d6d" : isDep ? "#00e676" : "#4f8ef7",
+                            border: `1px solid ${t.status==="pending" ? "rgba(255,183,3,0.3)" : isWin ? "rgba(0,230,118,0.25)" : isBet ? "rgba(255,77,109,0.25)" : isDep ? "rgba(0,230,118,0.25)" : "rgba(79,142,247,0.25)"}`,
+                          }}>{t.status==="pending" ? "⏳ PENDING" : isWin ? "🏆 WIN" : isBet ? "❌ LOSS" : isDep ? "✓ DEPOSITED" : "✓ WITHDRAWN"}</div>
                         </div>
                       </div>
-                      <div style={{textAlign:"right"}}>
-                        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:18,fontWeight:800,color:accentColor,letterSpacing:"-0.5px"}}>
-                          {positive ? "+" : "-"}KES {Number(Math.abs(t.amount)).toLocaleString("en-KE",{minimumFractionDigits:2})}
+                      {/* WIN DETAILS: bet amount, multiplier, cashout */}
+                      {isWin && (() => {
+                        const multMatch = t.label.match(/x([\d.]+)/i);
+                        const mult = multMatch ? parseFloat(multMatch[1]) : null;
+                        const betAmt = mult ? Math.abs(t.amount) / mult : null;
+                        const cashout = Math.abs(t.amount);
+                        return mult ? (
+                          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,background:"rgba(0,230,118,0.04)",border:"1px solid rgba(0,230,118,0.1)",borderRadius:8,padding:"8px 10px"}}>
+                            <div style={{textAlign:"center"}}>
+                              <div style={{fontSize:9,color:"#6b7a99",fontWeight:600,letterSpacing:"0.5px",marginBottom:3}}>BET</div>
+                              <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,fontWeight:700,color:"#f0f4ff"}}>KES {betAmt.toLocaleString("en-KE",{minimumFractionDigits:2})}</div>
+                            </div>
+                            <div style={{textAlign:"center",borderLeft:"1px solid rgba(255,255,255,0.06)",borderRight:"1px solid rgba(255,255,255,0.06)"}}>
+                              <div style={{fontSize:9,color:"#6b7a99",fontWeight:600,letterSpacing:"0.5px",marginBottom:3}}>CASHED OUT</div>
+                              <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,fontWeight:800,color:"#00e676"}}>{mult.toFixed(2)}×</div>
+                            </div>
+                            <div style={{textAlign:"center"}}>
+                              <div style={{fontSize:9,color:"#6b7a99",fontWeight:600,letterSpacing:"0.5px",marginBottom:3}}>RECEIVED</div>
+                              <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,fontWeight:700,color:"#00e676"}}>KES {cashout.toLocaleString("en-KE",{minimumFractionDigits:2})}</div>
+                            </div>
+                          </div>
+                        ) : null;
+                      })()}
+                      {/* BET DETAILS: just show bet amount */}
+                      {isBet && (
+                        <div style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,77,109,0.04)",border:"1px solid rgba(255,77,109,0.1)",borderRadius:8,padding:"8px 10px"}}>
+                          <span style={{fontSize:9,color:"#6b7a99",fontWeight:600,letterSpacing:"0.5px"}}>AMOUNT BETTED</span>
+                          <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,fontWeight:700,color:"#ff4d6d",marginLeft:"auto"}}>KES {Number(Math.abs(t.amount)).toLocaleString("en-KE",{minimumFractionDigits:2})}</span>
                         </div>
-                        <div style={{
-                          display:"inline-block",marginTop:4,fontSize:9,fontWeight:700,
-                          padding:"2px 8px",borderRadius:20,letterSpacing:"0.8px",
-                          background: t.status==="pending" ? "rgba(255,183,3,0.15)" : isWin ? "rgba(0,230,118,0.12)" : isBet ? "rgba(255,77,109,0.12)" : isDep ? "rgba(0,230,118,0.12)" : "rgba(79,142,247,0.12)",
-                          color: t.status==="pending" ? "#ffb703" : isWin ? "#00e676" : isBet ? "#ff4d6d" : isDep ? "#00e676" : "#4f8ef7",
-                          border: `1px solid ${t.status==="pending" ? "rgba(255,183,3,0.3)" : isWin ? "rgba(0,230,118,0.25)" : isBet ? "rgba(255,77,109,0.25)" : isDep ? "rgba(0,230,118,0.25)" : "rgba(79,142,247,0.25)"}`,
-                        }}>{t.status==="pending" ? "⏳ PENDING" : isWin ? "🏆 WIN" : isBet ? "❌ LOSS" : isDep ? "✓ DEPOSITED" : "✓ WITHDRAWN"}</div>
-                      </div>
+                      )}
                     </div>
 
                     {/* TEAR LINE */}
