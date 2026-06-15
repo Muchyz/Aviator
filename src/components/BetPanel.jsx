@@ -8,14 +8,14 @@ export default function BetPanel({
   onBet2, onCashout2, lastBet2Ref,
   socket,
 }) {
-  const [dualMode, setDualMode] = useState(false);
+  const [dualMode, setDualMode] = useState(true);
 
   return (
     <>
       <div className="bpanel-header">
         <span className="bpanel-title">BET CONTROLS</span>
         <div className="dual-toggle-row">
-          <span className="dual-lbl">2 Bets</span>
+          <span className="dual-lbl">1 Bet</span>
           <label className="toggle">
             <input type="checkbox" checked={dualMode} onChange={e => setDualMode(e.target.checked)} />
             <div className="toggle-track" /><div className="toggle-thumb" />

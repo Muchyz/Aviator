@@ -42,6 +42,7 @@ export default function App() {
   const [walletMode, setWalletMode] = useState("deposit");
   const [txnFilter, setTxnFilter] = useState("all");
   const [leaderboard, setLeaderboard] = useState([]);
+  const [lbPeriod, setLbPeriod] = useState("today");
   const [stats, setStats] = useState({
     totalWon: 0, totalBets: 0, biggestWin: 0,
     totalWagered: 0, totalLost: 0, cashoutCount: 0, avgCashout: 0
@@ -1073,20 +1074,75 @@ export default function App() {
           <div className="pcard">
             <div className="pcard-head">
               <div className="pcard-title">Leaderboard</div>
-              <div className="pcard-sub">Top players this month</div>
+              <div className="pcard-sub">Top players</div>
             </div>
+
+            {/* Period tabs */}
+            <div className="lb-period-row">
+              {[["today","Today"],["week","This Week"],["all","All Time"]].map(([k,l]) => (
+                <button key={k} className={`lb-period-btn ${lbPeriod===k?"on":""}`} onClick={() => setLbPeriod(k)}>{l}</button>
+              ))}
+            </div>
+
             {leaderboard.length === 0 && <div className="nodata">Loading leaderboard...</div>}
-            {leaderboard.map((p, i) => (
-              <div key={i} className="lb-row">
-                <div className={`lb-rank ${rankCls(i)}`}>{rankLabel(i)}</div>
-                <div className="lb-av">{p.name[0]}</div>
-                <div style={{ flex: 1 }}>
-                  <div className="lb-name">{p.name}</div>
-                  <div className="lb-sub">{p.bets} bets · Best ×{Number(p.best).toFixed(2)}</div>
+
+            {leaderboard.length > 0 && (
+              <>
+                {/* Your rank card */}
+                {user && (() => {
+                  const myIdx = leaderboard.findIndex(p => p.name && user.name && p.name.split(" ")[0] === user.name.split(" ")[0]);
+                  const myRank = myIdx >= 0 ? myIdx + 1 : null;
+                  return (
+                    <div className="lb-myrank">
+                      <div className="lb-myrank-rank">{myRank ? `#${myRank}` : "—"}</div>
+                      <div className="lb-av lb-av-me">{user.name[0]}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div className="lb-name">You · {user.name}</div>
+                        <div className="lb-sub">{myRank ? "Keep climbing!" : "Place a bet to enter the rankings"}</div>
+                      </div>
+                      {myIdx >= 0 && <div className="lb-amt">{fKES(leaderboard[myIdx].total)}</div>}
+                    </div>
+                  );
+                })()}
+
+                {/* Podium for top 3 */}
+                {leaderboard.length >= 3 && (
+                  <div className="lb-podium">
+                    {[1,0,2].map(idx => {
+                      const p = leaderboard[idx];
+                      if (!p) return <div key={idx} className="lb-podium-spot empty" />;
+                      const place = idx + 1;
+                      const crown = place === 1 ? "👑" : place === 2 ? "🥈" : "🥉";
+                      return (
+                        <div key={idx} className={`lb-podium-spot place-${place}`}>
+                          <div className="lb-podium-crown">{crown}</div>
+                          <div className={`lb-podium-av rank-${place}`}>{p.name[0]}</div>
+                          <div className="lb-podium-name">{p.name}</div>
+                          <div className="lb-podium-amt">{fKES(p.total)}</div>
+                          <div className="lb-podium-sub">×{Number(p.best).toFixed(2)} best</div>
+                          <div className="lb-podium-base">{place}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Compact list for the rest */}
+                <div className="lb-list">
+                  {leaderboard.slice(3).map((p, i) => (
+                    <div key={i+3} className="lb-row">
+                      <div className="lb-rank">#{i+4}</div>
+                      <div className="lb-av">{p.name[0]}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="lb-name">{p.name}</div>
+                        <div className="lb-sub">{p.bets} bets · Best ×{Number(p.best).toFixed(2)}</div>
+                      </div>
+                      <div className="lb-amt">{fKES(p.total)}</div>
+                    </div>
+                  ))}
                 </div>
-                <div className="lb-amt">{fKES(p.total)}</div>
-              </div>
-            ))}
+              </>
+            )}
           </div>
         </div>
       )}

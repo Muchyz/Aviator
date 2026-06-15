@@ -125,7 +125,7 @@ export default function SingleBetPanel({
 
   return (
     <div style={{
-      padding: "12px 12px 12px",
+      padding: "5px 6px 6px",
       background: "#0d0d0d",
       boxSizing: "border-box",
       width: "100%",
@@ -134,35 +134,35 @@ export default function SingleBetPanel({
       {/* TAB SWITCHER */}
       <div style={{
         display: "flex", background: "#1a1a1a",
-        borderRadius: 50, padding: "3px",
-        marginBottom: 12, width: "100%", boxSizing: "border-box",
+        borderRadius: 50, padding: "2px",
+        marginBottom: 6, width: "100%", boxSizing: "border-box",
       }}>
         {["bet","auto"].map(t => (
           <button key={t} onClick={() => setMode(t)} style={{
-            flex: 1, padding: "9px 0", borderRadius: 50, border: "none",
+            flex: 1, padding: "5px 0", borderRadius: 50, border: "none",
             background: mode === t ? "#2e2e2e" : "transparent",
             color: mode === t ? "#fff" : "#555",
             fontFamily: "'Space Grotesk',sans-serif",
-            fontSize: 15, fontWeight: 700, cursor: "pointer",
+            fontSize: 13, fontWeight: 700, cursor: "pointer",
           }}>{t === "bet" ? "Bet" : "Auto"}</button>
         ))}
       </div>
 
       {/* MAIN ROW */}
       <div style={{
-        display: "flex", gap: 8, alignItems: "stretch",
+        display: "flex", gap: 5, alignItems: "stretch",
         width: "100%", boxSizing: "border-box",
       }}>
 
         {/* LEFT */}
         <div style={{
           flex: "1 1 0", minWidth: 0,
-          display: "flex", flexDirection: "column", gap: 7,
+          display: "flex", flexDirection: "column", gap: 3,
         }}>
           {/* Stepper */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <button onClick={() => adjust(-10)} disabled={controlsDisabled} style={{
-              width: 38, height: 38, minWidth: 38, borderRadius: "50%",
+              width: 28, height: 28, minWidth: 28, borderRadius: "50%",
               border: "1px solid #2a2a2a", background: "#1c1c1c",
               color: controlsDisabled ? "#333" : "#ccc",
               cursor: controlsDisabled ? "not-allowed" : "pointer",
@@ -177,17 +177,17 @@ export default function SingleBetPanel({
               style={{
                 flex: "1 1 0", minWidth: 0,
                 background: "#1c1c1c", border: "1px solid #252525",
-                borderRadius: 10, padding: "10px 4px",
+                borderRadius: 10, padding: "5px 4px",
                 color: controlsDisabled ? "#444" : "#fff",
                 fontFamily: "'JetBrains Mono',monospace",
-                fontSize: 20, fontWeight: 800,
+                fontSize: 15, fontWeight: 800,
                 textAlign: "center", outline: "none",
                 WebkitAppearance: "none", boxSizing: "border-box",
               }}
             />
 
             <button onClick={() => adjust(10)} disabled={controlsDisabled} style={{
-              width: 38, height: 38, minWidth: 38, borderRadius: "50%",
+              width: 28, height: 28, minWidth: 28, borderRadius: "50%",
               border: "1px solid #2a2a2a", background: "#1c1c1c",
               color: controlsDisabled ? "#333" : "#ccc",
               cursor: controlsDisabled ? "not-allowed" : "pointer",
@@ -201,11 +201,11 @@ export default function SingleBetPanel({
             {[100, 250, 1000, 25000].map(v => (
               <button key={v} onClick={() => setBetAmt(String(v))}
                 disabled={controlsDisabled} style={{
-                padding: "8px 4px", background: "#1c1c1c",
+                padding: "4px 4px", background: "#1c1c1c",
                 border: "1px solid #252525", borderRadius: 8,
                 color: controlsDisabled ? "#2a2a2a" : "#666",
                 fontFamily: "'JetBrains Mono',monospace",
-                fontSize: 12, fontWeight: 600,
+                fontSize: 10, fontWeight: 600,
                 cursor: controlsDisabled ? "not-allowed" : "pointer",
                 textAlign: "center", boxSizing: "border-box",
               }}>
@@ -224,7 +224,7 @@ export default function SingleBetPanel({
           cursor: isLocked ? "default" : "pointer",
           display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center",
-          gap: 3, minHeight: 108,
+          gap: 1, minHeight: 76,
           boxSizing: "border-box", padding: "8px 4px",
           transition: "background 0.3s",
         }}>
@@ -251,8 +251,8 @@ export default function SingleBetPanel({
             </>
           ) : (
             <>
-              <span style={{fontSize:22,fontWeight:900,fontFamily:"'Space Grotesk',sans-serif",letterSpacing:-0.5}}>Bet</span>
-              <span style={{fontSize:15,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",textAlign:"center"}}>
+              <span style={{fontSize:16,fontWeight:900,fontFamily:"'Space Grotesk',sans-serif",letterSpacing:-0.5}}>Bet</span>
+              <span style={{fontSize:12,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",textAlign:"center"}}>
                 {amt.toFixed(2)}{" "}<span style={{fontSize:12,fontWeight:600}}>KES</span>
               </span>
             </>
@@ -265,7 +265,7 @@ export default function SingleBetPanel({
         <div style={{
           display: "flex", alignItems: "center",
           justifyContent: "space-between",
-          marginTop: 12, flexWrap: "wrap", gap: 8,
+          marginTop: 5, flexWrap: "wrap", gap: 8,
           width: "100%", boxSizing: "border-box",
         }}>
           {/* Auto bet */}
@@ -282,7 +282,7 @@ export default function SingleBetPanel({
           </div>
 
           {/* Auto cash out */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{fontSize:13,color:"#777",fontFamily:"'Space Grotesk',sans-serif"}}>Auto Cash Out</span>
             <Toggle value={autoCOOn} onChange={setAutoCOOn}/>
             <input
