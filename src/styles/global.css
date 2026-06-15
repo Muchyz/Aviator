@@ -561,5 +561,11 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
   min-width: 0 !important;
 }
 .history-grid {
+  display: grid !important;
+  grid-template-columns: repeat(8, 1fr) !important;
   gap: 4px !important;
+}
+.history-grid .cbadge {
+  text-align: center !important;
+  width: 100% !important;
 }
