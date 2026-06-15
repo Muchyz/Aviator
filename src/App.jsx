@@ -578,9 +578,14 @@ export default function App() {
                   {ddOpen && (
                     <div className="dropdown">
                       <div className="dd-top">
-                        <div className="dd-name">{user.name}</div>
-                        <div className="dd-phone">+{user.phone}</div>
-                        {user.aviId && <div style={{fontSize:10,fontWeight:700,color:"var(--blue)",marginTop:3,fontFamily:"monospace"}}>{user.aviId}</div>}
+                        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between"}}>
+                          <div>
+                            <div className="dd-name">{user.name}</div>
+                            <div className="dd-phone">+{user.phone}</div>
+                            {user.aviId && <div style={{fontSize:10,fontWeight:700,color:"var(--blue)",marginTop:3,fontFamily:"monospace"}}>{user.aviId}</div>}
+                          </div>
+                          <button onClick={() => setDdOpen(false)} style={{background:"none",border:"none",color:"var(--text2)",cursor:"pointer",fontSize:18,lineHeight:1,padding:"0 0 0 8px",flexShrink:0}}>×</button>
+                        </div>
                       </div>
                       {NAV_TABS.map(t => (
                         <button key={t.id} className="dd-item" onClick={() => { setTab(t.id); setDdOpen(false); }}>
