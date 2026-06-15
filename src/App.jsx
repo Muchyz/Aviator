@@ -925,7 +925,7 @@ export default function App() {
                   const isBet = t.type === "bet";
                   const positive = t.amount >= 0;
                   const accentColor = isWin ? "#00e676" : isDep ? "#00e676" : isWd ? "#4f8ef7" : "#ff4d6d";
-                  const emoji = isWin ? "🏆" : isDep ? "💰" : isWd ? "📤" : "🎯";
+                  const emoji = isWin ? "🏆" : isDep ? "💰" : isWd ? "📤" : "❌";
                   const typeLabel = isWin ? "WIN" : isDep ? "DEPOSIT" : isWd ? "WITHDRAWAL" : "BET PLACED";
                   const refNum = t.reference || `TXN${String(t.id).padStart(8,"0")}`;
                   return (
