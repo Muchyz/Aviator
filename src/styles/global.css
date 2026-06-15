@@ -528,7 +528,7 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
   animation: fdDown 0.14s ease;
-  max-height: 280px;
+  max-height: 360px;
   overflow-y: auto;
 }
 .history-head {
@@ -549,4 +549,14 @@ html,body{width:100%;overflow-x:hidden;background:var(--bg);color:var(--text);fo
 }
 .history-body {
   padding: 12px 14px 14px;
+}
+
+.history-grid .cbadge {
+  font-size: 9px !important;
+  padding: 2px 5px !important;
+  border-radius: 4px !important;
+  min-width: 0 !important;
+}
+.history-grid {
+  gap: 4px !important;
 }
