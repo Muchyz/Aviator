@@ -38,6 +38,7 @@ export default function App() {
   const [ddOpen, setDdOpen] = useState(false);
   const [balance, setBalance] = useState(0);
   const [txns, setTxns] = useState([]);
+  const [txnsLoading, setTxnsLoading] = useState(false);
   const [walletMode, setWalletMode] = useState("deposit");
   const [txnFilter, setTxnFilter] = useState("all");
   const [leaderboard, setLeaderboard] = useState([]);
@@ -413,15 +414,20 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [handleBet, doCashout]);
 
+  const fetchTxns = () => {
+    if (!userRef.current) return;
+    setTxnsLoading(true);
+    fetch(`${API}/wallet/transactions`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("avipesa_token")}` }
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setTxns(data.map(t => ({ ...t, time: new Date(t.created_at) }))); })
+      .catch(() => {})
+      .finally(() => setTxnsLoading(false));
+  };
+
   useEffect(() => {
-    if (tab === "history" && userRef.current) {
-      fetch(`${API}/wallet/transactions`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("avipesa_token")}` }
-      })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => { if (data) setTxns(data.map(t => ({ ...t, time: new Date(t.created_at) }))); })
-        .catch(() => {});
-    }
+    if (tab === "history") fetchTxns();
   }, [tab]);
 
   useEffect(() => {
@@ -917,7 +923,39 @@ export default function App() {
                       onClick={() => setTxnFilter(f.k)}>{f.l}</button>
                   ))}
                 </div>
-                {filteredTxns.length === 0 && <div className="nodata">No transactions found.</div>}
+                {txnsLoading ? (
+                  <div style={{padding:"16px"}}>
+                    {[1,2,3,4].map(i => (
+                      <div key={i} style={{
+                        background:"#0e1117",border:"1px solid rgba(255,255,255,0.07)",
+                        borderRadius:14,margin:"0 0 12px",overflow:"hidden",
+                        animation:"pulse 1.4s ease-in-out infinite",
+                      }}>
+                        <div style={{padding:"14px 16px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:10}}>
+                            <div style={{width:40,height:40,borderRadius:10,background:"rgba(255,255,255,0.06)"}}/>
+                            <div>
+                              <div style={{width:80,height:10,borderRadius:4,background:"rgba(255,255,255,0.06)",marginBottom:8}}/>
+                              <div style={{width:120,height:12,borderRadius:4,background:"rgba(255,255,255,0.04)"}}/>
+                            </div>
+                          </div>
+                          <div style={{textAlign:"right"}}>
+                            <div style={{width:90,height:16,borderRadius:4,background:"rgba(255,255,255,0.06)",marginBottom:8}}/>
+                            <div style={{width:60,height:10,borderRadius:10,background:"rgba(255,255,255,0.04)"}}/>
+                          </div>
+                        </div>
+                        <div style={{borderTop:"1px dashed rgba(255,255,255,0.05)",margin:"0 16px"}}/>
+                        <div style={{padding:"10px 16px 14px",display:"flex",justifyContent:"space-between"}}>
+                          <div style={{width:60,height:9,borderRadius:4,background:"rgba(255,255,255,0.04)"}}/>
+                          <div style={{width:100,height:9,borderRadius:4,background:"rgba(255,255,255,0.04)"}}/>
+                        </div>
+                      </div>
+                    ))}
+                    <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
+                  </div>
+                ) : filteredTxns.length === 0 ? (
+                  <div className="nodata">No transactions found.</div>
+                ) : null}
                 {filteredTxns.map((t, idx) => {
                   const isWin = t.type === "win";
                   const isDep = t.type === "dep";
