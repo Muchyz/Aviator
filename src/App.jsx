@@ -555,8 +555,8 @@ export default function App() {
       <nav className="nav">
         <div className="nav-i">
           <div className="logo" onClick={() => setTab("game")}>
-            <div className="logo-icon"><Zap size={15} color="#fff" /></div>
-            <div className="logo-text">Avi<span>Pesa</span></div>
+            <img src="/logo.png" alt="AviPesa" style={{height:24, width:"auto", maxWidth:120}} />
+            
           </div>
           <div className="ntabs">
             {NAV_TABS.map(t => (
