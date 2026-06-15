@@ -233,7 +233,7 @@ export default function SingleBetPanel({
           ) : isCashout ? (
             <>
               <span style={{fontSize:16,fontWeight:800,fontFamily:"'Space Grotesk',sans-serif",textAlign:"center"}}>Cash Out</span>
-              <span style={{fontSize:15,fontWeight:700,fontFamily:"'JetBrains Mono',monospace"}}>{md}x</span>
+              <span style={{fontSize:15,fontWeight:700,fontFamily:"'JetBrains Mono',monospace"}}>KES {(parseFloat(betAmt) * parseFloat(md)).toLocaleString("en-KE", {minimumFractionDigits:2,maximumFractionDigits:2})}</span>
             </>
           ) : isBetPlaced ? (
             <span style={{fontSize:13,fontWeight:700,fontFamily:"'Space Grotesk',sans-serif",textAlign:"center",color:"#4a8a4a"}}>Placed ✓</span>
