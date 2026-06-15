@@ -227,7 +227,7 @@ export default function App() {
     socket.on("game:crashed", data => {
       gsRef.current = "crashed"; setGs("crashed"); setPlaneCrashed(true);
       const cm = data.multiplier;
-      setCrashes(p => [cm, ...p].slice(0, 24));
+      setCrashes(p => [cm, ...p].slice(0, 32));
       setPlayers(data.bets || []);
       if (data.hash) setPfHash(data.hash);
       if (data.roundId) { roundIdRef.current = data.roundId; setRoundId(data.roundId); }
