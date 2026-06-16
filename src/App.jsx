@@ -9,7 +9,7 @@ import {
 
 import "./styles/global.css";
 
-import { API, SOCKET_URL, FLOAT_WINS } from "./constants";
+import { API, SOCKET_URL, FLOAT_WINS, DUMMY_LEADERBOARD } from "./constants";
 import { fKES, fTime, fDate, cbCls } from "./utils/format";
 import { useSoundEngine } from "./hooks/useSoundEngine";
 
@@ -1065,13 +1065,62 @@ export default function App() {
       )}
 
       {tab === "leaderboard" && (
-        <div className="page wide">
-          <div className="pcard">
-            <div className="pcard-head">
-              <div className="pcard-title">Leaderboard</div>
-              <div className="pcard-sub">Top players</div>
+        <div className="page wide" style={{maxWidth:700,paddingBottom:80}}>
+          {/* HEADER */}
+          <div style={{
+            background:"linear-gradient(135deg,#0d1b3e,#1a0a2e)",
+            border:"1px solid rgba(79,142,247,0.2)",
+            borderRadius:16,marginBottom:16,padding:"20px 16px",
+            textAlign:"center",position:"relative",overflow:"hidden"
+          }}>
+            <div style={{fontSize:28,marginBottom:4}}>🏆</div>
+            <div style={{fontSize:20,fontWeight:900,letterSpacing:-0.5,color:"#f0f4ff"}}>Prize Leaderboard</div>
+            <div style={{fontSize:12,color:"#6b7a99",marginTop:3}}>Monthly competition · Top 100 win cash prizes</div>
+            <div style={{
+              display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+              marginTop:10,padding:"6px 14px",background:"rgba(255,183,3,0.1)",
+              border:"1px solid rgba(255,183,3,0.3)",borderRadius:20,
+              fontSize:11,fontWeight:700,color:"#ffb703",display:"inline-flex"
+            }}>
+              <span>🕐</span> Resets end of month
             </div>
+          </div>
 
+          {/* PRIZE POOL BANNER */}
+          <div style={{
+            display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16
+          }}>
+            <div style={{
+              background:"linear-gradient(135deg,rgba(255,183,3,0.15),rgba(255,183,3,0.05))",
+              border:"1px solid rgba(255,183,3,0.3)",borderRadius:12,
+              padding:"12px 8px",textAlign:"center"
+            }}>
+              <div style={{fontSize:18,marginBottom:4}}>🏍️</div>
+              <div style={{fontSize:11,fontWeight:800,color:"#ffb703"}}>1ST PLACE</div>
+              <div style={{fontSize:12,fontWeight:700,color:"#f0f4ff",marginTop:2}}>Bodaboda</div>
+              <div style={{fontSize:10,color:"#ffb703",fontWeight:600}}>+ KES 80,000</div>
+            </div>
+            <div style={{
+              background:"linear-gradient(135deg,rgba(148,163,184,0.15),rgba(148,163,184,0.05))",
+              border:"1px solid rgba(148,163,184,0.3)",borderRadius:12,
+              padding:"12px 8px",textAlign:"center"
+            }}>
+              <div style={{fontSize:18,marginBottom:4}}>🥈</div>
+              <div style={{fontSize:11,fontWeight:800,color:"#94a3b8"}}>2ND PLACE</div>
+              <div style={{fontSize:13,fontWeight:800,color:"#00e676",marginTop:2}}>KES 50,000</div>
+            </div>
+            <div style={{
+              background:"linear-gradient(135deg,rgba(161,98,7,0.15),rgba(161,98,7,0.05))",
+              border:"1px solid rgba(161,98,7,0.3)",borderRadius:12,
+              padding:"12px 8px",textAlign:"center"
+            }}>
+              <div style={{fontSize:18,marginBottom:4}}>🥉</div>
+              <div style={{fontSize:11,fontWeight:800,color:"#d9a066"}}>3RD PLACE</div>
+              <div style={{fontSize:13,fontWeight:800,color:"#00e676",marginTop:2}}>KES 30,000</div>
+            </div>
+          </div>
+
+          <div className="pcard">
             {/* Period tabs */}
             <div className="lb-period-row">
               {[["today","Today"],["week","This Week"],["all","All Time"]].map(([k,l]) => (
@@ -1079,65 +1128,191 @@ export default function App() {
               ))}
             </div>
 
-            {leaderboard.length === 0 && <div className="nodata">Loading leaderboard...</div>}
+            {(() => {
+              const raw = leaderboard.length > 0 ? leaderboard : [];
+              const merged = [...raw];
+              DUMMY_LEADERBOARD.forEach(d => {
+                if (!merged.find(p => p.name === d.name)) merged.push(d);
+              });
+              const sorted = merged.sort((a,b) => b.total - a.total).slice(0,100);
 
-            {leaderboard.length > 0 && (
-              <>
-                {/* Your rank card */}
-                {user && (() => {
-                  const myIdx = leaderboard.findIndex(p => p.name && user.name && p.name.split(" ")[0] === user.name.split(" ")[0]);
-                  const myRank = myIdx >= 0 ? myIdx + 1 : null;
-                  return (
-                    <div className="lb-myrank">
-                      <div className="lb-myrank-rank">{myRank ? `#${myRank}` : "—"}</div>
-                      <div className="lb-av lb-av-me">{user.name[0]}</div>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div className="lb-name">You · {user.name}</div>
-                        <div className="lb-sub">{myRank ? "Keep climbing!" : "Place a bet to enter the rankings"}</div>
+              const prizes = [
+                "🏍️ Bodaboda + KES 80,000",
+                "KES 50,000","KES 30,000","KES 20,000","KES 15,000",
+                "KES 10,000","KES 8,000","KES 6,000","KES 5,000","KES 4,000",
+                ...Array.from({length:10},(_,i)=>`KES ${3000-i*100}`),
+                ...Array.from({length:80},(_,i)=>`KES ${1900-i*18 > 500 ? Math.round((1900-i*18)/100)*100 : 500}`),
+              ];
+
+              return (
+                <>
+                  {/* Your rank */}
+                  {user && (() => {
+                    const myIdx = sorted.findIndex(p => p.name && user.name && p.name.split(" ")[0] === user.name.split(" ")[0]);
+                    return (
+                      <div style={{
+                        display:"flex",alignItems:"center",gap:10,
+                        padding:"12px 16px",margin:"12px 16px 4px",
+                        borderRadius:12,background:"linear-gradient(135deg,rgba(79,142,247,0.1),rgba(139,92,246,0.04))",
+                        border:"1px solid rgba(79,142,247,0.25)"
+                      }}>
+                        <div style={{fontFamily:"monospace",fontSize:14,fontWeight:800,color:"#4f8ef7",width:38,textAlign:"center"}}>
+                          {myIdx>=0 ? `#${myIdx+1}` : "—"}
+                        </div>
+                        <div style={{width:38,height:38,borderRadius:10,background:"linear-gradient(135deg,#4f8ef7,#8b5cf6)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:800,color:"#fff",flexShrink:0}}>
+                          {user.name[0]}
+                        </div>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:13,fontWeight:700}}>You · {user.name}</div>
+                          <div style={{fontSize:10,color:"#6b7a99",marginTop:2,fontFamily:"monospace"}}>{myIdx>=0?"Keep climbing! 🚀":"Place a bet to enter"}</div>
+                        </div>
+                        {myIdx>=0 && <div style={{textAlign:"right"}}>
+                          <div style={{fontSize:12,fontWeight:800,color:"#00e676",fontFamily:"monospace"}}>{fKES(sorted[myIdx].total)}</div>
+                          <div style={{fontSize:9,color:"#ffb703",fontWeight:700,marginTop:2}}>{prizes[myIdx]}</div>
+                        </div>}
                       </div>
-                      {myIdx >= 0 && <div className="lb-amt">{fKES(leaderboard[myIdx].total)}</div>}
-                    </div>
-                  );
-                })()}
+                    );
+                  })()}
 
-                {/* Podium for top 3 */}
-                {leaderboard.length >= 3 && (
-                  <div className="lb-podium">
-                    {[1,0,2].map(idx => {
-                      const p = leaderboard[idx];
-                      if (!p) return <div key={idx} className="lb-podium-spot empty" />;
-                      const place = idx + 1;
-                      const crown = place === 1 ? "👑" : place === 2 ? "🥈" : "🥉";
+                  {/* TOP 3 PODIUM */}
+                  {sorted.length >= 3 && (
+                    <div style={{padding:"16px 12px",background:"linear-gradient(180deg,rgba(255,183,3,0.04),transparent)"}}>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1.15fr 1fr",gap:8,alignItems:"end"}}>
+                        {/* 2nd */}
+                        <div style={{
+                          background:"linear-gradient(160deg,rgba(148,163,184,0.12),rgba(148,163,184,0.02))",
+                          border:"1px solid rgba(148,163,184,0.3)",borderRadius:14,
+                          padding:"14px 8px 12px",textAlign:"center",position:"relative"
+                        }}>
+                          <div style={{fontSize:22,marginBottom:6}}>🥈</div>
+                          <div style={{width:44,height:44,borderRadius:12,background:"linear-gradient(135deg,#cbd5e1,#94a3b8)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:800,color:"#1a1a2e",margin:"0 auto 8px",boxShadow:"0 4px 14px rgba(148,163,184,0.3)"}}>
+                            {sorted[1].name[0]}
+                          </div>
+                          <div style={{fontSize:11,fontWeight:700,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sorted[1].name}</div>
+                          <div style={{fontFamily:"monospace",fontSize:12,fontWeight:800,color:"#00e676"}}>{fKES(sorted[1].total)}</div>
+                          <div style={{fontSize:9,color:"#94a3b8",marginTop:3}}>×{Number(sorted[1].best).toFixed(2)} best</div>
+                          <div style={{marginTop:8,fontSize:9,fontWeight:700,color:"#94a3b8",background:"rgba(148,163,184,0.1)",borderRadius:6,padding:"3px 6px"}}>KES 50,000</div>
+                        </div>
+                        {/* 1st */}
+                        <div style={{
+                          background:"linear-gradient(160deg,rgba(255,183,3,0.18),rgba(255,183,3,0.04))",
+                          border:"1px solid rgba(255,183,3,0.4)",borderRadius:16,
+                          padding:"18px 8px 14px",textAlign:"center",position:"relative",
+                          boxShadow:"0 8px 32px rgba(255,183,3,0.2)"
+                        }}>
+                          <div style={{fontSize:28,marginBottom:6,filter:"drop-shadow(0 2px 8px rgba(255,183,3,0.6))"}}>👑</div>
+                          {/* BODABODA IMAGE PLACEHOLDER */}
+                          <div style={{
+                            width:52,height:52,borderRadius:14,
+                            background:"linear-gradient(135deg,#ffd166,#ffb703)",
+                            display:"flex",alignItems:"center",justifyContent:"center",
+                            fontSize:22,fontWeight:900,color:"#1a0a00",
+                            margin:"0 auto 8px",
+                            boxShadow:"0 6px 20px rgba(255,183,3,0.5)"
+                          }}>
+                            <img src="/bodaboda.jpg" style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:14}} />
+                          </div>
+                          <div style={{fontSize:13,fontWeight:800,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sorted[0].name}</div>
+                          <div style={{fontFamily:"monospace",fontSize:14,fontWeight:900,color:"#00e676"}}>{fKES(sorted[0].total)}</div>
+                          <div style={{fontSize:9,color:"#ffb703",marginTop:3}}>×{Number(sorted[0].best).toFixed(2)} best</div>
+                          <div style={{marginTop:8,fontSize:9,fontWeight:800,color:"#ffb703",background:"rgba(255,183,3,0.15)",border:"1px solid rgba(255,183,3,0.3)",borderRadius:6,padding:"4px 6px"}}>🏍️ Bodaboda + KES 80K</div>
+                        </div>
+                        {/* 3rd */}
+                        <div style={{
+                          background:"linear-gradient(160deg,rgba(161,98,7,0.12),rgba(161,98,7,0.02))",
+                          border:"1px solid rgba(161,98,7,0.3)",borderRadius:14,
+                          padding:"14px 8px 12px",textAlign:"center"
+                        }}>
+                          <div style={{fontSize:22,marginBottom:6}}>🥉</div>
+                          <div style={{width:44,height:44,borderRadius:12,background:"linear-gradient(135deg,#d9a066,#a16207)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:800,color:"#fff",margin:"0 auto 8px",boxShadow:"0 4px 14px rgba(161,98,7,0.3)"}}>
+                            {sorted[2].name[0]}
+                          </div>
+                          <div style={{fontSize:11,fontWeight:700,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sorted[2].name}</div>
+                          <div style={{fontFamily:"monospace",fontSize:12,fontWeight:800,color:"#00e676"}}>{fKES(sorted[2].total)}</div>
+                          <div style={{fontSize:9,color:"#d9a066",marginTop:3}}>×{Number(sorted[2].best).toFixed(2)} best</div>
+                          <div style={{marginTop:8,fontSize:9,fontWeight:700,color:"#d9a066",background:"rgba(161,98,7,0.1)",borderRadius:6,padding:"3px 6px"}}>KES 30,000</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* RANKS 4–100 LIST */}
+                  <div style={{borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+                    {/* Header */}
+                    <div style={{display:"grid",gridTemplateColumns:"44px 1fr 70px",gap:8,padding:"8px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+                      <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"#2a3350"}}>#</div>
+                      <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"#2a3350"}}>Player</div>
+                      <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",color:"#2a3350",textAlign:"right"}}>Winnings</div>
+                    </div>
+                    {sorted.slice(3).map((p,i) => {
+                      const rank = i + 4;
+                      const prize = prizes[rank-1] || "KES 500";
+                      const isTop10 = rank <= 10;
+                      const isTop20 = rank <= 20;
                       return (
-                        <div key={idx} className={`lb-podium-spot place-${place}`}>
-                          <div className="lb-podium-crown">{crown}</div>
-                          <div className={`lb-podium-av rank-${place}`}>{p.name[0]}</div>
-                          <div className="lb-podium-name">{p.name}</div>
-                          <div className="lb-podium-amt">{fKES(p.total)}</div>
-                          <div className="lb-podium-sub">×{Number(p.best).toFixed(2)} best</div>
-                          <div className="lb-podium-base">{place}</div>
+                        <div key={i} style={{
+                          display:"grid",gridTemplateColumns:"44px 1fr 70px",
+                          alignItems:"center",gap:8,
+                          padding:"10px 16px",
+                          borderBottom:"1px solid rgba(255,255,255,0.025)",
+                          background:isTop10?"linear-gradient(90deg,rgba(255,183,3,0.03),transparent)":"transparent",
+                          transition:"background 0.15s",
+                        }}>
+                          <div style={{
+                            fontFamily:"monospace",fontSize:12,fontWeight:800,
+                            color:isTop10?"#ffb703":isTop20?"#6b7a99":"#2a3350",
+                            textAlign:"center"
+                          }}>#{rank}</div>
+                          <div style={{minWidth:0}}>
+                            <div style={{display:"flex",alignItems:"center",gap:7}}>
+                              <div style={{
+                                width:28,height:28,borderRadius:7,flexShrink:0,
+                                background:isTop10?"linear-gradient(135deg,#4f8ef7,#8b5cf6)":"linear-gradient(135deg,#1e2a4a,#2a3560)",
+                                display:"flex",alignItems:"center",justifyContent:"center",
+                                fontSize:11,fontWeight:800,color:"#fff"
+                              }}>{p.name[0]}</div>
+                              <div style={{minWidth:0}}>
+                                <div style={{fontSize:12,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#c8d0e0"}}>{p.name}</div>
+                                <div style={{fontSize:9,color:"#ffb703",fontWeight:700,marginTop:1}}>{prize}</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div style={{textAlign:"right"}}>
+                            <div style={{fontFamily:"monospace",fontSize:11,fontWeight:700,color:"#00e676"}}>{fKES(p.total)}</div>
+                            <div style={{fontSize:9,color:"#2a3350",marginTop:1}}>×{Number(p.best).toFixed(2)}</div>
+                          </div>
                         </div>
                       );
                     })}
                   </div>
-                )}
 
-                {/* Compact list for the rest */}
-                <div className="lb-list">
-                  {leaderboard.slice(3).map((p, i) => (
-                    <div key={i+3} className="lb-row">
-                      <div className="lb-rank">#{i+4}</div>
-                      <div className="lb-av">{p.name[0]}</div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="lb-name">{p.name}</div>
-                        <div className="lb-sub">{p.bets} bets · Best ×{Number(p.best).toFixed(2)}</div>
-                      </div>
-                      <div className="lb-amt">{fKES(p.total)}</div>
+                  {/* PRIZE TABLE FOOTER */}
+                  <div style={{padding:"16px",borderTop:"1px solid rgba(255,255,255,0.06)",background:"rgba(0,0,0,0.2)"}}>
+                    <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.8px",textTransform:"uppercase",color:"#6b7a99",marginBottom:10,textAlign:"center"}}>Full Prize Structure</div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                      {[
+                        ["🥇 1st Place","🏍️ Bodaboda + KES 80,000","#ffb703"],
+                        ["🥈 2nd Place","KES 50,000","#94a3b8"],
+                        ["🥉 3rd Place","KES 30,000","#d9a066"],
+                        ["🏅 4th–5th","KES 15,000–20,000","#4f8ef7"],
+                        ["🏅 6th–10th","KES 4,000–10,000","#4f8ef7"],
+                        ["🎖️ 11th–20th","KES 1,000–3,000","#6b7a99"],
+                        ["🎖️ 21st–50th","KES 500–1,000","#6b7a99"],
+                        ["🎖️ 51st–100th","KES 500","#6b7a99"],
+                      ].map(([rank,prize,color],i) => (
+                        <div key={i} style={{
+                          background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.04)",
+                          borderRadius:8,padding:"8px 10px",display:"flex",justifyContent:"space-between",alignItems:"center"
+                        }}>
+                          <span style={{fontSize:10,color:"#6b7a99",fontWeight:600}}>{rank}</span>
+                          <span style={{fontSize:10,fontWeight:700,color}}>{prize}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
