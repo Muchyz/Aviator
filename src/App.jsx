@@ -1210,7 +1210,12 @@ export default function App() {
                             margin:"0 auto 8px",
                             boxShadow:"0 6px 20px rgba(255,183,3,0.5)"
                           }}>
-                            <img src="/bodaboda.jpg" style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:14}} />
+                            </div>
+                          {/* BODABODA PRIZE IMAGE */}
+                          <div style={{margin:"6px auto 8px",borderRadius:10,overflow:"hidden",width:70,height:50,border:"2px solid rgba(255,183,3,0.5)",boxShadow:"0 4px 16px rgba(255,183,3,0.3)"}}>
+                            <img src="/bodaboda.jpg" style={{width:"100%",height:"100%",objectFit:"cover"}} />
+                          </div>
+                          <div style={{display:"none"}}
                           </div>
                           <div style={{fontSize:13,fontWeight:800,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sorted[0].name}</div>
                           <div style={{fontFamily:"monospace",fontSize:14,fontWeight:900,color:"#00e676"}}>{fKES(sorted[0].total)}</div>
