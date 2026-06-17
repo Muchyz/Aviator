@@ -1194,33 +1194,19 @@ export default function App() {
                           <div style={{marginTop:8,fontSize:9,fontWeight:700,color:"#94a3b8",background:"rgba(148,163,184,0.1)",borderRadius:6,padding:"3px 6px"}}>KES 50,000</div>
                         </div>
                         {/* 1st */}
-                        <div style={{
-                          background:"linear-gradient(160deg,rgba(255,183,3,0.18),rgba(255,183,3,0.04))",
-                          border:"1px solid rgba(255,183,3,0.4)",borderRadius:16,
-                          padding:"18px 8px 14px",textAlign:"center",position:"relative",
-                          boxShadow:"0 8px 32px rgba(255,183,3,0.2)"
-                        }}>
-                          <div style={{fontSize:28,marginBottom:6,filter:"drop-shadow(0 2px 8px rgba(255,183,3,0.6))"}}>👑</div>
-                          {/* BODABODA IMAGE PLACEHOLDER */}
-                          <div style={{
-                            width:52,height:52,borderRadius:14,
-                            background:"linear-gradient(135deg,#ffd166,#ffb703)",
-                            display:"flex",alignItems:"center",justifyContent:"center",
-                            fontSize:22,fontWeight:900,color:"#1a0a00",
-                            margin:"0 auto 8px",
-                            boxShadow:"0 6px 20px rgba(255,183,3,0.5)"
-                          }}>
-                            </div>
-                          {/* BODABODA PRIZE IMAGE */}
-                          <div style={{margin:"6px auto 8px",borderRadius:10,overflow:"hidden",width:70,height:50,border:"2px solid rgba(255,183,3,0.5)",boxShadow:"0 4px 16px rgba(255,183,3,0.3)"}}>
+                        <div style={{background:"linear-gradient(160deg,rgba(255,183,3,0.22),rgba(255,183,3,0.05))",border:"1px solid rgba(255,183,3,0.5)",borderRadius:18,padding:"16px 8px 14px",textAlign:"center",position:"relative",boxShadow:"0 10px 40px rgba(255,183,3,0.25)",transform:"scale(1.05)",zIndex:2}}>
+                          <div style={{fontSize:26,marginBottom:4,filter:"drop-shadow(0 2px 10px rgba(255,183,3,0.8))"}}>👑</div>
+                          <div style={{width:46,height:46,borderRadius:"50%",background:"linear-gradient(135deg,#ffd166,#ffb703)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,fontWeight:900,color:"#1a0a00",margin:"0 auto 8px",boxShadow:"0 4px 16px rgba(255,183,3,0.5)",border:"2px solid rgba(255,255,255,0.3)"}}>
+                            {sorted[0].name[0]}
+                          </div>
+                          <div style={{fontSize:12,fontWeight:800,marginBottom:6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#fff"}}>{sorted[0].name}</div>
+                          <div style={{margin:"0 auto 6px",borderRadius:12,overflow:"hidden",width:"100%",maxWidth:110,height:72,border:"2px solid rgba(255,183,3,0.7)",boxShadow:"0 6px 24px rgba(255,183,3,0.4)"}}>
                             <img src="/bodaboda.jpg" style={{width:"100%",height:"100%",objectFit:"cover"}} />
                           </div>
-                          <div style={{display:"none"}}
-                          </div>
-                          <div style={{fontSize:13,fontWeight:800,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sorted[0].name}</div>
-                          <div style={{fontFamily:"monospace",fontSize:14,fontWeight:900,color:"#00e676"}}>{fKES(sorted[0].total)}</div>
-                          <div style={{fontSize:9,color:"#ffb703",marginTop:3}}>×{Number(sorted[0].best).toFixed(2)} best</div>
-                          <div style={{marginTop:8,fontSize:9,fontWeight:800,color:"#ffb703",background:"rgba(255,183,3,0.15)",border:"1px solid rgba(255,183,3,0.3)",borderRadius:6,padding:"4px 6px"}}>🏍️ Bodaboda + KES 80K</div>
+                          <div style={{fontSize:10,fontWeight:800,color:"#ffb703",marginBottom:2,letterSpacing:"0.3px"}}>🏍️ Prize</div>
+                          <div style={{fontFamily:"monospace",fontSize:13,fontWeight:900,color:"#00e676",marginBottom:2}}>{fKES(sorted[0].total)}</div>
+                          <div style={{fontSize:9,color:"#ffb703",marginBottom:6}}>×{Number(sorted[0].best).toFixed(2)} best</div>
+                          <div style={{fontSize:9,fontWeight:800,color:"#1a0a00",background:"linear-gradient(135deg,#ffd166,#ffb703)",borderRadius:6,padding:"4px 8px",display:"inline-block"}}>Bodaboda + KES 80K</div>
                         </div>
                         {/* 3rd */}
                         <div style={{
